@@ -13,7 +13,7 @@ import {
   BarChart3,
 } from 'lucide-react'
 
-export const Route = createFileRoute('/_app/')({
+export const Route = createFileRoute('/')({
   head: () => ({
     meta: [
       { title: 'EduFlex — Plateforme LMS nouvelle génération' },
@@ -36,7 +36,7 @@ function LandingPage() {
       {/* Nav */}
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-lg">
         <nav className="max-w-7xl mx-auto flex items-center justify-between h-16 px-6">
-          <Link to="/_app/" className="flex items-center gap-2.5">
+          <Link to="/" className="flex items-center gap-2.5">
             <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center">
               <Sparkles className="h-5 w-5 text-primary-foreground" />
             </div>

@@ -12,7 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
-import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppStatistiquesRouteImport } from './routes/_app/statistiques'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppPaiementsRouteImport } from './routes/_app/paiements'
@@ -38,10 +38,10 @@ const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppIndexRoute = AppIndexRouteImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AppRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AppStatistiquesRoute = AppStatistiquesRouteImport.update({
   id: '/statistiques',
@@ -95,7 +95,7 @@ const AppCoursesIdRoute = AppCoursesIdRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AppIndexRoute
+  '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/courses': typeof AppCoursesRouteWithChildren
@@ -110,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/study/$id': typeof AppStudyIdRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/courses': typeof AppCoursesRouteWithChildren
@@ -120,12 +121,12 @@ export interface FileRoutesByTo {
   '/paiements': typeof AppPaiementsRoute
   '/settings': typeof AppSettingsRoute
   '/statistiques': typeof AppStatistiquesRoute
-  '/': typeof AppIndexRoute
   '/courses/$id': typeof AppCoursesIdRoute
   '/study/$id': typeof AppStudyIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
@@ -137,7 +138,6 @@ export interface FileRoutesById {
   '/_app/paiements': typeof AppPaiementsRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/statistiques': typeof AppStatistiquesRoute
-  '/_app/': typeof AppIndexRoute
   '/_app/courses/$id': typeof AppCoursesIdRoute
   '/_app/study/$id': typeof AppStudyIdRoute
 }
@@ -159,6 +159,7 @@ export interface FileRouteTypes {
     | '/study/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/login'
     | '/register'
     | '/courses'
@@ -169,11 +170,11 @@ export interface FileRouteTypes {
     | '/paiements'
     | '/settings'
     | '/statistiques'
-    | '/'
     | '/courses/$id'
     | '/study/$id'
   id:
     | '__root__'
+    | '/'
     | '/_app'
     | '/login'
     | '/register'
@@ -185,12 +186,12 @@ export interface FileRouteTypes {
     | '/_app/paiements'
     | '/_app/settings'
     | '/_app/statistiques'
-    | '/_app/'
     | '/_app/courses/$id'
     | '/_app/study/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
@@ -219,12 +220,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_app/': {
-      id: '/_app/'
+    '/': {
+      id: '/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof AppIndexRouteImport
-      parentRoute: typeof AppRoute
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_app/statistiques': {
       id: '/_app/statistiques'
@@ -320,7 +321,6 @@ interface AppRouteChildren {
   AppPaiementsRoute: typeof AppPaiementsRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppStatistiquesRoute: typeof AppStatistiquesRoute
-  AppIndexRoute: typeof AppIndexRoute
   AppStudyIdRoute: typeof AppStudyIdRoute
 }
 
@@ -333,13 +333,13 @@ const AppRouteChildren: AppRouteChildren = {
   AppPaiementsRoute: AppPaiementsRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppStatistiquesRoute: AppStatistiquesRoute,
-  AppIndexRoute: AppIndexRoute,
   AppStudyIdRoute: AppStudyIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,

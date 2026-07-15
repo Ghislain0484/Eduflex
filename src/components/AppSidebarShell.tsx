@@ -205,8 +205,36 @@ export function AppSidebarShell() {
             </button>
           )}
 
-          {/* Sign out */}
-          {collapsed ? (
+          {/* Sign out or Sign in */}
+          {!user ? (
+            collapsed ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-primary hover:text-primary/80"
+                    onClick={() => navigate({ to: '/login' })}
+                  >
+                    <LogOut className="h-4 w-4 shrink-0 rotate-180 text-primary" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">Se connecter</TooltipContent>
+              </Tooltip>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full justify-start px-2 gap-2 text-primary border-primary/20 hover:bg-primary/5"
+                onClick={() => navigate({ to: '/login' })}
+              >
+                <LogOut className="h-4 w-4 shrink-0 rotate-180" />
+                Se connecter
+              </Button>
+            )
+          ) : collapsed ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
