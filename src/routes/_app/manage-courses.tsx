@@ -61,6 +61,16 @@ function ManageCoursesPage() {
   const [allReferrals, setAllReferrals] = useState<any[]>([])
   const [referralsLoading, setReferralsLoading] = useState(false)
 
+  // Payout management states
+  const [payoutRequests, setPayoutRequests] = useState<any[]>([])
+  const [payoutsLoading, setPayoutsLoading] = useState(false)
+  const [payoutDetails, setPayoutDetails] = useState('')
+  const [requestAmount, setRequestAmount] = useState('')
+
+  // Instructor sales tracking states
+  const [instructorSales, setInstructorSales] = useState<any[]>([])
+  const [salesLoading, setSalesLoading] = useState(false)
+
   // Form states
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -130,6 +140,129 @@ function ManageCoursesPage() {
       fetchAllReferrals()
     } catch (err: any) {
       toast.error(err.message || 'Erreur lors de la modification.')
+    }
+  }
+
+  const fetchPayoutRequests = async () => {
+    if (!user) return
+    setPayoutsLoading(true)
+    try {
+      let query = supabase
+        .from('payout_requests')
+        .select(`
+          id,
+          amount,
+          payment_details,
+          status,
+          created_at,
+          profiles (
+            display_name,
+            email
+          )
+        `)
+        .order('created_at', { ascending: false })
+
+      if (user.role !== 'admin') {
+        query = query.eq('user_id', user.id)
+      }
+
+      const { data, error } = await query
+      if (error) throw error
+      setPayoutRequests(data || [])
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setPayoutsLoading(false)
+    }
+  }
+
+  const fetchInstructorSales = async () => {
+    if (!user) return
+    setSalesLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('enrollments')
+        .select(`
+          id,
+          enrolled_at,
+          course_id,
+          courses (
+            title,
+            price,
+            user_id
+          ),
+          profiles (
+            display_name,
+            email
+          )
+        `)
+
+      if (error) throw error
+
+      const filteredSales = (data || []).filter((item: any) => {
+        return item.courses?.user_id === user.id || user.role === 'admin'
+      })
+
+      setInstructorSales(filteredSales)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setSalesLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (view === 'list' && activeTab === 'payouts') {
+      fetchPayoutRequests()
+      fetchInstructorSales()
+    }
+  }, [view, activeTab, user])
+
+  const handleRequestPayout = async (e: React.FormEvent, maxAvailable: number) => {
+    e.preventDefault()
+    if (!user || !payoutDetails.trim()) return
+    const parsedAmount = Math.round(parseFloat(requestAmount) * 100)
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      toast.error('Montant de retrait invalide.')
+      return
+    }
+    if (parsedAmount > maxAvailable) {
+      toast.error('Le montant demandé dépasse votre solde disponible.')
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('payout_requests')
+        .insert([{
+          user_id: user.id,
+          amount: parsedAmount,
+          payment_details: payoutDetails.trim(),
+          status: 'en_attente'
+        }])
+
+      if (error) throw error
+      toast.success('Demande de reversement soumise !')
+      setPayoutDetails('')
+      setRequestAmount('')
+      fetchPayoutRequests()
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de la soumission.')
+    }
+  }
+
+  const handleValidatePayout = async (payoutId: number) => {
+    try {
+      const { error } = await supabase
+        .from('payout_requests')
+        .update({ status: 'valide' })
+        .eq('id', payoutId)
+
+      if (error) throw error
+      toast.success('Reversement validé avec succès !')
+      fetchPayoutRequests()
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de la validation.')
     }
   }
 
@@ -253,6 +386,9 @@ function ManageCoursesPage() {
               </TabsTrigger>
               <TabsTrigger value="commissions" className="gap-2">
                 <Percent className="h-4 w-4" /> Affiliation & Commissions
+              </TabsTrigger>
+              <TabsTrigger value="payouts" className="gap-2">
+                <DollarSign className="h-4 w-4" /> Gains & Reversements
               </TabsTrigger>
             </TabsList>
 
@@ -450,6 +586,186 @@ function ManageCoursesPage() {
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="payouts" className="space-y-6 mt-6">
+              {(() => {
+                const totalGrossSales = instructorSales.reduce((sum, item) => sum + (item.courses?.price || 0), 0)
+                const totalGrossSalesEur = totalGrossSales / 100
+
+                // Option A: 10% platform fee
+                const platformFeesEur = totalGrossSalesEur * 0.10
+                
+                // Total affiliate payouts from this instructor's courses
+                const affiliatePayouts = allReferrals.reduce((sum, ref) => sum + (ref.commission_amount || 0), 0)
+                const affiliatePayoutsEur = affiliatePayouts / 100
+
+                // Net earnings for instructor: Gross minus platform fee (10%) and affiliate commissions paid/pending (15% on referred items)
+                const netInstructorEarningsEur = totalGrossSalesEur - platformFeesEur - affiliatePayoutsEur
+                
+                // Cumulative valid payouts already processed by admin
+                const processedPayoutsEur = payoutRequests
+                  .filter(r => r.status === 'valide')
+                  .reduce((sum, r) => sum + (r.amount || 0), 0) / 100
+
+                // Solde disponible = net - processed
+                const availableSoldeEur = Math.max(0, netInstructorEarningsEur - processedPayoutsEur)
+                const availableSoldeXof = Math.round(availableSoldeEur * 655.957)
+
+                return (
+                  <div className="space-y-6">
+                    {/* Stats cards */}
+                    <div className="grid gap-4 md:grid-cols-4">
+                      <Card className="border-border/80">
+                        <CardContent className="pt-6">
+                          <p className="text-xs text-muted-foreground font-medium">Ventes brutes (100%)</p>
+                          <p className="text-xl font-bold mt-1">{totalGrossSalesEur.toLocaleString('fr-FR')} €</p>
+                          <p className="text-[10px] text-muted-foreground font-semibold">~ {Math.round(totalGrossSalesEur * 655.957).toLocaleString('fr-FR')} F CFA</p>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="border-border/80 bg-red-500/5">
+                        <CardContent className="pt-6">
+                          <p className="text-xs text-red-800 dark:text-red-400 font-medium">Frais EduFlex (10%)</p>
+                          <p className="text-xl font-bold mt-1 text-red-900 dark:text-red-300">{platformFeesEur.toLocaleString('fr-FR')} €</p>
+                          <p className="text-[10px] text-muted-foreground font-semibold">~ {Math.round(platformFeesEur * 655.957).toLocaleString('fr-FR')} F CFA</p>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="border-border/80 bg-blue-500/5">
+                        <CardContent className="pt-6">
+                          <p className="text-xs text-blue-800 dark:text-blue-400 font-medium">Retirés / Reversés</p>
+                          <p className="text-xl font-bold mt-1 text-blue-900 dark:text-blue-300">{processedPayoutsEur.toLocaleString('fr-FR')} €</p>
+                          <p className="text-[10px] text-muted-foreground font-semibold">~ {Math.round(processedPayoutsEur * 655.957).toLocaleString('fr-FR')} F CFA</p>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="border-emerald-500/30 bg-emerald-500/5">
+                        <CardContent className="pt-6">
+                          <p className="text-xs text-emerald-800 dark:text-emerald-400 font-medium">Solde disponible (Net)</p>
+                          <p className="text-xl font-bold mt-1 text-emerald-900 dark:text-emerald-300">{availableSoldeEur.toLocaleString('fr-FR')} €</p>
+                          <p className="text-[10px] text-emerald-700 dark:text-emerald-500 font-medium">~ {availableSoldeXof.toLocaleString('fr-FR')} F CFA</p>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Instructor Payout Form & Admin List */}
+                    <div className="grid gap-6 md:grid-cols-3">
+                      {/* Request Form (Only show for teachers/admins requesting payout for themselves) */}
+                      {user?.role !== 'admin' && (
+                        <Card className="md:col-span-1 border-border/80">
+                          <CardHeader>
+                            <CardTitle className="text-sm font-bold">Demander un reversement</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <form onSubmit={(e) => handleRequestPayout(e, availableSoldeEur * 100)} className="space-y-4">
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-semibold">Montant (€)</label>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  placeholder="Ex: 50.00"
+                                  required
+                                  value={requestAmount}
+                                  onChange={e => setRequestAmount(e.target.value)}
+                                  className="h-9 text-xs"
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-semibold">Coordonnées de paiement (Mobile Money / RIB)</label>
+                                <Input
+                                  placeholder="Ex: Orange Money CI +225XXXXXXXXX"
+                                  required
+                                  value={payoutDetails}
+                                  onChange={e => setPayoutDetails(e.target.value)}
+                                  className="h-9 text-xs"
+                                />
+                              </div>
+                              <Button type="submit" size="sm" className="w-full text-xs" disabled={availableSoldeEur <= 0}>
+                                Envoyer la demande
+                              </Button>
+                            </form>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {/* Requests List */}
+                      <Card className={user?.role === 'admin' ? 'md:col-span-3 border-border/80' : 'md:col-span-2 border-border/80'}>
+                        <CardHeader>
+                          <CardTitle className="text-sm font-bold">
+                            {user?.role === 'admin' ? 'Toutes les demandes de reversement' : 'Mes demandes de reversement'}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {payoutsLoading ? (
+                            <div className="space-y-2"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></div>
+                          ) : payoutRequests.length === 0 ? (
+                            <p className="text-xs text-muted-foreground italic text-center py-6">Aucune demande de reversement enregistrée.</p>
+                          ) : (
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-left text-xs border-collapse">
+                                <thead>
+                                  <tr className="border-b border-border/60 text-muted-foreground uppercase font-semibold text-[10px]">
+                                    <th className="py-2.5 px-3">Date</th>
+                                    {user?.role === 'admin' && <th className="py-2.5 px-3">Formateur</th>}
+                                    <th className="py-2.5 px-3">Montant</th>
+                                    <th className="py-2.5 px-3">Coordonnées</th>
+                                    <th className="py-2.5 px-3">Statut</th>
+                                    {user?.role === 'admin' && <th className="py-2.5 px-3 text-right">Action</th>}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {payoutRequests.map((req) => {
+                                    const date = new Date(req.created_at).toLocaleDateString('fr-FR', {
+                                      day: 'numeric',
+                                      month: 'short',
+                                      year: 'numeric'
+                                    })
+                                    const amountEur = (req.amount || 0) / 100
+                                    const name = req.profiles?.display_name || req.profiles?.email?.split('@')[0] || 'Formateur'
+                                    return (
+                                      <tr key={req.id} className="border-b border-border/30 hover:bg-muted/10 transition-colors">
+                                        <td className="py-3 px-3 text-muted-foreground">{date}</td>
+                                        {user?.role === 'admin' && (
+                                          <td className="py-3 px-3">
+                                            <span className="font-semibold">{name}</span>
+                                            <span className="text-[10px] text-muted-foreground block">{req.profiles?.email}</span>
+                                          </td>
+                                        )}
+                                        <td className="py-3 px-3 font-semibold text-primary">{amountEur.toLocaleString('fr-FR')} €</td>
+                                        <td className="py-3 px-3 text-muted-foreground max-w-xs truncate">{req.payment_details}</td>
+                                        <td className="py-3 px-3">
+                                          <Badge variant={req.status === 'valide' ? 'default' : req.status === 'rejete' ? 'destructive' : 'secondary'}>
+                                            {req.status === 'valide' ? 'Validé' : req.status === 'rejete' ? 'Rejeté' : 'En attente'}
+                                          </Badge>
+                                        </td>
+                                        {user?.role === 'admin' && (
+                                          <td className="py-3 px-3 text-right">
+                                            {req.status === 'en_attente' && (
+                                              <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="h-8 text-[10px]"
+                                                onClick={() => handleValidatePayout(req.id)}
+                                              >
+                                                Valider le reversement
+                                              </Button>
+                                            )}
+                                          </td>
+                                        )}
+                                      </tr>
+                                    )
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+                )
+              })()}
             </TabsContent>
           </Tabs>
         </>
