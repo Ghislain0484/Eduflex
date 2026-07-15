@@ -55,6 +55,7 @@ function RootDocument({ children }: { children: ReactNode }) {
     <html lang="fr">
       <head>
         <HeadContent />
+        <script src="https://checkout.flutterwave.com/v3.js"></script>
         {/*
           WebSite + Organization entity (rendered on every page, once at the root).
           Gives Google's Knowledge Graph + AI answer engines explicit, machine-

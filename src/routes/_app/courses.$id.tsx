@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useParams } from '@tanstack/react-router'
-import { Badge, Button, Card, CardContent, Skeleton, EmptyState } from '@blinkdotnew/ui'
+import { Badge, Button, Card, CardContent, Skeleton, EmptyState, toast } from '@blinkdotnew/ui'
 import { useCourse } from '@/hooks/useCourses'
 import { useEnroll, useEnrollments } from '@/hooks/useEnrollments'
 import { useChapters } from '@/hooks/useChapters'
 import { useAuth } from '@/hooks/useAuth'
+import { useFlutterwave } from '@/hooks/useFlutterwave'
 import { ArrowLeft, Clock, Users, BookOpen, GraduationCap, CheckCircle, Play } from 'lucide-react'
 import { useState } from 'react'
 
@@ -18,8 +19,9 @@ function CourseDetailPage() {
   const { data: course, isLoading, error } = useCourse(Number(id))
   const { data: chapters } = useChapters(Number(id))
   const { data: enrollments } = useEnrollments()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const enrollMutation = useEnroll()
+  const { makePayment } = useFlutterwave()
   const [enrolled, setEnrolled] = useState(false)
 
   const isUserEnrolled = enrollments?.some(e => Number(e.courseId) === Number(id))
@@ -41,9 +43,35 @@ function CourseDetailPage() {
     return <div className="p-6 max-w-6xl mx-auto"><EmptyState icon={<BookOpen className="h-8 w-8" />} title="Formation introuvable" description="Cette formation n'existe pas ou n'est plus disponible." /></div>
   }
 
-  const handleEnroll = () => {
-    if (!isAuthenticated) return
-    enrollMutation.mutate(course.id, { onSuccess: () => setEnrolled(true) })
+  const handleEnroll = async () => {
+    if (!isAuthenticated || !user) return
+
+    // Free course: Direct enrollment
+    if (!course.price || course.price <= 0) {
+      enrollMutation.mutate(course.id, { onSuccess: () => setEnrolled(true) })
+      return
+    }
+
+    // Paid course: Launch Flutterwave payment popup
+    try {
+      await makePayment({
+        amount: course.price,
+        currency: 'EUR',
+        courseTitle: course.title,
+        userEmail: user.email || '',
+        userName: user.displayName || user.email?.split('@')[0] || 'Apprenant',
+      })
+
+      // Payment succeeded: Register enrollment in Supabase
+      enrollMutation.mutate(course.id, {
+        onSuccess: () => {
+          setEnrolled(true)
+          toast.success('Paiement validé avec succès ! Bienvenue dans la formation.')
+        },
+      })
+    } catch (err: any) {
+      toast.error(err.message || 'Le paiement a échoué ou a été annulé.')
+    }
   }
 
   return (
@@ -104,7 +132,11 @@ function CourseDetailPage() {
                 </div>
               ) : isAuthenticated ? (
                 <Button className="w-full" size="lg" onClick={handleEnroll} disabled={enrollMutation.isPending}>
-                  {enrollMutation.isPending ? 'Inscription...' : 'S\'inscrire à cette formation'}
+                  {enrollMutation.isPending 
+                    ? 'Inscription...' 
+                    : (!course.price || course.price <= 0) 
+                      ? "S'inscrire à cette formation" 
+                      : "Acheter cette formation"}
                 </Button>
               ) : (
                 <div className="space-y-2">
