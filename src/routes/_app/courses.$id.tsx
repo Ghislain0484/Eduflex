@@ -158,23 +158,79 @@ function CourseDetailPage() {
             <Badge variant="secondary">{course.category || 'Général'}</Badge>
             <Badge variant="outline">{LEVEL_MAP[course.level] || course.level}</Badge>
           </div>
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{course.title}</h1>
-            <p className="mt-4 text-muted-foreground leading-relaxed">{course.description}</p>
+          <div className="space-y-3">
+            <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight text-foreground leading-tight">{course.title}</h1>
+            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{course.description}</p>
           </div>
-          <Card>
+
+          {/* Ce que vous allez apprendre */}
+          <Card className="border-border/80">
             <CardContent className="p-6 space-y-4">
-              <h2 className="text-lg font-semibold">Contenu de la formation</h2>
+              <h2 className="text-base font-bold text-foreground">Ce que vous allez apprendre dans ce cours</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs md:text-sm">
+                {[
+                  "Maîtriser les concepts fondamentaux de la thématique.",
+                  "Appliquer des cas pratiques réels pas-à-pas.",
+                  "Valider vos compétences grâce à des quiz interactifs.",
+                  "Obtenir un certificat de réussite professionnel.",
+                  "Rejoindre une communauté d'entraide dynamique.",
+                  "Accéder à des mises à jour gratuites à vie."
+                ].map((item, idx) => (
+                  <div key={idx} className="flex gap-2.5 items-start">
+                    <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <span className="text-muted-foreground leading-relaxed">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Prérequis & Public Cible */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card className="border-border/80 bg-muted/10">
+              <CardContent className="p-5 space-y-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Prérequis</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Aucun prérequis technique particulier n'est demandé. Une connexion internet et un ordinateur ou mobile suffisent pour suivre l'intégralité du syllabus.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border/80 bg-muted/10">
+              <CardContent className="p-5 space-y-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Public idéal</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Étudiants, professionnels en reconversion ou passionnés souhaitant acquérir des compétences concrètes et validées par un certificat.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Curriculum */}
+          <Card className="border-border/80">
+            <CardContent className="p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-base font-bold text-foreground">Programme détaillé de la formation</h2>
+                <Badge variant="secondary" className="text-[10px] font-semibold">{chapters?.length || 0} Chapitres</Badge>
+              </div>
               <div className="space-y-3">
                 {chapters && chapters.length > 0 ? (
                   chapters.map((chapter, i) => (
-                    <div key={chapter.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                      <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 text-sm font-semibold">{i + 1}</div>
-                      <span className="text-sm font-medium">{chapter.title}</span>
+                    <div key={chapter.id} className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-border/50 hover:bg-muted/10 transition-colors">
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 text-xs font-bold">{i + 1}</div>
+                        <div className="min-w-0">
+                          <span className="text-xs md:text-sm font-semibold text-foreground block truncate">{chapter.title}</span>
+                          <span className="text-[10px] text-muted-foreground leading-relaxed truncate block">Contenu vidéo & support interactif</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Badge variant="outline" className="text-[9px] px-2 py-0.5">30-45 min</Badge>
+                      </div>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-muted-foreground py-2">Aucun chapitre disponible pour le moment.</p>
+                  <p className="text-xs text-muted-foreground py-2 italic">Aucun chapitre disponible pour le moment.</p>
                 )}
               </div>
             </CardContent>
@@ -297,6 +353,9 @@ function CourseDetailPage() {
                 <div className="flex items-center gap-3 text-sm"><Users className="h-4 w-4 text-muted-foreground" /><span>{Number(course.studentsCount) || 0} apprenants inscrits</span></div>
                 <div className="flex items-center gap-3 text-sm"><GraduationCap className="h-4 w-4 text-muted-foreground" /><span>Certificat de complétion</span></div>
                 <div className="flex items-center gap-3 text-sm"><Play className="h-4 w-4 text-muted-foreground" /><span>Accès illimité à vie</span></div>
+              </div>
+              <div className="border border-emerald-500/20 bg-emerald-500/5 rounded-xl p-3 text-[10px] text-muted-foreground leading-relaxed text-center mt-3">
+                🛡️ <b>Garantie de satisfaction 30 jours</b> : si le contenu ne vous convient pas, demandez un remboursement complet.
               </div>
             </CardContent>
           </Card>

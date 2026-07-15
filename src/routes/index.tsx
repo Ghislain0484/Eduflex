@@ -16,6 +16,10 @@ import {
   ChevronDown,
   CheckCircle,
   HelpCircle,
+  Play,
+  Heart,
+  TrendingUp,
+  UserCheck,
 } from 'lucide-react'
 
 export const Route = createFileRoute('/')({
@@ -29,7 +33,7 @@ export const Route = createFileRoute('/')({
 })
 
 function LandingPage() {
-  const { isAuthenticated, isLoading, user } = useAuth()
+  const { isAuthenticated, isLoading } = useAuth()
   const { data: courses, isLoading: coursesLoading } = useCourses()
   const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(null)
 
@@ -121,7 +125,7 @@ function LandingPage() {
         <section className="border-y border-border/50 bg-muted/20 py-10">
           <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {[
-              { val: '15 000+', label: 'Apprenants actifs' },
+              { val: '15 000+', label: 'Apprenants formés' },
               { val: '100%', label: 'Mobile Money local' },
               { val: '98%', label: 'Taux de satisfaction' },
               { val: '15%', label: 'Affiliation parrain' }
@@ -134,12 +138,37 @@ function LandingPage() {
           </div>
         </section>
 
+        {/* Comment ça marche Section (Teachizy Style) */}
+        <section className="max-w-7xl mx-auto px-6 py-24 border-b border-border/40">
+          <div className="text-center mb-16 space-y-2">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Comment fonctionne la plateforme ?</h2>
+            <p className="text-sm text-muted-foreground max-w-lg mx-auto">
+              Une expérience d'apprentissage et de vente simplifiée au maximum en 4 étapes clés.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
+            {[
+              { step: '01', title: 'Création du cours', desc: 'Le formateur crée son cours et structure ses chapitres avec du texte, des vidéos et des quiz interactifs.' },
+              { step: '02', title: 'Achat sécurisé', desc: 'L\'élève s\'inscrit et paye en ligne par Carte Bancaire ou via son compte Mobile Money local en Francs CFA.' },
+              { step: '03', title: 'Apprentissage', desc: 'L\'élève progresse chapitre après chapitre, participe aux discussions communautaires et valide ses acquis.' },
+              { step: '04', title: 'Certification & Gain', desc: 'L\'élève obtient son certificat de complétion Canvas HD et peut parrainer d\'autres élèves pour toucher 15%.' }
+            ].map((s, i) => (
+              <div key={i} className="space-y-3 relative group">
+                <div className="text-5xl font-black text-primary/10 group-hover:text-primary/20 transition-colors">{s.step}</div>
+                <h3 className="text-base font-bold text-foreground">{s.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* Dynamic Courses Highlight */}
         <section className="max-w-7xl mx-auto px-6 py-24">
           <div className="text-center mb-14 space-y-2">
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Formations à la une</h2>
             <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              Découvrez les programmes les plus populaires créés par nos experts certifiés.
+              Accédez aux fiches détaillées des formations pour découvrir le syllabus complet.
             </p>
           </div>
 
@@ -164,7 +193,7 @@ function LandingPage() {
               {publishedCourses.map(course => {
                 const priceXof = Math.round((course.price / 100) * 655.957)
                 return (
-                  <Card key={course.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col justify-between border-border/80">
+                  <Card key={course.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col justify-between border-border/80 bg-card">
                     <div className="h-44 bg-gradient-to-br from-primary/10 to-accent/10 relative overflow-hidden shrink-0">
                       {course.imageUrl ? (
                         <img src={course.imageUrl} alt={course.title} className="w-full h-full object-cover" />
@@ -184,7 +213,7 @@ function LandingPage() {
                           <p className="text-[10px] text-muted-foreground font-semibold">~ {priceXof.toLocaleString('fr-FR')} F CFA</p>
                         </div>
                         <Button asChild size="sm" variant="outline" className="text-xs">
-                          <Link to="/login">En savoir plus</Link>
+                          <Link to="/courses/$id" params={{ id: String(course.id) }}>En savoir plus</Link>
                         </Button>
                       </div>
                     </CardContent>
@@ -195,31 +224,71 @@ function LandingPage() {
           )}
         </section>
 
-        {/* Features / Advantages */}
-        <section className="max-w-7xl mx-auto px-6 py-20 border-t border-border/40">
+        {/* Payouts / LMS Comparative Table */}
+        <section className="max-w-4xl mx-auto px-6 py-20 border-t border-border/40">
           <div className="text-center mb-14 space-y-2">
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Une technologie pensée pour la conversion</h2>
-            <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-              Nous avons supprimé tous les freins à l'achat pour offrir le taux de conversion le plus élevé du marché.
-            </p>
+            <h2 className="text-3xl font-bold tracking-tight">Pourquoi choisir EduFlex ?</h2>
+            <p className="text-sm text-muted-foreground">Une comparaison rapide face aux solutions LMS américaines ou traditionnelles.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="overflow-x-auto rounded-xl border border-border bg-card">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-border bg-muted/30 font-bold text-foreground">
+                  <th className="p-4">Fonctionnalité</th>
+                  <th className="p-4 text-primary font-black">EduFlex</th>
+                  <th className="p-4 text-muted-foreground">LMS Classique (Teachable, etc.)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/60">
+                <tr>
+                  <td className="p-4 font-semibold">Paiement Mobile Money local (Afrique)</td>
+                  <td className="p-4 text-emerald-600 font-bold">Oui (Wave, Orange, MTN, Moov)</td>
+                  <td className="p-4 text-red-500">Non (Stripe/PayPal uniquement)</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-semibold">Double Devise dynamique (EUR/XOF)</td>
+                  <td className="p-4 text-emerald-600 font-bold">Oui (Conversion intégrée)</td>
+                  <td className="p-4 text-red-500">Non (Frais bancaires élevés)</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-semibold">Certificats de réussite Canvas HD</td>
+                  <td className="p-4 text-emerald-600 font-bold">Oui (Inclus)</td>
+                  <td className="p-4 text-muted-foreground">Payant / Modules tiers</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-semibold">Commission d'Affiliation Directe (15%)</td>
+                  <td className="p-4 text-emerald-600 font-bold">Oui (Tableau de bord parrain)</td>
+                  <td className="p-4 text-muted-foreground">Paramétrage complexe</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* Testimonials Section */}
+        <section className="max-w-7xl mx-auto px-6 py-20 border-t border-border/40">
+          <div className="text-center mb-14 space-y-2">
+            <h2 className="text-3xl font-bold tracking-tight">Ils font confiance à EduFlex</h2>
+            <p className="text-sm text-muted-foreground">Découvrez les retours d'expérience de nos apprenants et formateurs certifiés.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { icon: <Monitor className="h-6 w-6" />, title: 'Interface 100% Fluide', description: 'Un lecteur de cours rapide, disponible sur mobile, tablette et ordinateur de manière fluide.' },
-              { icon: <BookOpen className="h-6 w-6" />, title: 'Quiz & Certifications', description: 'Validez les acquis de vos élèves avec des quiz automatiques et des certificats de réussite téléchargeables.' },
-              { icon: <Users className="h-6 w-6" />, title: 'Espace Discussion', description: 'Fils de commentaires intégrés à chaque module pour favoriser l\'entraide de vos élèves.' },
-              { icon: <BarChart3 className="h-6 w-6" />, title: 'Double Devise EUR/XOF', description: 'Une tarification dynamique en devises locales pour cibler le public international sans friction.' },
-              { icon: <Shield className="h-6 w-6" />, title: 'Système d\'Affiliation', description: 'Vos élèves partagent leur lien unique de parrainage et touchent une commission de 15%.' },
-              { icon: <RefreshCw className="h-6 w-6" />, title: 'Codes Promotionnels', description: 'Boostez vos campagnes de vente en créant des codes de réduction applicables au checkout.' },
-            ].map((f, i) => (
-              <div key={i} className="group rounded-2xl border border-border bg-card/60 p-6 hover:shadow-md hover:border-primary/20 transition-all duration-300">
-                <div className="h-11 w-11 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
-                  {f.icon}
-                </div>
-                <h3 className="font-bold text-base mb-2">{f.title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">{f.description}</p>
-              </div>
+              { name: 'Dr. Jean-Marc Koffi', role: 'Enseignant Business', quote: 'La double devise et le paiement par Mobile Money ont multiplié mes inscriptions par 4 en Côte d\'Ivoire et au Sénégal !' },
+              { name: 'Awa Diop', role: 'Apprenante Marketing', quote: 'J\'ai adoré le système de certificat. Dès que j\'ai fini mon quiz de fin d\'étude, j\'ai pu télécharger mon diplôme en HD d\'un clic.' },
+              { name: 'Salif Traoré', role: 'Formateur Dev Web', quote: 'L\'affiliation à 15% est un outil marketing de fou. Mes élèves partagent leur lien et gagnent des commissions. C\'est gagnant-gagnant !' }
+            ].map((t, i) => (
+              <Card key={i} className="bg-card/50 border-border/80">
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex gap-0.5 text-amber-500"><Heart className="h-4 w-4 fill-current" /><Heart className="h-4 w-4 fill-current" /><Heart className="h-4 w-4 fill-current" /><Heart className="h-4 w-4 fill-current" /><Heart className="h-4 w-4 fill-current" /></div>
+                  <p className="text-xs text-muted-foreground italic leading-relaxed">"{t.quote}"</p>
+                  <div>
+                    <p className="text-xs font-bold text-foreground">{t.name}</p>
+                    <p className="text-[10px] text-primary font-medium">{t.role}</p>
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </section>
