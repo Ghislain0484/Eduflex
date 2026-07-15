@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -102,4 +102,82 @@ export function useUserCourses() {
     enabled: !authLoading && !!user?.id,
   })
 }
+
+export function useManageCourses() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+
+  const createCourse = useMutation({
+    mutationFn: async (course: Omit<Course, 'id' | 'createdAt' | 'updatedAt' | 'studentsCount' | 'userId'>) => {
+      const { data, error } = await supabase
+        .from('courses')
+        .insert([{
+          user_id: user!.id,
+          title: course.title,
+          description: course.description,
+          category: course.category,
+          price: course.price,
+          duration_hours: course.durationHours,
+          level: course.level,
+          image_url: course.imageUrl,
+          status: course.status,
+          students_count: 0
+        }])
+        .select()
+        .single()
+
+      if (error) throw error
+      return mapCourse(data)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['courses'] })
+    }
+  })
+
+  const updateCourse = useMutation({
+    mutationFn: async (course: Partial<Course> & { id: number }) => {
+      const { data, error } = await supabase
+        .from('courses')
+        .update({
+          title: course.title,
+          description: course.description,
+          category: course.category,
+          price: course.price,
+          duration_hours: course.durationHours,
+          level: course.level,
+          image_url: course.imageUrl,
+          status: course.status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', course.id)
+        .select()
+        .single()
+
+      if (error) throw error
+      return mapCourse(data)
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['courses'] })
+      queryClient.invalidateQueries({ queryKey: ['courses', variables.id] })
+    }
+  })
+
+  const deleteCourse = useMutation({
+    mutationFn: async (id: number) => {
+      const { error } = await supabase
+        .from('courses')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+      return id
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['courses'] })
+    }
+  })
+
+  return { createCourse, updateCourse, deleteCourse }
+}
+
 

@@ -16,10 +16,12 @@ import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppStatistiquesRouteImport } from './routes/_app/statistiques'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppPaiementsRouteImport } from './routes/_app/paiements'
+import { Route as AppManageCoursesRouteImport } from './routes/_app/manage-courses'
 import { Route as AppEnseignantsRouteImport } from './routes/_app/enseignants'
 import { Route as AppElevesRouteImport } from './routes/_app/eleves'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppCoursesRouteImport } from './routes/_app/courses'
+import { Route as AppStudyIdRouteImport } from './routes/_app/study.$id'
 import { Route as AppCoursesIdRouteImport } from './routes/_app/courses.$id'
 
 const RegisterRoute = RegisterRouteImport.update({
@@ -56,6 +58,11 @@ const AppPaiementsRoute = AppPaiementsRouteImport.update({
   path: '/paiements',
   getParentRoute: () => AppRoute,
 } as any)
+const AppManageCoursesRoute = AppManageCoursesRouteImport.update({
+  id: '/manage-courses',
+  path: '/manage-courses',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppEnseignantsRoute = AppEnseignantsRouteImport.update({
   id: '/enseignants',
   path: '/enseignants',
@@ -76,6 +83,11 @@ const AppCoursesRoute = AppCoursesRouteImport.update({
   path: '/courses',
   getParentRoute: () => AppRoute,
 } as any)
+const AppStudyIdRoute = AppStudyIdRouteImport.update({
+  id: '/study/$id',
+  path: '/study/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppCoursesIdRoute = AppCoursesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -90,10 +102,12 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AppDashboardRoute
   '/eleves': typeof AppElevesRoute
   '/enseignants': typeof AppEnseignantsRoute
+  '/manage-courses': typeof AppManageCoursesRoute
   '/paiements': typeof AppPaiementsRoute
   '/settings': typeof AppSettingsRoute
   '/statistiques': typeof AppStatistiquesRoute
   '/courses/$id': typeof AppCoursesIdRoute
+  '/study/$id': typeof AppStudyIdRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -102,11 +116,13 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AppDashboardRoute
   '/eleves': typeof AppElevesRoute
   '/enseignants': typeof AppEnseignantsRoute
+  '/manage-courses': typeof AppManageCoursesRoute
   '/paiements': typeof AppPaiementsRoute
   '/settings': typeof AppSettingsRoute
   '/statistiques': typeof AppStatistiquesRoute
   '/': typeof AppIndexRoute
   '/courses/$id': typeof AppCoursesIdRoute
+  '/study/$id': typeof AppStudyIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -117,11 +133,13 @@ export interface FileRoutesById {
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/eleves': typeof AppElevesRoute
   '/_app/enseignants': typeof AppEnseignantsRoute
+  '/_app/manage-courses': typeof AppManageCoursesRoute
   '/_app/paiements': typeof AppPaiementsRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/statistiques': typeof AppStatistiquesRoute
   '/_app/': typeof AppIndexRoute
   '/_app/courses/$id': typeof AppCoursesIdRoute
+  '/_app/study/$id': typeof AppStudyIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -133,10 +151,12 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/eleves'
     | '/enseignants'
+    | '/manage-courses'
     | '/paiements'
     | '/settings'
     | '/statistiques'
     | '/courses/$id'
+    | '/study/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -145,11 +165,13 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/eleves'
     | '/enseignants'
+    | '/manage-courses'
     | '/paiements'
     | '/settings'
     | '/statistiques'
     | '/'
     | '/courses/$id'
+    | '/study/$id'
   id:
     | '__root__'
     | '/_app'
@@ -159,11 +181,13 @@ export interface FileRouteTypes {
     | '/_app/dashboard'
     | '/_app/eleves'
     | '/_app/enseignants'
+    | '/_app/manage-courses'
     | '/_app/paiements'
     | '/_app/settings'
     | '/_app/statistiques'
     | '/_app/'
     | '/_app/courses/$id'
+    | '/_app/study/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -223,6 +247,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPaiementsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/manage-courses': {
+      id: '/_app/manage-courses'
+      path: '/manage-courses'
+      fullPath: '/manage-courses'
+      preLoaderRoute: typeof AppManageCoursesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/enseignants': {
       id: '/_app/enseignants'
       path: '/enseignants'
@@ -249,6 +280,13 @@ declare module '@tanstack/react-router' {
       path: '/courses'
       fullPath: '/courses'
       preLoaderRoute: typeof AppCoursesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/study/$id': {
+      id: '/_app/study/$id'
+      path: '/study/$id'
+      fullPath: '/study/$id'
+      preLoaderRoute: typeof AppStudyIdRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/courses/$id': {
@@ -278,10 +316,12 @@ interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
   AppElevesRoute: typeof AppElevesRoute
   AppEnseignantsRoute: typeof AppEnseignantsRoute
+  AppManageCoursesRoute: typeof AppManageCoursesRoute
   AppPaiementsRoute: typeof AppPaiementsRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppStatistiquesRoute: typeof AppStatistiquesRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppStudyIdRoute: typeof AppStudyIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -289,10 +329,12 @@ const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
   AppElevesRoute: AppElevesRoute,
   AppEnseignantsRoute: AppEnseignantsRoute,
+  AppManageCoursesRoute: AppManageCoursesRoute,
   AppPaiementsRoute: AppPaiementsRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppStatistiquesRoute: AppStatistiquesRoute,
   AppIndexRoute: AppIndexRoute,
+  AppStudyIdRoute: AppStudyIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

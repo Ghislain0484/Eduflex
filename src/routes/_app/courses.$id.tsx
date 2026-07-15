@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useParams } from '@tanstack/react-router'
 import { Badge, Button, Card, CardContent, Skeleton, EmptyState } from '@blinkdotnew/ui'
 import { useCourse } from '@/hooks/useCourses'
-import { useEnroll } from '@/hooks/useEnrollments'
+import { useEnroll, useEnrollments } from '@/hooks/useEnrollments'
+import { useChapters } from '@/hooks/useChapters'
 import { useAuth } from '@/hooks/useAuth'
 import { ArrowLeft, Clock, Users, BookOpen, GraduationCap, CheckCircle, Play } from 'lucide-react'
 import { useState } from 'react'
@@ -15,9 +16,14 @@ const LEVEL_MAP: Record<string, string> = { debutant: 'Débutant', intermediaire
 function CourseDetailPage() {
   const { id } = useParams({ from: '/courses/$id' } as any)
   const { data: course, isLoading, error } = useCourse(Number(id))
+  const { data: chapters } = useChapters(Number(id))
+  const { data: enrollments } = useEnrollments()
   const { isAuthenticated } = useAuth()
   const enrollMutation = useEnroll()
   const [enrolled, setEnrolled] = useState(false)
+
+  const isUserEnrolled = enrollments?.some(e => Number(e.courseId) === Number(id))
+
 
   if (isLoading) {
     return (
@@ -63,12 +69,16 @@ function CourseDetailPage() {
             <CardContent className="p-6 space-y-4">
               <h2 className="text-lg font-semibold">Contenu de la formation</h2>
               <div className="space-y-3">
-                {['Introduction et présentation du cours', 'Les fondamentaux essentiels', 'Techniques avancées et pratique', 'Études de cas concrets', 'Évaluation et certification'].map((module, i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                    <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 text-sm font-semibold">{i + 1}</div>
-                    <span className="text-sm font-medium">{module}</span>
-                  </div>
-                ))}
+                {chapters && chapters.length > 0 ? (
+                  chapters.map((chapter, i) => (
+                    <div key={chapter.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                      <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 text-sm font-semibold">{i + 1}</div>
+                      <span className="text-sm font-medium">{chapter.title}</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground py-2">Aucun chapitre disponible pour le moment.</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -81,9 +91,16 @@ function CourseDetailPage() {
                 <p className="text-3xl font-bold text-primary">{((Number(course.price) || 0) / 100).toLocaleString('fr-FR')} €</p>
                 <p className="text-xs text-muted-foreground mt-1">Accès à vie</p>
               </div>
-              {enrolled ? (
-                <div className="flex items-center gap-2 justify-center p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400">
-                  <CheckCircle className="h-5 w-5" /><span className="text-sm font-medium">Inscription confirmée !</span>
+              {enrolled || isUserEnrolled ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 justify-center p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400">
+                    <CheckCircle className="h-5 w-5" /><span className="text-sm font-medium">Inscription confirmée !</span>
+                  </div>
+                  <Button asChild className="w-full" size="lg">
+                    <Link to="/study/$id" params={{ id: String(course.id) }}>
+                      Continuer la formation
+                    </Link>
+                  </Button>
                 </div>
               ) : isAuthenticated ? (
                 <Button className="w-full" size="lg" onClick={handleEnroll} disabled={enrollMutation.isPending}>

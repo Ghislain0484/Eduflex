@@ -31,11 +31,17 @@ import {
   CreditCard,
   LogOut,
   PanelLeft,
+  BookOpen,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-
 const SIDEBAR_KEY = 'sidebar_collapsed'
+
+const ROLE_MAP = {
+  student: 'Élève',
+  teacher: 'Enseignant',
+  admin: 'Admin',
+}
 
 interface NavItemDef {
   href: string
@@ -43,13 +49,6 @@ interface NavItemDef {
   label: string
 }
 
-const NAV_ITEMS: NavItemDef[] = [
-  { href: '/dashboard', icon: <LayoutDashboard className="h-4 w-4" />, label: 'Tableau de bord' },
-  { href: '/eleves', icon: <Users className="h-4 w-4" />, label: 'Élèves' },
-  { href: '/enseignants', icon: <GraduationCap className="h-4 w-4" />, label: 'Enseignants' },
-  { href: '/statistiques', icon: <BarChart3 className="h-4 w-4" />, label: 'Statistiques' },
-  { href: '/paiements', icon: <CreditCard className="h-4 w-4" />, label: 'Paiements' },
-]
 
 function NavItem({ item, collapsed }: { item: NavItemDef; collapsed: boolean }) {
   const location = useLocation()
@@ -85,6 +84,18 @@ export function AppSidebarShell() {
     if (typeof window === 'undefined') return false
     return localStorage.getItem(SIDEBAR_KEY) === 'true'
   })
+
+  const navItems: NavItemDef[] = [
+    { href: '/dashboard', icon: <LayoutDashboard className="h-4 w-4" />, label: 'Tableau de bord' },
+    ...((user?.role === 'teacher' || user?.role === 'admin') ? [
+      { href: '/manage-courses', icon: <BookOpen className="h-4 w-4" />, label: 'Gérer les formations' }
+    ] : []),
+    { href: '/eleves', icon: <Users className="h-4 w-4" />, label: 'Élèves' },
+    { href: '/enseignants', icon: <GraduationCap className="h-4 w-4" />, label: 'Enseignants' },
+    { href: '/statistiques', icon: <BarChart3 className="h-4 w-4" />, label: 'Statistiques' },
+    { href: '/paiements', icon: <CreditCard className="h-4 w-4" />, label: 'Paiements' },
+  ]
+
 
 
   const toggle = useCallback(() => {
@@ -148,7 +159,7 @@ export function AppSidebarShell() {
               Navigation
             </p>
           )}
-          {NAV_ITEMS.map(item => (
+          {navItems.map(item => (
             <NavItem key={item.href} item={item} collapsed={collapsed} />
           ))}
         </div>
@@ -173,7 +184,7 @@ export function AppSidebarShell() {
                 </button>
               </TooltipTrigger>
               <TooltipContent side="right">
-                {user?.displayName || 'Utilisateur'} · {user?.email || ''}
+                {user?.displayName || 'Utilisateur'} ({ROLE_MAP[user?.role || 'student']}) · {user?.email || ''}
               </TooltipContent>
             </Tooltip>
           ) : (
@@ -188,7 +199,7 @@ export function AppSidebarShell() {
                   {user?.displayName || 'Utilisateur'}
                 </p>
                 <p className="text-[10px] text-muted-foreground leading-tight truncate">
-                  {user?.email || 'Non connecté'}
+                  {ROLE_MAP[user?.role || 'student']} · {user?.email || 'Non connecté'}
                 </p>
               </div>
             </button>
