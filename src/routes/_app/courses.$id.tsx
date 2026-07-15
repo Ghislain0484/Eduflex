@@ -54,9 +54,10 @@ function CourseDetailPage() {
 
     // Paid course: Launch Flutterwave payment popup
     try {
+      const priceInXof = Math.round(((course.price || 0) / 100) * 655.957)
       await makePayment({
-        amount: course.price,
-        currency: 'EUR',
+        amount: priceInXof * 100, // will be divided by 100 in the hook to pass main unit to Flutterwave
+        currency: 'XOF',
         courseTitle: course.title,
         userEmail: user.email || '',
         userName: user.displayName || user.email?.split('@')[0] || 'Apprenant',
@@ -115,9 +116,14 @@ function CourseDetailPage() {
         <div className="space-y-6">
           <Card className="sticky top-20">
             <CardContent className="p-6 space-y-6">
-              <div className="text-center">
+              <div className="text-center space-y-1">
                 <p className="text-3xl font-bold text-primary">{((Number(course.price) || 0) / 100).toLocaleString('fr-FR')} €</p>
-                <p className="text-xs text-muted-foreground mt-1">Accès à vie</p>
+                {Number(course.price) > 0 && (
+                  <p className="text-sm font-semibold text-muted-foreground">
+                    ~ {Math.round(((Number(course.price) || 0) / 100) * 655.957).toLocaleString('fr-FR')} F CFA
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">Accès à vie</p>
               </div>
               {enrolled || isUserEnrolled ? (
                 <div className="space-y-3">

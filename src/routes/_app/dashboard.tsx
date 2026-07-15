@@ -26,7 +26,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts'
-import { useCourses } from '@/hooks/useCourses'
+import { useDashboardStats, useRecentEnrollments } from '@/hooks/useStats'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_app/dashboard')({
@@ -55,7 +55,7 @@ const revenueData = [
 ]
 
 function KpiCard({ title, value, trend, trendLabel, icon }: {
-  title: string; value: string; trend: number; trendLabel: string; icon: React.ReactNode
+  title: string; value: React.ReactNode; trend: number; trendLabel: string; icon: React.ReactNode
 }) {
   const isPositive = trend >= 0
   return (
@@ -83,7 +83,12 @@ function KpiCard({ title, value, trend, trendLabel, icon }: {
 }
 
 function DashboardPage() {
-  const { data: courses, isLoading } = useCourses()
+  const { data: stats, isLoading: statsLoading } = useDashboardStats()
+  const { data: recentEnrollments, isLoading: enrollmentsLoading } = useRecentEnrollments()
+
+  const barChartData = stats?.categoryRevenue && stats.categoryRevenue.length > 0
+    ? stats.categoryRevenue
+    : [{ categorie: 'Aucun cours', revenus: 0 }]
 
   return (
     <div className="flex-1 space-y-6 p-6">
@@ -92,12 +97,35 @@ function DashboardPage() {
         <p className="text-muted-foreground text-sm mt-1">Vue d'ensemble de votre plateforme EduFlex</p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard title="Formations" value="24" trend={12} trendLabel="vs mois dernier" icon={<BookOpen className="h-5 w-5" />} />
-        <KpiCard title="Apprenants" value="1 247" trend={8.3} trendLabel="vs mois dernier" icon={<Users className="h-5 w-5" />} />
-        <KpiCard title="Revenus" value="27 100 €" trend={15.2} trendLabel="vs mois dernier" icon={<Euro className="h-5 w-5" />} />
-        <KpiCard title="Taux de complétion" value="78,4 %" trend={-2.1} trendLabel="vs mois dernier" icon={<TrendingUp className="h-5 w-5" />} />
-      </div>
+      {statsLoading ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map(i => (
+            <Card key={i}><CardContent className="p-6"><Skeleton className="h-4 w-24 mb-2" /><Skeleton className="h-8 w-36" /></CardContent></Card>
+          ))}
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <KpiCard title="Formations actives" value={String(stats?.coursesCount ?? 0)} trend={0} trendLabel="Formations publiées" icon={<BookOpen className="h-5 w-5" />} />
+          <KpiCard title="Apprenants" value={String(stats?.studentsCount ?? 0)} trend={0} trendLabel="Élèves inscrits" icon={<Users className="h-5 w-5" />} />
+          <KpiCard 
+            title="Revenus" 
+            value={
+              <div className="flex flex-col items-start leading-tight">
+                <span>{((stats?.totalRevenue || 0) / 100).toLocaleString('fr-FR')} €</span>
+                {stats?.totalRevenue ? (
+                  <span className="text-[10px] font-semibold text-muted-foreground mt-0.5">
+                    ~ {Math.round(((stats.totalRevenue || 0) / 100) * 655.957).toLocaleString('fr-FR')} F CFA
+                  </span>
+                ) : null}
+              </div>
+            } 
+            trend={0} 
+            trendLabel="Ventes totales" 
+            icon={<Euro className="h-5 w-5" />} 
+          />
+          <KpiCard title="Taux de complétion" value={`${stats?.averageProgress ?? 0} %`} trend={0} trendLabel="Progression moyenne" icon={<TrendingUp className="h-5 w-5" />} />
+        </div>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-7">
         <Card className="lg:col-span-4 animate-fade-in">
@@ -132,7 +160,7 @@ function DashboardPage() {
           <CardContent>
             <div className="h-[280px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={revenueData}>
+                <BarChart data={barChartData}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis dataKey="categorie" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
@@ -148,12 +176,11 @@ function DashboardPage() {
       <Card className="animate-fade-in">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-semibold">Formations récentes</CardTitle>
-            <a href="/courses" className="text-xs text-primary hover:underline font-medium">Voir tout →</a>
+            <CardTitle className="text-base font-semibold">Inscriptions récentes</CardTitle>
           </div>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {enrollmentsLoading ? (
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="flex items-center gap-4">
@@ -163,23 +190,34 @@ function DashboardPage() {
                 </div>
               ))}
             </div>
-          ) : courses && courses.length > 0 ? (
+          ) : recentEnrollments && recentEnrollments.length > 0 ? (
             <div className="space-y-1">
-              {courses.slice(0, 5).map((course) => (
-                <div key={course.id} className="flex items-center gap-4 rounded-lg px-3 py-2.5 transition-colors hover:bg-muted/50">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
-                    <BookOpen className="h-4 w-4" />
+              {recentEnrollments.map((enrollment, index) => (
+                <div key={index} className="flex items-center gap-4 rounded-lg px-3 py-2.5 transition-colors hover:bg-muted/50">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 shrink-0">
+                    <Users className="h-4 w-4" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{course.title}</p>
-                    <p className="text-xs text-muted-foreground">{course.category || 'Général'} · {course.durationHours || 0}h</p>
+                    <p className="text-sm font-medium truncate">{enrollment.studentName}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      S'est inscrit à : <span className="font-medium text-foreground">{enrollment.courseTitle}</span> · {new Date(enrollment.enrolledAt).toLocaleDateString('fr-FR')}
+                    </p>
                   </div>
-                  <Badge variant="secondary" className="text-xs shrink-0">{((Number(course.price) || 0) / 100).toLocaleString('fr-FR')} €</Badge>
+                  <div className="flex flex-col items-end shrink-0">
+                    <Badge variant="secondary" className="text-xs font-semibold">
+                      {((enrollment.coursePrice || 0) / 100).toLocaleString('fr-FR')} €
+                    </Badge>
+                    {enrollment.coursePrice > 0 && (
+                      <span className="text-[9px] text-muted-foreground mt-0.5">
+                        ~ {Math.round(((enrollment.coursePrice || 0) / 100) * 655.957).toLocaleString('fr-FR')} F CFA
+                      </span>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground py-4 text-center">Aucune formation pour le moment</p>
+            <p className="text-sm text-muted-foreground py-4 text-center">Aucune inscription pour le moment</p>
           )}
         </CardContent>
       </Card>

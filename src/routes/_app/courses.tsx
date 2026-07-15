@@ -74,7 +74,14 @@ function CoursesPage() {
                   <Badge variant="outline" className="text-[10px]">{LEVEL_MAP[course.level] || course.level}</Badge>
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-border/50">
-                  <span className="text-lg font-bold text-primary">{((Number(course.price) || 0) / 100).toLocaleString('fr-FR')} €</span>
+                  <div className="flex flex-col text-left">
+                    <span className="text-base font-bold text-primary">{((Number(course.price) || 0) / 100).toLocaleString('fr-FR')} €</span>
+                    {Number(course.price) > 0 && (
+                      <span className="text-[10px] text-muted-foreground leading-none mt-0.5">
+                        ~{Math.round(((Number(course.price) || 0) / 100) * 655.957).toLocaleString('fr-FR')} F CFA
+                      </span>
+                    )}
+                  </div>
                   <span className="text-xs text-primary font-medium flex items-center gap-1 group-hover:gap-2 transition-all">Découvrir <ArrowRight className="h-3.5 w-3.5" /></span>
                 </div>
               </div>

@@ -1,37 +1,34 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Card, CardContent, Badge, Button, Input, EmptyState } from '@blinkdotnew/ui'
-import { Users, Search, Plus, Mail, GraduationCap } from 'lucide-react'
+import { useStudentsList } from '@/hooks/useStats'
+import { Card, CardContent, Badge, Button, Input, EmptyState, Skeleton } from '@blinkdotnew/ui'
+import { Users, Search, Mail } from 'lucide-react'
 import { useState } from 'react'
 
 export const Route = createFileRoute('/_app/eleves')({
   component: ElevesPage,
 })
 
-const MOCK_ELEVES = [
-  { id: 1, name: 'Marie Dupont', email: 'marie.dupont@email.com', classe: 'Marketing Digital L1', date: '15/01/2026', status: 'Actif' },
-  { id: 2, name: 'Thomas Martin', email: 'thomas.martin@email.com', classe: 'Business Management L2', date: '22/01/2026', status: 'Actif' },
-  { id: 3, name: 'Sophie Bernard', email: 'sophie.bernard@email.com', classe: 'SEO & Contenu L1', date: '03/02/2026', status: 'Actif' },
-  { id: 4, name: 'Lucas Petit', email: 'lucas.petit@email.com', classe: 'Marketing Digital L1', date: '10/02/2026', status: 'Inactif' },
-  { id: 5, name: 'Emma Richard', email: 'emma.richard@email.com', classe: 'Excel Avancé L3', date: '18/02/2026', status: 'Actif' },
-  { id: 6, name: 'Hugo Moreau', email: 'hugo.moreau@email.com', classe: 'Business Management L2', date: '01/03/2026', status: 'Actif' },
-]
-
 function ElevesPage() {
+  const { data: students, isLoading } = useStudentsList()
   const [search, setSearch] = useState('')
-  const filtered = MOCK_ELEVES.filter(e =>
-    e.name.toLowerCase().includes(search.toLowerCase()) ||
-    e.email.toLowerCase().includes(search.toLowerCase()) ||
-  e.classe.toLowerCase().includes(search.toLowerCase())
-  )
+
+  const studentList = students || []
+  const filtered = studentList.filter(e => {
+    const name = e.displayName || ''
+    const email = e.email || ''
+    return name.toLowerCase().includes(search.toLowerCase()) ||
+      email.toLowerCase().includes(search.toLowerCase())
+  })
 
   return (
     <div className="flex-1 space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Gestion des élèves</h1>
-          <p className="text-muted-foreground text-sm mt-1">{MOCK_ELEVES.length} élèves inscrits</p>
+          <p className="text-muted-foreground text-sm mt-1">
+            {isLoading ? 'Chargement...' : `${filtered.length} élève(s) inscrit(s)`}
+          </p>
         </div>
-        <Button className="gap-2"><Plus className="h-4 w-4" />Ajouter un élève</Button>
       </div>
 
       <div className="flex items-center gap-4">
@@ -47,38 +44,55 @@ function ElevesPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border text-left">
-                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Nom</th>
-                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Classe</th>
+                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Nom / Prénom</th>
+                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Email</th>
                   <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Date inscription</th>
                   <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Statut</th>
                   <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(eleve => (
-                  <tr key={eleve.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3">
-                      <div>
-                        <p className="text-sm font-medium">{eleve.name}</p>
-                        <p className="text-xs text-muted-foreground">{eleve.email}</p>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm">{eleve.classe}</td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{eleve.date}</td>
-                    <td className="px-4 py-3">
-                      <Badge variant={eleve.status === 'Actif' ? 'default' : 'secondary'}>{eleve.status}</Badge>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0"><Mail className="h-4 w-4" /></Button>
-                    </td>
-                  </tr>
-                ))}
+                {isLoading ? (
+                  [1, 2, 3].map(i => (
+                    <tr key={i} className="border-b border-border/50">
+                      <td className="px-4 py-3"><Skeleton className="h-4 w-32" /></td>
+                      <td className="px-4 py-3"><Skeleton className="h-4 w-40" /></td>
+                      <td className="px-4 py-3"><Skeleton className="h-4 w-24" /></td>
+                      <td className="px-4 py-3"><Skeleton className="h-5 w-16" /></td>
+                      <td className="px-4 py-3"><Skeleton className="h-8 w-8 rounded-full" /></td>
+                    </tr>
+                  ))
+                ) : (
+                  filtered.map(eleve => (
+                    <tr key={eleve.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3 text-sm font-medium">
+                        {eleve.displayName || eleve.email?.split('@')[0] || 'Apprenant'}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                        {eleve.email}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                        {new Date(eleve.createdAt).toLocaleDateString('fr-FR')}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge variant="default">Actif</Badge>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" asChild>
+                          <a href={`mailto:${eleve.email}`}>
+                            <Mail className="h-4 w-4" />
+                          </a>
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
-          {filtered.length === 0 && (
+          {!isLoading && filtered.length === 0 && (
             <div className="py-12">
-              <EmptyState icon={<Users className="h-8 w-8" />} title="Aucun élève trouvé" description="Aucun résultat pour votre recherche." />
+              <EmptyState icon={<Users className="h-8 w-8" />} title="Aucun élève trouvé" description="Aucun élève inscrit ne correspond à votre recherche." />
             </div>
           )}
         </CardContent>
