@@ -1,84 +1,136 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Card, CardContent, Badge, Button, Input } from '@blinkdotnew/ui'
+import { Card, CardContent, Badge, Button, Input, Skeleton, EmptyState } from '@blinkdotnew/ui'
 import { CreditCard, Search, Download, Euro } from 'lucide-react'
 import { useState } from 'react'
+import { useAllEnrollments } from '@/hooks/useStats'
 
 export const Route = createFileRoute('/_app/paiements')({
   component: PaiementsPage,
 })
 
-const MOCK_PAIEMENTS = [
-  { id: 1, student: 'Marie Dupont', course: 'Marketing Digital', amount: '299,00 €', date: '20/01/2026', method: 'Carte bancaire', status: 'Payé' },
-  { id: 2, student: 'Thomas Martin', course: 'Business Management', amount: '499,00 €', date: '22/01/2026', method: 'PayPal', status: 'Payé' },
-  { id: 3, student: 'Sophie Bernard', course: 'SEO & Contenu', amount: '399,00 €', date: '03/02/2026', method: 'Carte bancaire', status: 'Payé' },
-  { id: 4, student: 'Lucas Petit', course: 'Marketing Digital', amount: '299,00 €', date: '10/02/2026', method: 'Virement', status: 'En attente' },
-  { id: 5, student: 'Emma Richard', course: 'Excel Avancé', amount: '199,00 €', date: '18/02/2026', method: 'Carte bancaire', status: 'Payé' },
-  { id: 6, student: 'Hugo Moreau', course: 'Business Management', amount: '499,00 €', date: '01/03/2026', method: 'Carte bancaire', status: 'Remboursé' },
-]
-
 function PaiementsPage() {
+  const { data: enrollments, isLoading } = useAllEnrollments()
   const [search, setSearch] = useState('')
-  const filtered = MOCK_PAIEMENTS.filter(p =>
-    p.student.toLowerCase().includes(search.toLowerCase()) ||
-    p.course.toLowerCase().includes(search.toLowerCase())
+
+  const enrollmentList = enrollments || []
+  const filtered = enrollmentList.filter(p =>
+    p.studentName.toLowerCase().includes(search.toLowerCase()) ||
+    p.courseTitle.toLowerCase().includes(search.toLowerCase()) ||
+    p.studentEmail.toLowerCase().includes(search.toLowerCase())
   )
+
+  // Calculate dynamic total revenue in EUR and XOF
+  const totalRevenue = enrollmentList.reduce((sum, item) => sum + (item.coursePrice || 0), 0)
+  const totalRevenueEur = totalRevenue / 100
+  const totalRevenueXof = Math.round(totalRevenueEur * 655.957)
 
   return (
     <div className="flex-1 space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Paiements</h1>
-          <p className="text-muted-foreground text-sm mt-1">Historique des transactions</p>
+          <p className="text-muted-foreground text-sm mt-1">Historique des transactions de la plateforme</p>
         </div>
-        <Button variant="outline" className="gap-2"><Download className="h-4 w-4" />Exporter</Button>
       </div>
 
-      <Card className="animate-fade-in">
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700"><Euro className="h-5 w-5" /></div>
-            <div>
-              <p className="text-sm text-muted-foreground">Revenus total</p>
-              <p className="text-2xl font-bold">2 194,00 €</p>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card className="animate-fade-in border-border/80">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 shrink-0">
+                <Euro className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground font-medium">Revenus cumulés (Euros)</p>
+                <p className="text-2xl font-bold mt-0.5">{totalRevenueEur.toLocaleString('fr-FR')} €</p>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        <Card className="animate-fade-in border-border/80">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 shrink-0">
+                <CreditCard className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground font-medium">Revenus cumulés (CFA)</p>
+                <p className="text-2xl font-bold mt-0.5">~ {totalRevenueXof.toLocaleString('fr-FR')} F CFA</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Rechercher une transaction..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+        <Input placeholder="Rechercher par élève ou cours..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
       </div>
 
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-xs text-left">
               <thead>
-                <tr className="border-b border-border text-left">
-                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Élève</th>
-                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Formation</th>
-                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Montant</th>
-                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
-                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Méthode</th>
-                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Statut</th>
+                <tr className="border-b border-border/80 text-muted-foreground uppercase font-semibold text-[10px]">
+                  <th className="py-3 px-4">Élève</th>
+                  <th className="py-3 px-4">Formation</th>
+                  <th className="py-3 px-4">Montant</th>
+                  <th className="py-3 px-4">Date</th>
+                  <th className="py-3 px-4">Méthode</th>
+                  <th className="py-3 px-4">Statut</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(paiement => (
-                  <tr key={paiement.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3 text-sm font-medium">{paiement.student}</td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{paiement.course}</td>
-                    <td className="px-4 py-3 text-sm font-semibold">{paiement.amount}</td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{paiement.date}</td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{paiement.method}</td>
-                    <td className="px-4 py-3">
-                      <Badge variant={paiement.status === 'Payé' ? 'default' : paiement.status === 'En attente' ? 'secondary' : 'destructive'}>
-                        {paiement.status}
-                      </Badge>
+                {isLoading ? (
+                  [1, 2, 3].map(i => (
+                    <tr key={i} className="border-b border-border/50">
+                      <td className="py-4 px-4"><Skeleton className="h-4 w-32" /></td>
+                      <td className="py-4 px-4"><Skeleton className="h-4 w-48" /></td>
+                      <td className="py-4 px-4"><Skeleton className="h-4 w-16" /></td>
+                      <td className="py-4 px-4"><Skeleton className="h-4 w-24" /></td>
+                      <td className="py-4 px-4"><Skeleton className="h-4 w-24" /></td>
+                      <td className="py-4 px-4"><Skeleton className="h-5 w-16" /></td>
+                    </tr>
+                  ))
+                ) : filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-10 text-center text-muted-foreground italic">
+                      Aucune transaction enregistrée.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  filtered.map(paiement => {
+                    const priceEur = paiement.coursePrice / 100
+                    const priceXof = Math.round(priceEur * 655.957)
+                    const date = new Date(paiement.enrolledAt).toLocaleDateString('fr-FR', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric'
+                    })
+                    return (
+                      <tr key={paiement.id} className="border-b border-border/30 hover:bg-muted/10 transition-colors">
+                        <td className="py-3.5 px-4">
+                          <span className="font-medium text-foreground block">{paiement.studentName}</span>
+                          <span className="text-[10px] text-muted-foreground">{paiement.studentEmail}</span>
+                        </td>
+                        <td className="py-3.5 px-4 text-muted-foreground truncate max-w-xs">{paiement.courseTitle}</td>
+                        <td className="py-3.5 px-4">
+                          <span className="font-semibold text-foreground block">{priceEur.toLocaleString('fr-FR')} €</span>
+                          {priceEur > 0 && <span className="text-[10px] text-muted-foreground">~ {priceXof.toLocaleString('fr-FR')} FCFA</span>}
+                        </td>
+                        <td className="py-3.5 px-4 text-muted-foreground">{date}</td>
+                        <td className="py-3.5 px-4 text-muted-foreground">{paiement.method}</td>
+                        <td className="py-3.5 px-4">
+                          <Badge variant={paiement.coursePrice > 0 ? 'default' : 'secondary'}>
+                            {paiement.status}
+                          </Badge>
+                        </td>
+                      </tr>
+                    )
+                  })
+                )}
               </tbody>
             </table>
           </div>

@@ -164,3 +164,52 @@ export function useRecentEnrollments() {
     },
   })
 }
+
+export interface EnrollmentRecord {
+  id: number
+  enrolledAt: string
+  courseTitle: string
+  coursePrice: number
+  studentName: string
+  studentEmail: string
+  method: string
+  status: string
+}
+
+export function useAllEnrollments() {
+  return useQuery({
+    queryKey: ['enrollments', 'all'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('enrollments')
+        .select(`
+          id,
+          enrolled_at,
+          course_id,
+          user_id,
+          courses (
+            title,
+            price
+          ),
+          profiles (
+            display_name,
+            email
+          )
+        `)
+        .order('enrolled_at', { ascending: false })
+
+      if (error) throw error
+
+      return (data || []).map((item: any) => ({
+        id: item.id,
+        enrolledAt: item.enrolled_at,
+        courseTitle: item.courses?.title || 'Formation supprimée',
+        coursePrice: item.courses?.price || 0,
+        studentName: item.profiles?.display_name || item.profiles?.email?.split('@')[0] || 'Apprenant',
+        studentEmail: item.profiles?.email || '',
+        method: item.courses?.price > 0 ? 'Mobile Money / CB' : 'Gratuit',
+        status: 'Payé'
+      })) as EnrollmentRecord[]
+    },
+  })
+}
