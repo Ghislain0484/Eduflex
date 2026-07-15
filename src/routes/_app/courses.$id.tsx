@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useFlutterwave } from '@/hooks/useFlutterwave'
 import { supabase } from '@/lib/supabase'
 import { ArrowLeft, Clock, Users, BookOpen, GraduationCap, CheckCircle, Play } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export const Route = createFileRoute('/_app/courses/$id')({
   component: CourseDetailPage,
@@ -24,6 +24,17 @@ function CourseDetailPage() {
   const enrollMutation = useEnroll()
   const { makePayment } = useFlutterwave()
   const [enrolled, setEnrolled] = useState(false)
+
+  // Extract ref link parameter
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const ref = params.get('ref')
+      if (ref) {
+        sessionStorage.setItem('affiliate_ref', ref)
+      }
+    }
+  }, [])
 
   // Promo code states
   const [promoCode, setPromoCode] = useState('')
@@ -100,9 +111,31 @@ function CourseDetailPage() {
 
       // Payment succeeded: Register enrollment in Supabase
       enrollMutation.mutate(course.id, {
-        onSuccess: () => {
+        onSuccess: async () => {
           setEnrolled(true)
           toast.success('Paiement validé avec succès ! Bienvenue dans la formation.')
+
+          // Save affiliate referral if present
+          if (typeof window !== 'undefined') {
+            const referrerId = sessionStorage.getItem('affiliate_ref')
+            if (referrerId && referrerId !== user.id) {
+              const commission = Math.round(finalPrice * 0.15) // 15% commission
+              try {
+                await supabase
+                  .from('affiliate_referrals')
+                  .insert([{
+                    referrer_id: referrerId,
+                    referred_email: user.email || '',
+                    course_id: course.id,
+                    commission_amount: commission,
+                    status: 'en_attente'
+                  }])
+                sessionStorage.removeItem('affiliate_ref')
+              } catch (affErr) {
+                console.error('Affiliate referral error:', affErr)
+              }
+            }
+          }
         },
       })
     } catch (err: any) {
@@ -214,6 +247,36 @@ function CourseDetailPage() {
                       Continuer la formation
                     </Link>
                   </Button>
+
+                  {/* Affiliate Link Block */}
+                  {isAuthenticated && user && (
+                    <div className="border border-amber-500/30 rounded-xl p-4 bg-amber-500/5 dark:bg-amber-500/10 space-y-2 mt-4 text-left">
+                      <h4 className="text-xs font-bold text-amber-800 dark:text-amber-400">🔗 Programme de parrainage</h4>
+                      <p className="text-[10px] text-muted-foreground leading-relaxed">
+                        Gagnez 15% de commission en partageant ce cours avec vos contacts !
+                      </p>
+                      <div className="flex gap-2">
+                        <Input
+                          readOnly
+                          value={typeof window !== 'undefined' ? `${window.location.origin}/courses/${course.id}?ref=${user.id}` : ''}
+                          className="h-8 text-[10px] bg-background/50"
+                        />
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="h-8 text-[10px] shrink-0"
+                          onClick={() => {
+                            if (typeof window !== 'undefined') {
+                              navigator.clipboard.writeText(`${window.location.origin}/courses/${course.id}?ref=${user.id}`)
+                              toast.success('Lien de parrainage copié !')
+                            }
+                          }}
+                        >
+                          Copier
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : isAuthenticated ? (
                 <Button className="w-full" size="lg" onClick={handleEnroll} disabled={enrollMutation.isPending}>

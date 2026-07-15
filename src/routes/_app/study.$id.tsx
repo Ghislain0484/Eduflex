@@ -15,6 +15,7 @@ import {
   useCompletedChapters,
   useToggleChapterCompletion,
 } from '@/hooks/useChapters'
+import { supabase } from '@/lib/supabase'
 import {
   ArrowLeft,
   CheckCircle,
@@ -46,6 +47,11 @@ function StudyRoomPage() {
   const [quizScore, setQuizScore] = useState(0)
   const [quizPassed, setQuizPassed] = useState(false)
 
+  // Comments states
+  const [comments, setComments] = useState<any[]>([])
+  const [commentContent, setCommentContent] = useState('')
+  const [commentsLoading, setCommentsLoading] = useState(false)
+
   const chapterList = chapters || []
   const activeChapter = chapterList.find((c) => c.id === activeChapterId) || chapterList[0]
 
@@ -64,6 +70,60 @@ function StudyRoomPage() {
     setQuizScore(0)
     setQuizPassed(false)
   }, [activeChapterId])
+
+  const fetchComments = async () => {
+    if (!activeChapter) return
+    setCommentsLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('chapter_comments')
+        .select(`
+          id,
+          content,
+          created_at,
+          user_id,
+          profiles (
+            display_name,
+            email
+          )
+        `)
+        .eq('chapter_id', activeChapter.id)
+        .order('created_at', { ascending: true })
+
+      if (error) throw error
+      setComments(data || [])
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setCommentsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchComments()
+  }, [activeChapterId])
+
+  const handleAddComment = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!commentContent.trim() || !user || !activeChapter) return
+
+    try {
+      const { error } = await supabase
+        .from('chapter_comments')
+        .insert([{
+          chapter_id: activeChapter.id,
+          user_id: user.id,
+          content: commentContent.trim()
+        }])
+
+      if (error) throw error
+      setCommentContent('')
+      toast.success('Commentaire ajouté !')
+      fetchComments()
+    } catch (err) {
+      toast.error('Erreur lors de l’ajout du commentaire.')
+    }
+  }
 
   if (courseLoading || chaptersLoading) {
     return (
@@ -514,6 +574,63 @@ function StudyRoomPage() {
                     )}
                   </div>
                 </>
+              )}
+            </div>
+
+            {/* Discussion Thread */}
+            <div className="border-t border-border/60 pt-8 space-y-4">
+              <h3 className="text-base font-bold text-foreground">Discussion de la communauté</h3>
+              
+              {/* Comment Input Form */}
+              {user ? (
+                <form onSubmit={handleAddComment} className="flex gap-2">
+                  <input
+                    placeholder="Posez votre question ou laissez un message..."
+                    value={commentContent}
+                    onChange={e => setCommentContent(e.target.value)}
+                    className="flex-1 min-w-0 rounded-md border border-input bg-transparent px-3 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  />
+                  <Button type="submit" size="sm" className="text-xs">Envoyer</Button>
+                </form>
+              ) : (
+                <p className="text-xs text-muted-foreground">Veuillez vous connecter pour participer à la discussion.</p>
+              )}
+
+              {/* Comments List */}
+              {commentsLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ) : comments.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">Aucun message pour l'instant. Soyez le premier à poser une question !</p>
+              ) : (
+                <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+                  {comments.map((c: any) => {
+                    const name = c.profiles?.display_name || c.profiles?.email?.split('@')[0] || 'Apprenant'
+                    const initials = name.slice(0, 2).toUpperCase()
+                    const date = new Date(c.created_at).toLocaleDateString('fr-FR', {
+                      day: 'numeric',
+                      month: 'short',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })
+                    return (
+                      <div key={c.id} className="flex gap-3 text-xs animate-fade-in">
+                        <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-[10px] shrink-0">
+                          {initials}
+                        </div>
+                        <div className="flex-1 bg-muted/20 dark:bg-muted/10 p-2.5 rounded-xl border border-border/40">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-semibold text-foreground">{name}</span>
+                            <span className="text-[9px] text-muted-foreground">{date}</span>
+                          </div>
+                          <p className="text-muted-foreground mt-1 leading-relaxed">{c.content}</p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
               )}
             </div>
 

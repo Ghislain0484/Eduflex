@@ -10,7 +10,7 @@
  * single overflow-y-auto div, making flex-1/shrink-0 on children no-ops.
  * This native flex-col implementation gives full layout control.
  */
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { useLocation, useNavigate } from '@tanstack/react-router'
 import { useAuth } from '@/hooks/useAuth'
@@ -32,6 +32,8 @@ import {
   LogOut,
   PanelLeft,
   BookOpen,
+  Sun,
+  Moon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -85,6 +87,27 @@ export function AppSidebarShell() {
     return localStorage.getItem(SIDEBAR_KEY) === 'true'
   })
 
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window === 'undefined') return 'light'
+    const stored = localStorage.getItem('theme')
+    if (stored === 'dark' || stored === 'light') return stored
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  })
+
+  useEffect(() => {
+    const root = window.document.documentElement
+    if (theme === 'dark') {
+      root.classList.add('dark')
+    } else {
+      root.classList.remove('dark')
+    }
+    localStorage.setItem('theme', theme)
+  }, [theme])
+
+  const toggleTheme = () => {
+    setTheme(prev => (prev === 'light' ? 'dark' : 'light'))
+  }
+
   const navItems: NavItemDef[] = [
     { href: '/dashboard', icon: <LayoutDashboard className="h-4 w-4" />, label: 'Tableau de bord' },
     ...((user?.role === 'teacher' || user?.role === 'admin') ? [
@@ -130,6 +153,23 @@ export function AppSidebarShell() {
               <span className="flex-1 font-semibold text-sm truncate">EduFlex</span>
             </>
           )}
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0 shrink-0 text-muted-foreground hover:text-foreground"
+                onClick={toggleTheme}
+              >
+                {theme === 'dark' ? <Sun className="h-4 w-4 animate-none" /> : <Moon className="h-4 w-4 animate-none" />}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              {theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+            </TooltipContent>
+          </Tooltip>
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
