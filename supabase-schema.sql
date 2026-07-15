@@ -285,6 +285,33 @@ values
   (1, 'Introduction au Marketing Digital', 'Dans ce chapitre, nous allons définir ce qu''est le marketing digital et présenter les différents canaux.', 'https://www.w3schools.com/html/mov_bbb.mp4', 1),
   (1, 'Les fondamentaux du SEO', 'Le référencement naturel (SEO) est l''art de positionner son site dans les premiers résultats de recherche.', null, 2),
   (1, 'Google Ads & Search Engine Marketing', 'Apprenez à configurer votre première campagne publicitaire payante sur Google Ads.', null, 3),
-  (1, 'Le marketing sur les réseaux sociaux', 'Découvrez comment créer une communauté engagée sur Facebook, Instagram et LinkedIn.', null, 4),
   (1, 'Stratégie de newsletter et emailing', 'L''emailing reste le canal avec le meilleur retour sur investissement. Voici comment créer une liste d''abonnés.', null, 5)
 on conflict do nothing;
+
+-- 8. PREMIUM FEATURES (QUIZ & PROMO CODES)
+-- Add quiz_data column in chapters table
+alter table public.chapters add column if not exists quiz_data jsonb default null;
+
+-- Create promo_codes table
+create table if not exists public.promo_codes (
+  code text primary key,
+  discount_percent integer not null check (discount_percent > 0 and discount_percent <= 100),
+  is_active boolean default true,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Enable RLS for promo_codes
+alter table public.promo_codes enable row level security;
+
+-- Policies for promo_codes
+create policy "Allow public read access for promo codes"
+  on public.promo_codes for select
+  using (true);
+
+-- Seed initial promo codes
+insert into public.promo_codes (code, discount_percent, is_active)
+values
+  ('EDUFLEX20', 20, true),
+  ('START50', 50, true)
+on conflict (code) do nothing;
+

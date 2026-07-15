@@ -9,6 +9,7 @@ export interface Chapter {
   content: string | null
   videoUrl: string | null
   sortOrder: number
+  quizData: any[] | null
   createdAt: string
 }
 
@@ -19,6 +20,7 @@ const mapChapter = (row: any): Chapter => ({
   content: row.content,
   videoUrl: row.video_url,
   sortOrder: Number(row.sort_order),
+  quizData: row.quiz_data || null,
   createdAt: row.created_at,
 })
 
@@ -105,6 +107,7 @@ export function useManageChapters(courseId: number) {
           content: chapter.content,
           video_url: chapter.videoUrl,
           sort_order: chapter.sortOrder,
+          quiz_data: chapter.quizData || null,
         }])
         .select()
         .single()
@@ -126,6 +129,7 @@ export function useManageChapters(courseId: number) {
           content: chapter.content,
           video_url: chapter.videoUrl,
           sort_order: chapter.sortOrder,
+          quiz_data: chapter.quizData,
         })
         .eq('id', chapter.id)
         .select()

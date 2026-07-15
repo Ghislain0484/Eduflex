@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useParams } from '@tanstack/react-router'
-import { Badge, Button, Card, CardContent, Skeleton, EmptyState, toast } from '@blinkdotnew/ui'
+import { Badge, Button, Card, CardContent, Skeleton, EmptyState, toast, Input } from '@blinkdotnew/ui'
 import { useCourse } from '@/hooks/useCourses'
 import { useEnroll, useEnrollments } from '@/hooks/useEnrollments'
 import { useChapters } from '@/hooks/useChapters'
 import { useAuth } from '@/hooks/useAuth'
 import { useFlutterwave } from '@/hooks/useFlutterwave'
+import { supabase } from '@/lib/supabase'
 import { ArrowLeft, Clock, Users, BookOpen, GraduationCap, CheckCircle, Play } from 'lucide-react'
 import { useState } from 'react'
 
@@ -24,8 +25,39 @@ function CourseDetailPage() {
   const { makePayment } = useFlutterwave()
   const [enrolled, setEnrolled] = useState(false)
 
+  // Promo code states
+  const [promoCode, setPromoCode] = useState('')
+  const [discountPercent, setDiscountPercent] = useState(0)
+  const [promoApplied, setPromoApplied] = useState(false)
+  const [promoError, setPromoError] = useState('')
+
   const isUserEnrolled = enrollments?.some(e => Number(e.courseId) === Number(id))
 
+  const handleApplyPromoCode = async () => {
+    if (!promoCode.trim()) return
+    setPromoError('')
+    try {
+      const { data, error } = await supabase
+        .from('promo_codes')
+        .select('*')
+        .eq('code', promoCode.toUpperCase().trim())
+        .eq('is_active', true)
+        .single()
+
+      if (error || !data) {
+        setPromoError('Code promo invalide ou expiré.')
+        setDiscountPercent(0)
+        setPromoApplied(false)
+        return
+      }
+
+      setDiscountPercent(data.discount_percent)
+      setPromoApplied(true)
+      toast.success(`Code appliqué ! Réduction de ${data.discount_percent}%`)
+    } catch (err) {
+      setPromoError('Code promo incorrect.')
+    }
+  }
 
   if (isLoading) {
     return (
@@ -43,18 +75,21 @@ function CourseDetailPage() {
     return <div className="p-6 max-w-6xl mx-auto"><EmptyState icon={<BookOpen className="h-8 w-8" />} title="Formation introuvable" description="Cette formation n'existe pas ou n'est plus disponible." /></div>
   }
 
+  const discountMultiplier = (100 - discountPercent) / 100
+  const finalPrice = Math.round((course.price || 0) * discountMultiplier)
+
   const handleEnroll = async () => {
     if (!isAuthenticated || !user) return
 
-    // Free course: Direct enrollment
-    if (!course.price || course.price <= 0) {
+    // Free course or 100% discount
+    if (finalPrice <= 0) {
       enrollMutation.mutate(course.id, { onSuccess: () => setEnrolled(true) })
       return
     }
 
     // Paid course: Launch Flutterwave payment popup
     try {
-      const priceInXof = Math.round(((course.price || 0) / 100) * 655.957)
+      const priceInXof = Math.round((finalPrice / 100) * 655.957)
       await makePayment({
         amount: priceInXof * 100, // will be divided by 100 in the hook to pass main unit to Flutterwave
         currency: 'XOF',
@@ -117,14 +152,58 @@ function CourseDetailPage() {
           <Card className="sticky top-20">
             <CardContent className="p-6 space-y-6">
               <div className="text-center space-y-1">
-                <p className="text-3xl font-bold text-primary">{((Number(course.price) || 0) / 100).toLocaleString('fr-FR')} €</p>
-                {Number(course.price) > 0 && (
+                <p className="text-3xl font-bold text-primary">
+                  {discountPercent > 0 ? (
+                    <div className="flex flex-col items-center">
+                      <span className="text-xs line-through text-muted-foreground">
+                        {((Number(course.price) || 0) / 100).toLocaleString('fr-FR')} €
+                      </span>
+                      <span className="text-primary font-bold">
+                        {((finalPrice || 0) / 100).toLocaleString('fr-FR')} €
+                      </span>
+                    </div>
+                  ) : (
+                    `${((Number(course.price) || 0) / 100).toLocaleString('fr-FR')} €`
+                  )}
+                </p>
+                {finalPrice > 0 && (
                   <p className="text-sm font-semibold text-muted-foreground">
-                    ~ {Math.round(((Number(course.price) || 0) / 100) * 655.957).toLocaleString('fr-FR')} F CFA
+                    ~ {Math.round((finalPrice / 100) * 655.957).toLocaleString('fr-FR')} F CFA
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground">Accès à vie</p>
               </div>
+
+              {/* Promo Code Input */}
+              {!enrolled && !isUserEnrolled && isAuthenticated && (
+                <div className="space-y-2 pt-2 border-t border-border/50">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Code promo"
+                      value={promoCode}
+                      onChange={e => setPromoCode(e.target.value)}
+                      disabled={promoApplied}
+                      className="h-9 text-xs uppercase"
+                    />
+                    <Button 
+                      type="button" 
+                      onClick={handleApplyPromoCode}
+                      disabled={promoApplied}
+                      size="sm" 
+                      className="h-9 px-3 text-xs"
+                    >
+                      {promoApplied ? 'Appliqué' : 'Valider'}
+                    </Button>
+                  </div>
+                  {promoError && <p className="text-[10px] text-red-500">{promoError}</p>}
+                  {promoApplied && (
+                    <p className="text-[10px] text-emerald-500 font-medium">
+                      Remise de {discountPercent}% activée !
+                    </p>
+                  )}
+                </div>
+              )}
+
               {enrolled || isUserEnrolled ? (
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 justify-center p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400">
@@ -140,7 +219,7 @@ function CourseDetailPage() {
                 <Button className="w-full" size="lg" onClick={handleEnroll} disabled={enrollMutation.isPending}>
                   {enrollMutation.isPending 
                     ? 'Inscription...' 
-                    : (!course.price || course.price <= 0) 
+                    : (finalPrice <= 0) 
                       ? "S'inscrire à cette formation" 
                       : "Acheter cette formation"}
                 </Button>

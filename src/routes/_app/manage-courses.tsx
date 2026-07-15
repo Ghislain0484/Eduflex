@@ -412,12 +412,24 @@ function ChaptersManagerSection({ course, onBack }: { course: any; onBack: () =>
   const [videoUrl, setVideoUrl] = useState('')
   const [sortOrder, setSortOrder] = useState('0')
 
+  // Quiz Editor states
+  const [isQuiz, setIsQuiz] = useState(false)
+  const [questions, setQuestions] = useState<any[]>([])
+  const [tempQuestion, setTempQuestion] = useState('')
+  const [tempOpt1, setTempOpt1] = useState('')
+  const [tempOpt2, setTempOpt2] = useState('')
+  const [tempOpt3, setTempOpt3] = useState('')
+  const [tempOpt4, setTempOpt4] = useState('')
+  const [tempCorrectIdx, setTempCorrectIdx] = useState('0')
+
   const openAddForm = () => {
     setEditingChapterId(null)
     setTitle('')
     setContent('')
     setVideoUrl('')
     setSortOrder(String((chapters?.length || 0) + 1))
+    setIsQuiz(false)
+    setQuestions([])
     setFormOpen(true)
   }
 
@@ -427,18 +439,50 @@ function ChaptersManagerSection({ course, onBack }: { course: any; onBack: () =>
     setContent(chapter.content || '')
     setVideoUrl(chapter.videoUrl || '')
     setSortOrder(String(chapter.sortOrder || 0))
+    const hasQuiz = Array.isArray(chapter.quizData) && chapter.quizData.length > 0
+    setIsQuiz(hasQuiz)
+    setQuestions(hasQuiz ? chapter.quizData : [])
     setFormOpen(true)
+  }
+
+  const addQuestion = () => {
+    if (!tempQuestion.trim() || !tempOpt1.trim() || !tempOpt2.trim() || !tempOpt3.trim() || !tempOpt4.trim()) {
+      toast.error('Veuillez renseigner la question et ses 4 options.')
+      return
+    }
+    const newQ = {
+      question: tempQuestion.trim(),
+      options: [tempOpt1.trim(), tempOpt2.trim(), tempOpt3.trim(), tempOpt4.trim()],
+      correctOptionIndex: parseInt(tempCorrectIdx),
+    }
+    setQuestions([...questions, newQ])
+    setTempQuestion('')
+    setTempOpt1('')
+    setTempOpt2('')
+    setTempOpt3('')
+    setTempOpt4('')
+    setTempCorrectIdx('0')
+  }
+
+  const removeQuestion = (index: number) => {
+    setQuestions(questions.filter((_, i) => i !== index))
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
+    if (isQuiz && questions.length === 0) {
+      toast.error('Un chapitre de type Quiz doit contenir au moins une question.')
+      return
+    }
+
     const payload = {
       courseId: course.id,
       title,
-      content: content || null,
-      videoUrl: videoUrl || null,
+      content: isQuiz ? null : (content || null),
+      videoUrl: isQuiz ? null : (videoUrl || null),
       sortOrder: parseInt(sortOrder) || 0,
+      quizData: isQuiz ? questions : null,
     }
 
     if (editingChapterId == null) {
@@ -513,26 +557,115 @@ function ChaptersManagerSection({ course, onBack }: { course: any; onBack: () =>
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">URL de la vidéo (MP4, YouTube, Vimeo)</label>
-                <Input
-                  type="url"
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
-                  placeholder="https://www.w3schools.com/html/mov_bbb.mp4"
+              <div className="flex items-center gap-2 py-2">
+                <input
+                  type="checkbox"
+                  id="isQuiz"
+                  checked={isQuiz}
+                  onChange={e => setIsQuiz(e.target.checked)}
+                  className="rounded border-input text-primary focus:ring-primary h-4.5 w-4.5 animate-none"
                 />
+                <label htmlFor="isQuiz" className="text-sm font-medium cursor-pointer select-none">
+                  Ce chapitre est un Quiz interactif
+                </label>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Contenu textuel (Texte / Markdown)</label>
-                <textarea
-                  rows={6}
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  placeholder="Rédigez le texte du cours ici..."
-                />
-              </div>
+              {!isQuiz ? (
+                <>
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium">URL de la vidéo (MP4, YouTube, Vimeo)</label>
+                    <Input
+                      type="url"
+                      value={videoUrl}
+                      onChange={(e) => setVideoUrl(e.target.value)}
+                      placeholder="https://www.w3schools.com/html/mov_bbb.mp4"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium">Contenu textuel (Texte / Markdown)</label>
+                    <textarea
+                      rows={6}
+                      value={content}
+                      onChange={(e) => setContent(e.target.value)}
+                      className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      placeholder="Rédigez le texte du cours ici..."
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="border border-border/80 rounded-xl p-4 bg-muted/20 space-y-4">
+                  <h4 className="font-semibold text-sm">Gestion des questions du Quiz ({questions.length} question(s))</h4>
+
+                  {questions.length > 0 && (
+                    <div className="space-y-2.5">
+                      {questions.map((q, i) => (
+                        <div key={i} className="flex items-start justify-between p-3 rounded-lg border border-border bg-card text-xs">
+                          <div className="space-y-1">
+                            <p className="font-semibold">{i + 1}. {q.question}</p>
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-muted-foreground mt-1">
+                              {q.options.map((opt: string, idx: number) => (
+                                <span key={idx} className={idx === q.correctOptionIndex ? "text-emerald-600 font-medium" : ""}>
+                                  • {opt} {idx === q.correctOptionIndex ? "(Correct)" : ""}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-destructive h-7 px-2 hover:bg-destructive/10 shrink-0"
+                            onClick={() => removeQuestion(i)}
+                          >
+                            Supprimer
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="border-t border-border/50 pt-4 space-y-3">
+                    <h5 className="text-xs font-semibold text-muted-foreground">Ajouter une question</h5>
+                    <div className="space-y-2">
+                      <Input
+                        placeholder="Intitulé de la question (ex: Quel outil est utilisé pour...)"
+                        value={tempQuestion}
+                        onChange={e => setTempQuestion(e.target.value)}
+                        className="text-xs"
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input placeholder="Option 1" value={tempOpt1} onChange={e => setTempOpt1(e.target.value)} className="text-xs" />
+                        <Input placeholder="Option 2" value={tempOpt2} onChange={e => setTempOpt2(e.target.value)} className="text-xs" />
+                        <Input placeholder="Option 3" value={tempOpt3} onChange={e => setTempOpt3(e.target.value)} className="text-xs" />
+                        <Input placeholder="Option 4" value={tempOpt4} onChange={e => setTempOpt4(e.target.value)} className="text-xs" />
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <label className="text-xs font-medium text-muted-foreground shrink-0">Bonne réponse :</label>
+                        <select
+                          value={tempCorrectIdx}
+                          onChange={e => setTempCorrectIdx(e.target.value)}
+                          className="rounded-md border border-input bg-background px-3 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          <option value="0">Option 1</option>
+                          <option value="1">Option 2</option>
+                          <option value="2">Option 3</option>
+                          <option value="3">Option 4</option>
+                        </select>
+                        <Button
+                          type="button"
+                          onClick={addQuestion}
+                          variant="secondary"
+                          size="sm"
+                          className="ml-auto text-xs"
+                        >
+                          Ajouter la question
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Ordre d'affichage</label>
@@ -590,8 +723,10 @@ function ChaptersManagerSection({ course, onBack }: { course: any; onBack: () =>
                 <div>
                   <h4 className="text-sm font-medium">{chapter.title}</h4>
                   <p className="text-[10px] text-muted-foreground mt-0.5">
-                    {chapter.videoUrl ? 'Vidéo intégrée' : 'Texte uniquement'} · Ordre :{' '}
-                    {chapter.sortOrder}
+                    {Array.isArray(chapter.quizData) && chapter.quizData.length > 0 
+                      ? `Quiz (${chapter.quizData.length} question(s))` 
+                      : (chapter.videoUrl ? 'Vidéo intégrée' : 'Texte uniquement')
+                    } · Ordre : {chapter.sortOrder}
                   </p>
                 </div>
               </div>
