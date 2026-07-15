@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Button, Card, CardContent, Skeleton } from '@blinkdotnew/ui'
+import { Button, Card, CardContent, Skeleton, Badge } from '@blinkdotnew/ui'
 import { useAuth } from '@/hooks/useAuth'
 import { useCourses } from '@/hooks/useCourses'
 import { useState } from 'react'

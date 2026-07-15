@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Card,
   CardContent,
@@ -10,10 +10,16 @@ import {
   Badge,
   Skeleton,
   EmptyState,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
 } from '@blinkdotnew/ui'
 import { toast } from '@blinkdotnew/ui'
 import { useUserCourses, useManageCourses } from '@/hooks/useCourses'
 import { useChapters, useManageChapters } from '@/hooks/useChapters'
+import { useAuth } from '@/hooks/useAuth'
+import { supabase } from '@/lib/supabase'
 import {
   Plus,
   BookOpen,
@@ -22,8 +28,11 @@ import {
   ListPlus,
   ArrowLeft,
   Loader2,
-  Eye,
   Settings,
+  Percent,
+  CheckCircle,
+  Clock,
+  DollarSign,
 } from 'lucide-react'
 
 export const Route = createFileRoute('/_app/manage-courses')({
@@ -40,9 +49,17 @@ const LEVELS = [
 function ManageCoursesPage() {
   const { data: courses, isLoading } = useUserCourses()
   const { createCourse, updateCourse, deleteCourse } = useManageCourses()
+  const { user } = useAuth()
 
   const [view, setView] = useState<'list' | 'create' | 'edit' | 'chapters'>('list')
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null)
+  
+  // Tab controller for list view
+  const [activeTab, setActiveTab] = useState<'courses' | 'commissions'>('courses')
+
+  // Affiliate management states
+  const [allReferrals, setAllReferrals] = useState<any[]>([])
+  const [referralsLoading, setReferralsLoading] = useState(false)
 
   // Form states
   const [title, setTitle] = useState('')
@@ -53,6 +70,68 @@ function ManageCoursesPage() {
   const [durationHours, setDurationHours] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [status, setStatus] = useState('publie')
+
+  const fetchAllReferrals = async () => {
+    if (!user) return
+    setReferralsLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('affiliate_referrals')
+        .select(`
+          id,
+          referrer_id,
+          referred_email,
+          course_id,
+          commission_amount,
+          status,
+          created_at,
+          courses (
+            title,
+            user_id
+          ),
+          profiles:referrer_id (
+            display_name,
+            email
+          )
+        `)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      // Filter referrals to show only those belonging to the current teacher's courses
+      // (Admins see all)
+      const instructorReferrals = (data || []).filter((ref: any) => {
+        return ref.courses?.user_id === user.id || user.role === 'admin'
+      })
+
+      setAllReferrals(instructorReferrals)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setReferralsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (view === 'list' && activeTab === 'commissions') {
+      fetchAllReferrals()
+    }
+  }, [view, activeTab, user])
+
+  const handleMarkAsPaid = async (referralId: number) => {
+    try {
+      const { error } = await supabase
+        .from('affiliate_referrals')
+        .update({ status: 'paye' })
+        .eq('id', referralId)
+
+      if (error) throw error
+      toast.success('Commission marquée comme payée !')
+      fetchAllReferrals()
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de la modification.')
+    }
+  }
 
   const openCreateForm = () => {
     setTitle('')
@@ -155,100 +234,224 @@ function ManageCoursesPage() {
         <>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">Mes Formations</h1>
+              <h1 className="text-2xl font-bold tracking-tight">Gestion Formateur</h1>
               <p className="text-muted-foreground text-sm mt-1">
-                Gérez vos cours, planifiez vos modules et éditez vos contenus.
+                Gérez vos cours, planifiez vos modules et validez les commissions d'affiliation.
               </p>
             </div>
-            <Button onClick={openCreateForm} className="gap-2">
-              <Plus className="h-4 w-4" /> Nouvelle formation
-            </Button>
+            {activeTab === 'courses' && (
+              <Button onClick={openCreateForm} className="gap-2">
+                <Plus className="h-4 w-4" /> Nouvelle formation
+              </Button>
+            )}
           </div>
 
-          {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="border border-border rounded-xl overflow-hidden">
-                  <Skeleton className="h-40 w-full" />
-                  <div className="p-5 space-y-3">
-                    <Skeleton className="h-5 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : !courses || courses.length === 0 ? (
-            <EmptyState
-              icon={<BookOpen className="h-8 w-8" />}
-              title="Aucune formation"
-              description="Vous n'avez pas encore créé de formation. Cliquez sur le bouton ci-dessus pour commencer."
-            />
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {courses.map((course) => (
-                <Card key={course.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                  <div className="h-40 bg-gradient-to-br from-primary/10 to-accent/10 relative overflow-hidden">
-                    {course.imageUrl ? (
-                      <img
-                        src={course.imageUrl}
-                        alt={course.title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-full">
-                        <BookOpen className="h-10 w-10 text-primary/30" />
-                      </div>
-                    )}
-                    <Badge className="absolute top-3 left-3" variant="secondary">
-                      {course.category}
-                    </Badge>
-                    <Badge
-                      className="absolute top-3 right-3"
-                      variant={course.status === 'publie' ? 'default' : 'outline'}
-                    >
-                      {course.status === 'publie' ? 'Publiée' : 'Brouillon'}
-                    </Badge>
-                  </div>
-                  <CardContent className="p-5 space-y-4">
-                    <div>
-                      <h3 className="font-semibold text-base truncate">{course.title}</h3>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {((course.price || 0) / 100).toLocaleString('fr-FR')} € ·{' '}
-                        {course.durationHours}h
-                      </p>
-                    </div>
+          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
+            <TabsList>
+              <TabsTrigger value="courses" className="gap-2">
+                <BookOpen className="h-4 w-4" /> Mes Formations
+              </TabsTrigger>
+              <TabsTrigger value="commissions" className="gap-2">
+                <Percent className="h-4 w-4" /> Affiliation & Commissions
+              </TabsTrigger>
+            </TabsList>
 
-                    <div className="flex items-center gap-2 pt-2 border-t border-border">
-                      <Button
-                        onClick={() => openEditForm(course)}
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 gap-1.5"
-                      >
-                        <Edit2 className="h-3.5 w-3.5" /> Modifier
-                      </Button>
-                      <Button
-                        onClick={() => openChaptersManager(course.id)}
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 gap-1.5"
-                      >
-                        <ListPlus className="h-3.5 w-3.5" /> Chapitres
-                      </Button>
-                      <Button
-                        onClick={() => handleDelete(course.id)}
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+            <TabsContent value="courses" className="space-y-6 mt-6">
+              {isLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="border border-border rounded-xl overflow-hidden">
+                      <Skeleton className="h-40 w-full" />
+                      <div className="p-5 space-y-3">
+                        <Skeleton className="h-5 w-3/4" />
+                        <Skeleton className="h-4 w-1/2" />
+                      </div>
                     </div>
+                  ))}
+                </div>
+              ) : !courses || courses.length === 0 ? (
+                <EmptyState
+                  icon={<BookOpen className="h-8 w-8" />}
+                  title="Aucune formation"
+                  description="Vous n'avez pas encore créé de formation. Cliquez sur le bouton ci-dessus pour commencer."
+                  action={
+                    <Button onClick={openCreateForm} className="gap-2">
+                      <Plus className="h-4 w-4" /> Créer ma première formation
+                    </Button>
+                  }
+                />
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {courses.map((course) => (
+                    <Card key={course.id} className="overflow-hidden border border-border/80">
+                      <div className="h-40 bg-gradient-to-br from-primary/10 to-accent/10 relative overflow-hidden">
+                        {course.imageUrl ? (
+                          <img
+                            src={course.imageUrl}
+                            alt={course.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-muted-foreground/30">
+                            <BookOpen className="h-10 w-10" />
+                          </div>
+                        )}
+                        <div className="absolute top-3 right-3 flex gap-1.5">
+                          <Badge variant={course.status === 'publie' ? 'default' : 'secondary'}>
+                            {course.status === 'publie' ? 'Publié' : 'Brouillon'}
+                          </Badge>
+                        </div>
+                      </div>
+                      <CardContent className="p-5 space-y-4">
+                        <div>
+                          <h3 className="font-semibold text-base truncate">{course.title}</h3>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {((course.price || 0) / 100).toLocaleString('fr-FR')} € ·{' '}
+                            {course.durationHours}h
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-2 border-t border-border">
+                          <Button
+                            onClick={() => openEditForm(course)}
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 gap-1.5"
+                          >
+                            <Edit2 className="h-3.5 w-3.5" /> Modifier
+                          </Button>
+                          <Button
+                            onClick={() => openChaptersManager(course.id)}
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 gap-1.5"
+                          >
+                            <ListPlus className="h-3.5 w-3.5" /> Chapitres
+                          </Button>
+                          <Button
+                            onClick={() => handleDelete(course.id)}
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="commissions" className="space-y-6 mt-6">
+              {/* Stats overview */}
+              <div className="grid gap-4 md:grid-cols-2">
+                <Card className="bg-amber-500/5 border-amber-500/20">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-medium text-amber-800 dark:text-amber-400">Commissions en attente de paiement</p>
+                      <Clock className="h-4.5 w-4.5 text-amber-600" />
+                    </div>
+                    <p className="text-2xl font-bold text-amber-900 dark:text-amber-300 mt-2.5">
+                      {(allReferrals.filter(r => r.status === 'en_attente').reduce((sum, r) => sum + (r.commission_amount || 0), 0) / 100).toLocaleString('fr-FR')} €
+                    </p>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
-          )}
+
+                <Card className="bg-emerald-500/5 border-emerald-500/20">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-medium text-emerald-800 dark:text-emerald-400">Commissions payées</p>
+                      <CheckCircle className="h-4.5 w-4.5 text-emerald-600" />
+                    </div>
+                    <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-300 mt-2.5">
+                      {(allReferrals.filter(r => r.status === 'paye').reduce((sum, r) => sum + (r.commission_amount || 0), 0) / 100).toLocaleString('fr-FR')} €
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Table */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base font-semibold">Historique des ventes par parrainage</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {referralsLoading ? (
+                    <div className="space-y-2">
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  ) : allReferrals.length === 0 ? (
+                    <p className="text-xs text-muted-foreground italic text-center py-6">
+                      Aucune vente par affiliation n'a encore été enregistrée pour vos cours.
+                    </p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse text-left text-xs">
+                        <thead>
+                          <tr className="border-b border-border/60 text-muted-foreground uppercase font-semibold text-[10px]">
+                            <th className="py-3 px-4">Date</th>
+                            <th className="py-3 px-4">Formation</th>
+                            <th className="py-3 px-4">Parrain (Referrer)</th>
+                            <th className="py-3 px-4">Filleul</th>
+                            <th className="py-3 px-4">Commission (15%)</th>
+                            <th className="py-3 px-4">Statut</th>
+                            <th className="py-3 px-4">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {allReferrals.map((ref) => {
+                            const date = new Date(ref.created_at).toLocaleDateString('fr-FR', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric'
+                            })
+                            const amountEur = (ref.commission_amount || 0) / 100
+                            const amountXof = Math.round(amountEur * 655.957)
+                            const parrainName = ref.profiles?.display_name || ref.profiles?.email?.split('@')[0] || 'Inconnu'
+                            return (
+                              <tr key={ref.id} className="border-b border-border/30 hover:bg-muted/10 transition-colors">
+                                <td className="py-3.5 px-4 text-muted-foreground">{date}</td>
+                                <td className="py-3.5 px-4 font-medium text-foreground truncate max-w-xs">{ref.courses?.title}</td>
+                                <td className="py-3.5 px-4">
+                                  <span className="font-medium text-foreground">{parrainName}</span>
+                                  <span className="text-[10px] text-muted-foreground block">{ref.profiles?.email}</span>
+                                </td>
+                                <td className="py-3.5 px-4 text-muted-foreground">{ref.referred_email}</td>
+                                <td className="py-3.5 px-4 font-semibold text-primary">
+                                  {amountEur.toLocaleString('fr-FR')} €
+                                  <span className="text-[10px] text-muted-foreground block">~ {amountXof.toLocaleString('fr-FR')} FCFA</span>
+                                </td>
+                                <td className="py-3.5 px-4">
+                                  <Badge variant={ref.status === 'paye' ? 'default' : 'secondary'}>
+                                    {ref.status === 'paye' ? 'Payé' : 'En attente'}
+                                  </Badge>
+                                </td>
+                                <td className="py-3.5 px-4">
+                                  {ref.status === 'en_attente' && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-8 text-[10px]"
+                                      onClick={() => handleMarkAsPaid(ref.id)}
+                                    >
+                                      Valider le paiement
+                                    </Button>
+                                  )}
+                                </td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </>
       ) : (
         /* Create/Edit Form */
