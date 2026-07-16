@@ -59,6 +59,13 @@ export function useChapters(courseId: number | undefined) {
   return useQuery({
     queryKey: ['chapters', 'course', courseId],
     queryFn: async () => {
+      if (typeof window === 'undefined') {
+        const mockList = MOCK_CHAPTERS_MAP[Number(courseId)] || MOCK_CHAPTERS_MAP[1]
+        return mockList.map(ch => ({
+          ...ch,
+          createdAt: new Date().toISOString()
+        }))
+      }
       try {
         const { data, error } = await supabase
           .from('chapters')

@@ -32,7 +32,7 @@ export const Route = createFileRoute('/_app/study/$id')({
 })
 
 function StudyRoomPage() {
-  const { id } = useParams({ from: '/study.$id' } as any)
+  const { id } = useParams({ strict: false })
   const { data: course, isLoading: courseLoading } = useCourse(Number(id))
   const { data: chapters, isLoading: chaptersLoading } = useChapters(Number(id))
   const { data: completedIds } = useCompletedChapters(Number(id))

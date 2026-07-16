@@ -140,6 +140,9 @@ export function useCourses() {
   return useQuery({
     queryKey: ['courses', 'published'],
     queryFn: async () => {
+      if (typeof window === 'undefined') {
+        return DEFAULT_MOCK_COURSES
+      }
       try {
         const { data, error } = await supabase
           .from('courses')
@@ -167,6 +170,10 @@ export function useCourse(id: number | undefined) {
   return useQuery({
     queryKey: ['courses', id],
     queryFn: async () => {
+      if (typeof window === 'undefined') {
+        const found = DEFAULT_MOCK_COURSES.find(c => c.id === Number(id))
+        return found || null
+      }
       try {
         const { data, error } = await supabase
           .from('courses')

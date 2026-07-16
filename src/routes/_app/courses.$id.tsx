@@ -16,7 +16,7 @@ export const Route = createFileRoute('/_app/courses/$id')({
 const LEVEL_MAP: Record<string, string> = { debutant: 'Débutant', intermediaire: 'Intermédiaire', avance: 'Avancé' }
 
 function CourseDetailPage() {
-  const { id } = useParams({ from: '/courses/$id' } as any)
+  const { id } = useParams({ strict: false })
   const { data: course, isLoading, error } = useCourse(Number(id))
   const { data: chapters } = useChapters(Number(id))
   const { data: enrollments } = useEnrollments()
