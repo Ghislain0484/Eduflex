@@ -18,6 +18,7 @@ import {
   useToggleChapterCompletion,
 } from '@/hooks/useChapters'
 import { supabase } from '@/lib/supabase'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft,
   CheckCircle,
@@ -43,6 +44,27 @@ function StudyRoomPage() {
 
   const [activeChapterId, setActiveChapterId] = useState<number | null>(null)
   const [isDarkMode, setIsDarkMode] = useState(false)
+
+  // Success confetti animation states
+  const [showSuccessParticles, setShowSuccessParticles] = useState(false)
+  const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; color: string; size: number }>>([])
+
+  const triggerParticles = () => {
+    const colors = ['#0d9488', '#38bdf8', '#fbbf24', '#f43f5e', '#a855f7', '#10b981']
+    const newParticles = Array.from({ length: 30 }).map((_, i) => ({
+      id: Math.random() + i,
+      x: (Math.random() - 0.5) * 450,
+      y: (Math.random() - 0.5) * 350 - 80,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      size: Math.random() * 8 + 6,
+    }))
+    setParticles(newParticles)
+    setShowSuccessParticles(true)
+    setTimeout(() => {
+      setShowSuccessParticles(false)
+      setParticles([])
+    }, 2200)
+  }
 
   // Quiz states
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
@@ -156,9 +178,13 @@ function StudyRoomPage() {
 
   const handleToggleComplete = () => {
     if (!activeChapter) return
+    const nextCompleted = !activeChapterIsCompleted
+    if (nextCompleted) {
+      triggerParticles()
+    }
     toggleMutation.mutate({
       chapterId: activeChapter.id,
-      isCompleted: !activeChapterIsCompleted,
+      isCompleted: nextCompleted,
     })
   }
 
@@ -187,6 +213,7 @@ function StudyRoomPage() {
 
     if (passed) {
       toast.success(`Félicitations ! Quiz réussi avec un score de ${score}%`)
+      triggerParticles()
       // Mark chapter completed in database
       if (!activeChapterIsCompleted) {
         toggleMutation.mutate({
@@ -755,6 +782,36 @@ function StudyRoomPage() {
           </div>
         )}
       </main>
+
+      {/* Success Confetti overlay */}
+      <AnimatePresence>
+        {showSuccessParticles && (
+          <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-50 overflow-hidden">
+            {particles.map((p) => (
+              <motion.div
+                key={p.id}
+                initial={{ opacity: 1, scale: 0, x: 0, y: 0 }}
+                animate={{
+                  opacity: [1, 1, 0],
+                  scale: [0, 1.4, 0.5],
+                  x: p.x,
+                  y: p.y,
+                  rotate: Math.random() * 360,
+                }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 2, ease: 'easeOut' }}
+                style={{
+                  position: 'absolute',
+                  width: p.size,
+                  height: p.size,
+                  borderRadius: Math.random() > 0.5 ? '50%' : '20%',
+                  backgroundColor: p.color,
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
