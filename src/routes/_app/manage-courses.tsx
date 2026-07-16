@@ -353,6 +353,9 @@ function ManageCoursesPage() {
         onSuccess: () => {
           toast.success('Formation supprimée.')
         },
+        onError: (err: any) => {
+          toast.error('Erreur lors de la suppression de la formation : ' + err.message)
+        }
       })
     }
   }
@@ -1098,6 +1101,9 @@ function ChaptersManagerSection({ course, onBack }: { course: any; onBack: () =>
         onSuccess: () => {
           toast.success('Chapitre supprimé.')
         },
+        onError: (err: any) => {
+          toast.error('Erreur lors de la suppression du chapitre : ' + err.message)
+        }
       })
     }
   }

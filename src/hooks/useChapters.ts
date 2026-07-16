@@ -83,19 +83,18 @@ export function useChapters(courseId: number | undefined) {
           .order('sort_order', { ascending: true })
 
         if (error) throw error
-        if (data && data.length > 0) {
-          return data.map(mapChapter)
-        }
+        // If data is successfully fetched (even if empty, i.e. 0 chapters), return it.
+        // Do NOT fall back to mock chapters if the query succeeded!
+        return (data || []).map(mapChapter)
       } catch (err) {
         console.warn('Backend chapters error, using mock fallback data:', err)
+        // Only use mock fallback if there's a real network/query error
+        const mockList = MOCK_CHAPTERS_MAP[Number(courseId)] || MOCK_CHAPTERS_MAP[1]
+        return mockList.map(ch => ({
+          ...ch,
+          createdAt: new Date().toISOString()
+        }))
       }
-
-      // Fallback lookup
-      const mockList = MOCK_CHAPTERS_MAP[Number(courseId)] || MOCK_CHAPTERS_MAP[1]
-      return mockList.map(ch => ({
-        ...ch,
-        createdAt: new Date().toISOString()
-      }))
     },
     enabled: courseId != null,
   })
