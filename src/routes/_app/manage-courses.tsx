@@ -941,6 +941,11 @@ function ChaptersManagerSection({ course, onBack }: { course: any; onBack: () =>
   const [tempOpt4, setTempOpt4] = useState('')
   const [tempCorrectIdx, setTempCorrectIdx] = useState('0')
 
+  // B2B livestream states
+  const [chapterType, setChapterType] = useState<'standard' | 'quiz' | 'live'>('standard')
+  const [scheduledAt, setScheduledAt] = useState('')
+  const [liveUrl, setLiveUrl] = useState('')
+
   const openAddForm = () => {
     setEditingChapterId(null)
     setTitle('')
@@ -949,6 +954,9 @@ function ChaptersManagerSection({ course, onBack }: { course: any; onBack: () =>
     setSortOrder(String((chapters?.length || 0) + 1))
     setIsQuiz(false)
     setQuestions([])
+    setChapterType('standard')
+    setScheduledAt('')
+    setLiveUrl('')
     setFormOpen(true)
   }
 
@@ -961,6 +969,9 @@ function ChaptersManagerSection({ course, onBack }: { course: any; onBack: () =>
     const hasQuiz = Array.isArray(chapter.quizData) && chapter.quizData.length > 0
     setIsQuiz(hasQuiz)
     setQuestions(hasQuiz ? chapter.quizData : [])
+    setChapterType(chapter.chapterType || (hasQuiz ? 'quiz' : 'standard'))
+    setScheduledAt(chapter.scheduledAt ? chapter.scheduledAt.substring(0, 16) : '')
+    setLiveUrl(chapter.liveUrl || '')
     setFormOpen(true)
   }
 
@@ -990,18 +1001,26 @@ function ChaptersManagerSection({ course, onBack }: { course: any; onBack: () =>
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (isQuiz && questions.length === 0) {
+    if (chapterType === 'quiz' && questions.length === 0) {
       toast.error('Un chapitre de type Quiz doit contenir au moins une question.')
+      return
+    }
+
+    if (chapterType === 'live' && !scheduledAt) {
+      toast.error('Une date et heure planifiée est obligatoire pour une classe en direct.')
       return
     }
 
     const payload = {
       courseId: course.id,
       title,
-      content: isQuiz ? null : (content || null),
-      videoUrl: isQuiz ? null : (videoUrl || null),
+      content: chapterType === 'quiz' ? null : (content || null),
+      videoUrl: chapterType === 'standard' ? (videoUrl || null) : null,
       sortOrder: parseInt(sortOrder) || 0,
-      quizData: isQuiz ? questions : null,
+      quizData: chapterType === 'quiz' ? questions : null,
+      chapterType,
+      scheduledAt: chapterType === 'live' ? (scheduledAt ? new Date(scheduledAt).toISOString() : null) : null,
+      liveUrl: chapterType === 'live' ? (liveUrl || null) : null,
     }
 
     if (editingChapterId == null) {
@@ -1076,20 +1095,38 @@ function ChaptersManagerSection({ course, onBack }: { course: any; onBack: () =>
                 />
               </div>
 
-              <div className="flex items-center gap-2 py-2">
-                <input
-                  type="checkbox"
-                  id="isQuiz"
-                  checked={isQuiz}
-                  onChange={e => setIsQuiz(e.target.checked)}
-                  className="rounded border-input text-primary focus:ring-primary h-4.5 w-4.5 animate-none"
-                />
-                <label htmlFor="isQuiz" className="text-sm font-medium cursor-pointer select-none">
-                  Ce chapitre est un Quiz interactif
-                </label>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Format du chapitre</label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {[
+                    { type: 'standard', label: '📖 Standard (Vidéo / Texte)', desc: 'Contenu pédagogique classique.' },
+                    { type: 'quiz', label: '❓ Quiz interactif', desc: 'Évaluation des connaissances.' },
+                    { type: 'live', label: '🔴 Classe en Direct (Live)', desc: 'Visioconférence Jitsi intégrée.' }
+                  ].map(opt => {
+                    const active = chapterType === opt.type
+                    return (
+                      <button
+                        key={opt.type}
+                        type="button"
+                        onClick={() => {
+                          setChapterType(opt.type as any)
+                          setIsQuiz(opt.type === 'quiz')
+                        }}
+                        className={`p-3.5 rounded-xl border text-left transition-all ${
+                          active
+                            ? 'border-primary bg-primary/5 text-primary font-medium'
+                            : 'border-border hover:bg-muted/50 text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        <span className="block text-xs font-bold text-foreground">{opt.label}</span>
+                        <span className="block text-[10px] text-muted-foreground mt-0.5">{opt.desc}</span>
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
 
-              {!isQuiz ? (
+              {chapterType === 'standard' && (
                 <>
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium">URL de la vidéo (MP4, YouTube, Vimeo)</label>
@@ -1112,7 +1149,44 @@ function ChaptersManagerSection({ course, onBack }: { course: any; onBack: () =>
                     />
                   </div>
                 </>
-              ) : (
+              )}
+
+              {chapterType === 'live' && (
+                <>
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium">Date & Heure de début planifiée *</label>
+                    <Input
+                      type="datetime-local"
+                      required
+                      value={scheduledAt}
+                      onChange={(e) => setScheduledAt(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium">Lien externe alternatif (Optionnel)</label>
+                    <Input
+                      type="url"
+                      value={liveUrl}
+                      onChange={(e) => setLiveUrl(e.target.value)}
+                      placeholder="https://zoom.us/j/... (Si vide, Jitsi est intégré par défaut)"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium">Notes & Objectifs de la session</label>
+                    <textarea
+                      rows={4}
+                      value={content}
+                      onChange={(e) => setContent(e.target.value)}
+                      className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      placeholder="Ex: Dans cette session en direct, nous aborderons..."
+                    />
+                  </div>
+                </>
+              )}
+
+              {chapterType === 'quiz' && (
                 <div className="border border-border/80 rounded-xl p-4 bg-muted/20 space-y-4">
                   <h4 className="font-semibold text-sm">Gestion des questions du Quiz ({questions.length} question(s))</h4>
 
@@ -1242,9 +1316,11 @@ function ChaptersManagerSection({ course, onBack }: { course: any; onBack: () =>
                 <div>
                   <h4 className="text-sm font-medium">{chapter.title}</h4>
                   <p className="text-[10px] text-muted-foreground mt-0.5">
-                    {Array.isArray(chapter.quizData) && chapter.quizData.length > 0 
-                      ? `Quiz (${chapter.quizData.length} question(s))` 
-                      : (chapter.videoUrl ? 'Vidéo intégrée' : 'Texte uniquement')
+                    {chapter.chapterType === 'live'
+                      ? '🔴 Classe en Direct (Visioconférence)'
+                      : (chapter.chapterType === 'quiz' || (Array.isArray(chapter.quizData) && chapter.quizData.length > 0))
+                      ? `❓ Quiz (${chapter.quizData?.length || 0} question(s))`
+                      : (chapter.videoUrl ? '📖 Vidéo intégrée' : '📖 Texte uniquement')
                     } · Ordre : {chapter.sortOrder}
                   </p>
                 </div>

@@ -391,4 +391,15 @@ create policy "Allow admins to update payout requests"
     select 1 from public.profiles where id = auth.uid() and role = 'admin'
   ));
 
+-- 11. B2B SCHOOL & ACADEMY EXTENSIONS
+-- Alter chapters table to add types and livestream scheduled targets
+alter table public.chapters add column if not exists chapter_type text default 'standard' check (chapter_type in ('standard', 'quiz', 'live'));
+alter table public.chapters add column if not exists scheduled_at timestamp with time zone default null;
+alter table public.chapters add column if not exists live_url text default null;
+
+-- Alter profiles table to add school customization attributes
+alter table public.profiles add column if not exists academy_name text default null;
+alter table public.profiles add column if not exists academy_slogan text default null;
+alter table public.profiles add column if not exists academy_color text default '#6366f1';
+
 

@@ -88,7 +88,20 @@ function SettingsPage() {
 
 function ProfilTab({ user }: { user: any }) {
   const [name, setName] = useState(user?.displayName || '')
+  const [academyName, setAcademyName] = useState(user?.academyName || '')
+  const [academySlogan, setAcademySlogan] = useState(user?.academySlogan || '')
+  const [academyColor, setAcademyColor] = useState(user?.academyColor || '#6366f1')
   const [saving, setSaving] = useState(false)
+
+  // Pre-fill when user changes
+  useEffect(() => {
+    if (user) {
+      setName(user.displayName || '')
+      setAcademyName(user.academyName || '')
+      setAcademySlogan(user.academySlogan || '')
+      setAcademyColor(user.academyColor || '#6366f1')
+    }
+  }, [user])
 
   const ROLE_MAP: Record<string, string> = {
     student: 'Élève',
@@ -110,11 +123,16 @@ function ProfilTab({ user }: { user: any }) {
       // 2. Update profiles table in DB
       const { error: dbError } = await supabase
         .from('profiles')
-        .update({ display_name: name.trim() })
+        .update({ 
+          display_name: name.trim(),
+          academy_name: academyName.trim() || null,
+          academy_slogan: academySlogan.trim() || null,
+          academy_color: academyColor || '#6366f1'
+        })
         .eq('id', user.id)
       if (dbError) throw dbError
 
-      toast.success('Profil mis à jour avec succès !')
+      toast.success('Profil mis à jour avec succès ! Réactualisez la page pour appliquer les personnalisations.')
     } catch (err: any) {
       toast.error(err.message || 'Erreur lors de la sauvegarde.')
     } finally {
@@ -140,7 +158,55 @@ function ProfilTab({ user }: { user: any }) {
           <label className="text-sm font-medium">Rôle sur la plateforme</label>
           <Input value={userRole} disabled className="opacity-60 font-semibold" />
         </div>
-        <Button onClick={handleSave} disabled={saving}>
+
+        {(user?.role === 'teacher' || user?.role === 'admin') && (
+          <div className="border-t border-border/80 pt-6 mt-6 space-y-6">
+            <div>
+              <h3 className="text-sm font-bold text-foreground">Personnalisation de l'Académie (White-Label)</h3>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                Configurez l'image de marque de votre école ou académie en ligne.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-xs font-medium">Nom de l'Académie</label>
+                <Input 
+                  value={academyName} 
+                  onChange={e => setAcademyName(e.target.value)} 
+                  placeholder="Ex: Académie du Numérique" 
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-medium">Slogan / Message de bienvenue</label>
+                <Input 
+                  value={academySlogan} 
+                  onChange={e => setAcademySlogan(e.target.value)} 
+                  placeholder="Ex: Formez-vous aux métiers du futur avec nos experts." 
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2.5">
+              <label className="text-xs font-medium">Couleur d'accentuation de la marque</label>
+              <div className="flex items-center gap-3">
+                <input 
+                  type="color" 
+                  value={academyColor} 
+                  onChange={e => setAcademyColor(e.target.value)} 
+                  className="w-10 h-10 rounded-md border border-input cursor-pointer bg-transparent"
+                />
+                <div>
+                  <span className="text-xs font-medium text-foreground block">{academyColor}</span>
+                  <span className="text-[9px] text-muted-foreground">Cette couleur sera appliquée comme couleur de marque pour vos étudiants.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <Button onClick={handleSave} disabled={saving} className="mt-4">
           {saving ? 'Sauvegarde...' : 'Sauvegarder'}
         </Button>
       </CardContent>

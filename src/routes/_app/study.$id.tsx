@@ -7,6 +7,8 @@ import {
   Skeleton,
   EmptyState,
   toast,
+  Badge,
+  Input,
 } from '@blinkdotnew/ui'
 import { useCourse } from '@/hooks/useCourses'
 import { useAuth } from '@/hooks/useAuth'
@@ -409,7 +411,8 @@ function StudyRoomPage() {
             chapterList.map((chapter, index) => {
               const active = activeChapter?.id === chapter.id
               const done = isCompleted(chapter.id)
-              const hasQuiz = Array.isArray(chapter.quizData) && chapter.quizData.length > 0
+              const hasQuiz = chapter.chapterType === 'quiz' || (Array.isArray(chapter.quizData) && chapter.quizData.length > 0)
+              const isLive = chapter.chapterType === 'live'
 
               return (
                 <button
@@ -428,16 +431,25 @@ function StudyRoomPage() {
                       </div>
                     ) : active ? (
                       <PlayCircle className="h-4.5 w-4.5 text-primary" />
+                    ) : isLive ? (
+                      <span className="relative flex h-2 w-2 mt-1.5 mx-1">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                      </span>
                     ) : (
                       <div className="h-4.5 w-4.5 rounded-full border border-muted-foreground/30 flex items-center justify-center text-[10px]">
                         {index + 1}
                       </div>
                     )}
                   </div>
-                  <div className="min-w-0">
-                    <p className={`text-xs leading-snug line-clamp-2 ${active ? 'text-primary' : 'text-foreground'}`}>
-                      {chapter.title} {hasQuiz && " (Quiz)"}
+                  <div className="min-w-0 flex-1">
+                    <p className={`text-xs leading-snug line-clamp-2 ${active ? 'text-primary font-medium' : 'text-foreground'}`}>
+                      {chapter.title}
                     </p>
+                    <div className="flex gap-1.5 mt-1.5 flex-wrap">
+                      {isLive && <Badge className="bg-red-500 hover:bg-red-600 text-[8px] h-3.5 px-1 py-0 text-white border-0">Direct Live</Badge>}
+                      {hasQuiz && <Badge variant="secondary" className="text-[8px] h-3.5 px-1 py-0">Quiz</Badge>}
+                    </div>
                   </div>
                 </button>
               )
@@ -451,7 +463,62 @@ function StudyRoomPage() {
         {activeChapter ? (
           <div className="flex-1 p-6 md:p-10 max-w-4xl w-full mx-auto space-y-8 flex flex-col justify-between">
             <div className="space-y-6">
-              {Array.isArray(activeChapter.quizData) && activeChapter.quizData.length > 0 ? (
+              {activeChapter.chapterType === 'live' ? (
+                <div className="space-y-6">
+                  <div className="flex flex-wrap items-center justify-between gap-3 p-5 rounded-xl border border-primary/20 bg-primary/5 dark:bg-primary/10">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-2.5 w-2.5 relative">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                        </span>
+                        <h2 className="text-base font-bold text-foreground">Classe en Direct Interactive</h2>
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        {activeChapter.scheduledAt ? (
+                          <>Planifié pour le : <span className="font-semibold text-foreground">{new Date(activeChapter.scheduledAt).toLocaleString('fr-FR')}</span></>
+                        ) : (
+                          'Session virtuelle active'
+                        )}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Badge className="bg-red-600 text-white border-0 font-extrabold text-[10px] tracking-wide">DIRECT</Badge>
+                      <Badge variant="outline" className="text-[10px]">Audio, Vidéo & Écran</Badge>
+                    </div>
+                  </div>
+
+                  <div className="w-full aspect-video rounded-xl overflow-hidden border border-border shadow-lg bg-black flex flex-col items-center justify-center relative">
+                    <iframe
+                      src={`https://meet.jit.si/eduflex-${course.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${activeChapter.id}`}
+                      allow="camera; microphone; fullscreen; display-capture; autoplay"
+                      className="w-full h-full border-0 absolute inset-0"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Card className="border-border/80">
+                      <CardContent className="p-5 space-y-2">
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Comment participer ?</h3>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          1. Cliquez sur le bouton d'activation du microphone/caméra dans l'intégration.<br />
+                          2. Indiquez votre prénom pour que l'instructeur puisse vous identifier.<br />
+                          3. Utilisez le chat intégré de Jitsi pour poser des questions par écrit.
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-border/80">
+                      <CardContent className="p-5 space-y-2">
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Notes de session</h3>
+                        <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                          {activeChapter.content || "Aucune note complémentaire pour cette session. Préparez vos notes de cours et vos questions."}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              ) : (activeChapter.chapterType === 'quiz' || (Array.isArray(activeChapter.quizData) && activeChapter.quizData.length > 0)) ? (
                 <Card className="border border-border/80 shadow-md">
                   <CardContent className="p-6 md:p-8 space-y-6">
                     <div className="flex items-center justify-between border-b border-border/50 pb-4">

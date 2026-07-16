@@ -10,6 +10,9 @@ export interface Chapter {
   videoUrl: string | null
   sortOrder: number
   quizData: any[] | null
+  chapterType?: 'standard' | 'quiz' | 'live'
+  scheduledAt?: string | null
+  liveUrl?: string | null
   createdAt: string
 }
 
@@ -21,37 +24,43 @@ const mapChapter = (row: any): Chapter => ({
   videoUrl: row.video_url,
   sortOrder: Number(row.sort_order),
   quizData: row.quiz_data || null,
+  chapterType: row.chapter_type || 'standard',
+  scheduledAt: row.scheduled_at || null,
+  liveUrl: row.live_url || null,
   createdAt: row.created_at,
 })
 
 export const MOCK_CHAPTERS_MAP: Record<number, Omit<Chapter, 'createdAt'>[]> = {
   1: [
-    { id: 101, courseId: 1, title: "Introduction au Marketing Digital", content: "Dans ce chapitre, nous allons définir ce qu'est le marketing digital et présenter les différents canaux d'acquisition.", videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", sortOrder: 1, quizData: null },
-    { id: 102, courseId: 1, title: "Les fondamentaux du référencement naturel (SEO)", content: "Le référencement naturel (SEO) est l'art de positionner son site dans les premiers résultats organiques de Google.", videoUrl: null, sortOrder: 2, quizData: null },
-    { id: 103, courseId: 1, title: "Google Ads & Acquisition payante", content: "Configurez votre première campagne publicitaire payante sur les moteurs de recherche pour acquérir des clients instantanément.", videoUrl: null, sortOrder: 3, quizData: null },
-    { id: 104, courseId: 1, title: "Stratégies d'emailing avancées", content: "Découvrez comment récolter des leads qualifiés et mettre en place des séquences d'email automatisées performantes.", videoUrl: null, sortOrder: 4, quizData: null }
+    { id: 101, courseId: 1, title: "Introduction au Marketing Digital", content: "Dans ce chapitre, nous allons définir ce qu'est le marketing digital et présenter les différents canaux d'acquisition.", videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", sortOrder: 1, quizData: null, chapterType: 'standard' },
+    { id: 102, courseId: 1, title: "Les fondamentaux du référencement naturel (SEO)", content: "Le référencement naturel (SEO) is l'art de positionner son site dans les premiers résultats organiques de Google.", videoUrl: null, sortOrder: 2, quizData: null, chapterType: 'standard' },
+    { id: 103, courseId: 1, title: "Google Ads & Acquisition payante", content: "Configurez votre première campagne publicitaire payante sur les moteurs de recherche pour acquérir des clients instantanément.", videoUrl: null, sortOrder: 3, quizData: null, chapterType: 'standard' },
+    { id: 104, courseId: 1, title: "Stratégies d'emailing avancées", content: "Découvrez comment récolter des leads qualifiés et mettre en place des séquences d'email automatisées performantes.", videoUrl: null, sortOrder: 4, quizData: null, chapterType: 'standard' },
+    { id: 105, courseId: 1, title: "🔴 Classe en Direct : Atelier Pratique & Session Q&A", content: "Session interactive de questions-réponses en direct avec l'enseignant. Préparez vos questions !", videoUrl: null, sortOrder: 5, quizData: null, chapterType: 'live', scheduledAt: new Date(Date.now() + 86400000).toISOString(), liveUrl: 'https://meet.jit.si/eduflex-marketing-direct' }
   ],
   2: [
-    { id: 201, courseId: 2, title: "Fondations de l'entrepreneuriat", content: "Validez votre idée de produit, réalisez votre étude de marché et formulez votre proposition de valeur unique.", videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", sortOrder: 1, quizData: null },
-    { id: 202, courseId: 2, title: "Planification financière et Trésorerie", content: "Apprenez à dresser un bilan prévisionnel, à anticiper votre trésorerie et à calculer votre point mort.", videoUrl: null, sortOrder: 2, quizData: null },
-    { id: 203, courseId: 2, title: "Recrutement et Management d'équipe", content: "Comment attirer les meilleurs profils, gérer la motivation des équipes et piloter la performance collective.", videoUrl: null, sortOrder: 3, quizData: null }
+    { id: 201, courseId: 2, title: "Fondations de l'entrepreneuriat", content: "Validez votre idée de produit, réalisez votre étude de marché et formulez votre proposition de valeur unique.", videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", sortOrder: 1, quizData: null, chapterType: 'standard' },
+    { id: 202, courseId: 2, title: "Planification financière et Trésorerie", content: "Apprenez à dresser un bilan prévisionnel, à anticiper votre trésorerie et à calculer votre point mort.", videoUrl: null, sortOrder: 2, quizData: null, chapterType: 'standard' },
+    { id: 203, courseId: 2, title: "Recrutement et Management d'équipe", content: "Comment attirer les meilleurs profils, gérer la motivation des équipes et piloter la performance collective.", videoUrl: null, sortOrder: 3, quizData: null, chapterType: 'standard' },
+    { id: 204, courseId: 2, title: "🔴 Live Coaching : Analyse de Business Plans", content: "Présentez votre pitch et votre business plan en direct pour une séance de revue par vos pairs et votre tuteur.", videoUrl: null, sortOrder: 4, quizData: null, chapterType: 'live', scheduledAt: new Date(Date.now() + 172800000).toISOString(), liveUrl: 'https://meet.jit.si/eduflex-business-coaching' }
   ],
   3: [
-    { id: 301, courseId: 3, title: "Algorithme Google et Crawlability", content: "Comprendre comment fonctionnent les robots de Google pour indexer efficacement vos pages web.", videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", sortOrder: 1, quizData: null },
-    { id: 302, courseId: 3, title: "Recherche de mots-clés stratégiques", content: "Apprenez à utiliser Semrush, Ubersuggest et Ahrefs pour trouver des opportunités à fort volume.", videoUrl: null, sortOrder: 2, quizData: null },
-    { id: 303, courseId: 3, title: "Stratégie de Netlinking et Autorité", content: "Développez la popularité de votre nom de domaine en obtenant des backlinks thématisés de haute qualité.", videoUrl: null, sortOrder: 3, quizData: null }
+    { id: 301, courseId: 3, title: "Algorithme Google et Crawlability", content: "Comprendre comment fonctionnent les robots de Google pour indexer efficacement vos pages web.", videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", sortOrder: 1, quizData: null, chapterType: 'standard' },
+    { id: 302, courseId: 3, title: "Recherche de mots-clés stratégiques", content: "Apprenez à utiliser Semrush, Ubersuggest et Ahrefs pour trouver des opportunités à fort volume.", videoUrl: null, sortOrder: 2, quizData: null, chapterType: 'standard' },
+    { id: 303, courseId: 3, title: "Stratégie de Netlinking et Autorité", content: "Développez la popularité de votre nom de domaine en obtenant des backlinks thématisés de haute qualité.", videoUrl: null, sortOrder: 3, quizData: null, chapterType: 'standard' },
+    { id: 304, courseId: 3, title: "🔴 Live : Audit SEO en Direct de vos Sites", content: "Audit SEO de vos sites web soumis en direct. Nous analysons l'UX, la vitesse de chargement et le contenu.", videoUrl: null, sortOrder: 4, quizData: null, chapterType: 'live', scheduledAt: new Date(Date.now() + 50000).toISOString(), liveUrl: 'https://meet.jit.si/eduflex-seo-audit' }
   ],
   4: [
-    { id: 401, courseId: 4, title: "Formules logiques et conditions complexes", content: "Maîtrisez les fonctions SI, ET, OU, et les imbrications complexes.", videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", sortOrder: 1, quizData: null },
-    { id: 402, courseId: 4, title: "Tableaux Croisés Dynamiques (TCD)", content: "Structurez et analysez des milliers de lignes de données en quelques clics.", videoUrl: null, sortOrder: 2, quizData: null }
+    { id: 401, courseId: 4, title: "Formules logiques et conditions complexes", content: "Maîtrisez les fonctions SI, ET, OU, et les imbrications complexes.", videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", sortOrder: 1, quizData: null, chapterType: 'standard' },
+    { id: 402, courseId: 4, title: "Tableaux Croisés Dynamiques (TCD)", content: "Structurez et analysez des milliers de lignes de données en quelques clics.", videoUrl: null, sortOrder: 2, quizData: null, chapterType: 'standard' }
   ],
   5: [
-    { id: 501, courseId: 5, title: "Découverte de l'écosystème React", content: "Comprendre le DOM virtuel, JSX et la structure d'un projet React moderne.", videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", sortOrder: 1, quizData: null },
-    { id: 502, courseId: 5, title: "State et Props : La gestion des données", content: "Apprenez à faire communiquer vos composants et à gérer les états locaux.", videoUrl: null, sortOrder: 2, quizData: null }
+    { id: 501, courseId: 5, title: "Découverte de l'écosystème React", content: "Comprendre le DOM virtuel, JSX et la structure d'un projet React moderne.", videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", sortOrder: 1, quizData: null, chapterType: 'standard' },
+    { id: 502, courseId: 5, title: "State et Props : La gestion des données", content: "Apprenez à faire communiquer vos composants et à gérer les états locaux.", videoUrl: null, sortOrder: 2, quizData: null, chapterType: 'standard' }
   ],
   6: [
-    { id: 601, courseId: 6, title: "Introduction aux LLM et invites (Prompts)", content: "Optimisez vos requêtes pour obtenir des résultats professionnels de ChatGPT et Claude.", videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", sortOrder: 1, quizData: null },
-    { id: 602, courseId: 6, title: "Automatiser ses workflows avec Make et Zapier", content: "Connectez vos applications pour automatiser vos tâches administratives et marketing.", videoUrl: null, sortOrder: 2, quizData: null }
+    { id: 601, courseId: 6, title: "Introduction aux LLM et invites (Prompts)", content: "Optimisez vos requêtes pour obtenir des résultats professionnels de ChatGPT et Claude.", videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", sortOrder: 1, quizData: null, chapterType: 'standard' },
+    { id: 602, courseId: 6, title: "Automatiser ses workflows avec Make et Zapier", content: "Connectez vos applications pour automatiser vos tâches administratives et marketing.", videoUrl: null, sortOrder: 2, quizData: null, chapterType: 'standard' }
   ]
 }
 
@@ -159,6 +168,9 @@ export function useManageChapters(courseId: number) {
           video_url: chapter.videoUrl,
           sort_order: chapter.sortOrder,
           quiz_data: chapter.quizData || null,
+          chapter_type: chapter.chapterType || 'standard',
+          scheduled_at: chapter.scheduledAt || null,
+          live_url: chapter.liveUrl || null,
         }])
         .select()
         .single()
@@ -181,6 +193,9 @@ export function useManageChapters(courseId: number) {
           video_url: chapter.videoUrl,
           sort_order: chapter.sortOrder,
           quiz_data: chapter.quizData,
+          chapter_type: chapter.chapterType,
+          scheduled_at: chapter.scheduledAt,
+          live_url: chapter.liveUrl,
         })
         .eq('id', chapter.id)
         .select()

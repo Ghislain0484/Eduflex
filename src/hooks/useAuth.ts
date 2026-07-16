@@ -6,6 +6,9 @@ export interface AppUser {
   email?: string
   displayName?: string
   role?: 'student' | 'teacher' | 'admin'
+  academyName?: string | null
+  academySlogan?: string | null
+  academyColor?: string | null
 }
 
 export function useAuth() {
@@ -22,7 +25,7 @@ export function useAuth() {
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('role, display_name')
+        .select('role, display_name, academy_name, academy_slogan, academy_color')
         .eq('id', sessionUser.id)
         .maybeSingle()
 
@@ -33,6 +36,9 @@ export function useAuth() {
         email: sessionUser.email,
         displayName: profile?.display_name || sessionUser.user_metadata?.display_name || sessionUser.user_metadata?.full_name || sessionUser.email?.split('@')[0] || 'Utilisateur',
         role: profile?.role || 'student',
+        academyName: profile?.academy_name || null,
+        academySlogan: profile?.academy_slogan || null,
+        academyColor: profile?.academy_color || '#6366f1',
       })
     } catch (e) {
       console.error('Error fetching profile:', e)
@@ -42,6 +48,9 @@ export function useAuth() {
         email: sessionUser.email,
         displayName: sessionUser.user_metadata?.display_name || sessionUser.user_metadata?.full_name || sessionUser.email?.split('@')[0] || 'Utilisateur',
         role: 'student',
+        academyName: null,
+        academySlogan: null,
+        academyColor: '#6366f1',
       })
     } finally {
       setIsLoading(false)

@@ -42,8 +42,22 @@ export function SharedAppLayout({
   sidebar = <AppSidebarShell />,
   children,
 }: SharedAppLayoutProps) {
-  const value = React.useMemo(() => ({ appName }), [appName])
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
+  const displayedAppName = user?.academyName || appName
+  const value = React.useMemo(() => ({ appName: displayedAppName }), [displayedAppName])
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && user?.academyColor) {
+      document.documentElement.style.setProperty('--primary', user.academyColor)
+      const hex = user.academyColor.replace('#', '')
+      if (hex.length === 6) {
+        const r = parseInt(hex.substring(0, 2), 16)
+        const g = parseInt(hex.substring(2, 4), 16)
+        const b = parseInt(hex.substring(4, 6), 16)
+        document.documentElement.style.setProperty('--primary-rgb', `${r}, ${g}, ${b}`)
+      }
+    }
+  }, [user?.academyColor])
 
   if (!isAuthenticated) {
     return (
@@ -56,13 +70,13 @@ export function SharedAppLayout({
                 <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center">
                   <Sparkles className="h-5 w-5 text-primary-foreground" />
                 </div>
-                <span className="font-bold text-lg tracking-tight">EduFlex</span>
+                <span className="font-bold text-lg tracking-tight">{displayedAppName}</span>
               </Link>
               <div className="flex items-center gap-3">
                 <Button asChild variant="ghost" size="sm">
                   <Link to="/login">Se connecter</Link>
                 </Button>
-                <Button asChild size="sm" className="bg-primary hover:bg-primary/95">
+                <Button asChild size="sm" className="bg-primary hover:bg-primary/95 text-primary-foreground">
                   <Link to="/register">S'inscrire gratuitement</Link>
                 </Button>
               </div>
@@ -79,7 +93,7 @@ export function SharedAppLayout({
   return (
     <SharedLayoutContext.Provider value={value}>
       <div className="flex min-h-dvh w-full flex-1 flex-col">
-        <Shell appName={appName} sidebar={sidebar}>
+        <Shell appName={displayedAppName} sidebar={sidebar}>
           {children}
         </Shell>
       </div>
