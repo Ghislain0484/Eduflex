@@ -135,9 +135,9 @@ function LandingPage() {
               Fonctionnalités & Tarifs
             </a>
 
-            <a href="#eduflex-plus" className="text-[13px] font-semibold text-slate-300 hover:text-teal-400 transition-colors py-2">
+            <Link to="/eduflex-plus" className="text-[13px] font-semibold text-slate-300 hover:text-teal-400 transition-colors py-2">
               EduFlex+ Entreprises
-            </a>
+            </Link>
           </div>
 
           {/* Right: Auth Buttons */}

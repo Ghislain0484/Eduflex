@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as EduflexPlusRouteImport } from './routes/eduflex-plus'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppStatistiquesRouteImport } from './routes/_app/statistiques'
@@ -33,6 +34,11 @@ const RegisterRoute = RegisterRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EduflexPlusRoute = EduflexPlusRouteImport.update({
+  id: '/eduflex-plus',
+  path: '/eduflex-plus',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRoute = AppRouteImport.update({
@@ -102,6 +108,7 @@ const AppCoursesIdRoute = AppCoursesIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/eduflex-plus': typeof EduflexPlusRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/academies': typeof AppAcademiesRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/eduflex-plus': typeof EduflexPlusRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/academies': typeof AppAcademiesRoute
@@ -136,6 +144,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
+  '/eduflex-plus': typeof EduflexPlusRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/_app/academies': typeof AppAcademiesRoute
@@ -154,6 +163,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/eduflex-plus'
     | '/login'
     | '/register'
     | '/academies'
@@ -170,6 +180,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/eduflex-plus'
     | '/login'
     | '/register'
     | '/academies'
@@ -187,6 +198,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_app'
+    | '/eduflex-plus'
     | '/login'
     | '/register'
     | '/_app/academies'
@@ -205,6 +217,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
+  EduflexPlusRoute: typeof EduflexPlusRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
 }
@@ -223,6 +236,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/eduflex-plus': {
+      id: '/eduflex-plus'
+      path: '/eduflex-plus'
+      fullPath: '/eduflex-plus'
+      preLoaderRoute: typeof EduflexPlusRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app': {
@@ -362,6 +382,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
+  EduflexPlusRoute: EduflexPlusRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
 }

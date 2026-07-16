@@ -28,6 +28,8 @@ import {
 } from 'recharts'
 import { useDashboardStats, useRecentEnrollments } from '@/hooks/useStats'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/hooks/useAuth'
+import { Sparkles } from 'lucide-react'
 
 export const Route = createFileRoute('/_app/dashboard')({
   component: DashboardPage,
@@ -83,8 +85,42 @@ function KpiCard({ title, value, trend, trendLabel, icon }: {
 }
 
 function DashboardPage() {
+  const { user } = useAuth()
   const { data: stats, isLoading: statsLoading } = useDashboardStats()
   const { data: recentEnrollments, isLoading: enrollmentsLoading } = useRecentEnrollments()
+
+  if (user?.academyName && !user.approved) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-6 bg-background min-h-[85vh]">
+        <div className="max-w-md w-full text-center space-y-6 animate-fade-in border border-border bg-card p-8 rounded-2xl shadow-xl">
+          <div className="mx-auto h-16 w-16 bg-primary/10 text-primary flex items-center justify-center rounded-2xl">
+            <Sparkles className="h-8 w-8 animate-pulse" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-xl font-bold tracking-tight">Félicitations, votre inscription a été prise en compte !</h1>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Votre demande de création d'académie en ligne pour <strong className="text-foreground">{user.academyName}</strong> est actuellement en cours de validation par notre équipe d'administrateurs.
+            </p>
+          </div>
+          <Card className="border border-border/80 bg-accent/40 text-left">
+            <CardContent className="pt-6 space-y-3 text-xs leading-relaxed text-muted-foreground">
+              <p className="font-semibold text-foreground flex items-center gap-1.5 text-sm">
+                📌 Prochaines étapes :
+              </p>
+              <ul className="list-disc pl-4 space-y-2">
+                <li>Validation de vos informations par l'administrateur de la plateforme (sous 24h).</li>
+                <li>Activation de vos fonctionnalités d'enseignement et de personnalisation en marque blanche.</li>
+                <li>Notification automatique par e-mail dès que votre espace sera opérationnel.</li>
+              </ul>
+            </CardContent>
+          </Card>
+          <div className="text-[11px] text-muted-foreground">
+            Besoin d'aide ? Contactez notre support technique à <a href="mailto:support@eduflex.com" className="text-primary hover:underline font-semibold">support@eduflex.com</a>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const barChartData = stats?.categoryRevenue && stats.categoryRevenue.length > 0
     ? stats.categoryRevenue
