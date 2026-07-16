@@ -347,6 +347,98 @@ function LandingPage() {
           </div>
         </section>
 
+        {/* EduFlex+ B2B Digitalisation Projects Showcase */}
+        <section id="eduflex-plus" className="max-w-7xl mx-auto px-6 py-24 border-t border-border/40 space-y-16">
+          <div className="text-center space-y-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/20 bg-teal-500/5 px-4 py-1.5 text-xs font-semibold text-teal-400">
+              🚀 EduFlex+ Solutions Entreprises
+            </div>
+            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">
+              Quel est votre projet de digitalisation ?
+            </h2>
+            <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
+              Des processus d'amélioration continue au développement des compétences de vos équipes... EduFlex+ répond à vos besoins !
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                icon: '💻',
+                title: 'Académie clients',
+                desc: 'Accompagnez vos clients dans l\'utilisation de vos produits et services via une académie en accès libre ou payant selon votre modèle.'
+              },
+              {
+                icon: '📱',
+                title: 'Formation salariés',
+                desc: 'Renforcez l\'engagement de vos équipes locales avec la formation continue sur tous les sujets et y compris sur mobile.'
+              },
+              {
+                icon: '⚡',
+                title: 'Parcours réglementaire & RSE',
+                desc: 'Actualisez les compétences : sensibilisez vos apprenants aux enjeux réglementaires et de développement durable.'
+              },
+              {
+                icon: '👥',
+                title: 'Onboarding (intégration)',
+                desc: 'Optimisez l\'intégration de vos nouveaux collaborateurs en construisant une expérience RH moderne et engageante.'
+              },
+              {
+                icon: '🤝',
+                title: 'Formation des partenaires',
+                desc: 'Systématisez la transmission de savoir-faire avec votre réseau de distributeurs, franchisés et partenaires régionaux.'
+              },
+              {
+                icon: '🏫',
+                title: 'Écoles & Lycées Supérieurs',
+                desc: 'Gérez vos apprenants et donnez accès à vos contenus académiques (cours, quiz, classes lives) tout au long de leur parcours.'
+              }
+            ].map((p, i) => (
+              <Card key={i} className="bg-card/40 border-border/60 hover:border-teal-900/35 transition-all p-6 space-y-4">
+                <div className="text-3xl">{p.icon}</div>
+                <h3 className="text-base font-bold text-foreground">{p.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{p.desc}</p>
+              </Card>
+            ))}
+          </div>
+
+          {/* Pourquoi choisir EduFlex+ Sub-section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center bg-teal-950/10 border border-teal-900/20 rounded-2xl p-8 md:p-12">
+            <div className="space-y-6">
+              <h3 className="text-2xl md:text-3xl font-bold tracking-tight">Pourquoi choisir EduFlex+ ?</h3>
+              <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
+                Nous ne limitons pas votre réussite : toutes nos offres incluent des apprenants et des contenus en illimité !
+              </p>
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <div className="h-8 w-8 rounded-full bg-teal-500/10 text-teal-400 flex items-center justify-center shrink-0">✨</div>
+                  <div>
+                    <h4 className="text-sm font-bold text-foreground">Prise en main ultra-rapide</h4>
+                    <p className="text-xs text-muted-foreground mt-0.5">Notre outil auteur intuitif vous permet de structurer vos cursus et vos classes virtuelles en quelques heures.</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="h-8 w-8 rounded-full bg-teal-500/10 text-teal-400 flex items-center justify-center shrink-0">👑</div>
+                  <div>
+                    <h4 className="text-sm font-bold text-foreground">Expérience premium White-Label</h4>
+                    <p className="text-xs text-muted-foreground mt-0.5">Injectez vos propres couleurs et votre logo. Vos apprenants étudient dans un espace entièrement personnalisé à votre effigie.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="relative rounded-xl overflow-hidden border border-teal-900/30 aspect-video shadow-2xl">
+              <div className="absolute inset-0 bg-gradient-to-tr from-teal-950/80 to-transparent z-10" />
+              <div className="absolute inset-0 flex flex-col justify-end p-6 z-20 space-y-2">
+                <p className="text-lg font-bold text-white">L'écosystème de formation leader</p>
+                <p className="text-xs text-teal-300">Intégration Mobile Money native et visioconférences sécurisées.</p>
+              </div>
+              <div className="w-full h-full bg-[#051c1c] flex items-center justify-center">
+                <span className="text-6xl">🌍</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Testimonials Section */}
         <section className="max-w-7xl mx-auto px-6 py-20 border-t border-border/40">
           <div className="text-center mb-14 space-y-2">

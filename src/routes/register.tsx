@@ -23,6 +23,11 @@ function RegisterPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  // EduFlex+ White Label customization options on signup
+  const [isAcademy, setIsAcademy] = useState(false)
+  const [academyName, setAcademyName] = useState('')
+  const [academySlogan, setAcademySlogan] = useState('')
+
   if (!isLoading && isAuthenticated) {
     navigate({ to: '/dashboard' })
     return null
@@ -43,7 +48,7 @@ function RegisterPage() {
     if (password.length < 8) { setError('Le mot de passe doit contenir au moins 8 caractères.'); return }
     setLoading(true)
     try {
-      const { error: authError } = await supabase.auth.signUp({
+      const { data: signUpData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -54,6 +59,23 @@ function RegisterPage() {
         },
       })
       if (authError) throw authError
+
+      // If registered as a White-Label Academy (EduFlex+ option), pre-configure profile settings
+      if (signUpData?.user && isAcademy) {
+        // Wait briefly for Supabase database trigger to insert profile row
+        await new Promise(resolve => setTimeout(resolve, 800))
+        
+        await supabase
+          .from('profiles')
+          .update({
+            academy_name: academyName || `${prenom} ${nom} Académie`,
+            academy_slogan: academySlogan || 'Votre excellence en ligne',
+            academy_color: '#0d9488', // Default custom color: Teal
+            role: 'teacher',          // Grant instructor permissions
+          })
+          .eq('id', signUpData.user.id)
+      }
+
       navigate({ to: '/dashboard' })
     } catch (err: any) {
       setError(err?.message || 'Une erreur est survenue lors de l\'inscription.')
@@ -90,6 +112,42 @@ function RegisterPage() {
                 </button>
               </div>
             </div>
+            <div className="space-y-4 pt-2 border-t border-border/40">
+              <label className="flex items-center gap-2.5 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={isAcademy} 
+                  onChange={e => setIsAcademy(e.target.checked)} 
+                  className="h-4 w-4 rounded border-border accent-teal-600" 
+                />
+                <span className="text-xs font-semibold text-teal-600">
+                  Créer une Académie en marque blanche (Offre EduFlex+)
+                </span>
+              </label>
+
+              {isAcademy && (
+                <div className="space-y-3 p-3 bg-teal-950/20 border border-teal-900/40 rounded-xl animate-fade-in">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-teal-700 uppercase tracking-wider">Nom de votre Académie</label>
+                    <Input 
+                      value={academyName} 
+                      onChange={e => setAcademyName(e.target.value)} 
+                      placeholder="Ex: HEC Abidjan, Académie Digitale..." 
+                      required={isAcademy}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-teal-700 uppercase tracking-wider">Slogan de l'académie</label>
+                    <Input 
+                      value={academySlogan} 
+                      onChange={e => setAcademySlogan(e.target.value)} 
+                      placeholder="Ex: Votre avenir commence ici" 
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="space-y-3">
               <label className="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" checked={acceptCGV} onChange={e => setAcceptCGV(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-border accent-primary" />
