@@ -112,6 +112,219 @@ function ProfilTab({ user }: { user: any }) {
   }
   const userRole = ROLE_MAP[user?.role || 'student'] || 'Élève'
 
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      toast.error('Veuillez sélectionner un fichier image (PNG ou JPEG).')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string
+      setAcademyLogo(base64)
+      toast.success('Logo chargé localement avec succès ! Cliquez sur "Sauvegarder" pour appliquer.')
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const previewCertificate = () => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 1600
+    canvas.height = 1130
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    // 1. Fond beige/crème premium
+    ctx.fillStyle = '#fdfbf7'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+    // 2. Bordure double dorée/thème
+    ctx.strokeStyle = academyColor || '#ca8a04'
+    ctx.lineWidth = 15
+    ctx.strokeRect(30, 30, canvas.width - 60, canvas.height - 60)
+
+    // Bordure intérieure fine
+    ctx.strokeStyle = '#c5a880'
+    ctx.lineWidth = 2
+    ctx.strokeRect(55, 55, canvas.width - 110, canvas.height - 110)
+
+    // Coins décoratifs
+    ctx.fillStyle = '#c5a880'
+    ctx.fillRect(50, 50, 40, 4)
+    ctx.fillRect(50, 50, 4, 40)
+    ctx.fillRect(canvas.width - 90, 50, 40, 4)
+    ctx.fillRect(canvas.width - 54, 50, 4, 40)
+    ctx.fillRect(50, canvas.height - 54, 40, 4)
+    ctx.fillRect(50, canvas.height - 90, 4, 40)
+    ctx.fillRect(canvas.width - 90, canvas.height - 54, 40, 4)
+    ctx.fillRect(canvas.width - 54, canvas.height - 90, 4, 40)
+
+    // 3. Titre du Certificat
+    ctx.textAlign = 'center'
+    ctx.fillStyle = '#1e293b'
+    ctx.font = '600 24px Arial, sans-serif'
+    ctx.fillText((academyName || 'MON ACADEMIE').toUpperCase().split('').join(' '), canvas.width / 2, 180)
+
+    ctx.font = 'italic 62px Georgia, serif'
+    ctx.fillStyle = academyColor || '#ca8a04'
+    ctx.fillText('Certificat de Réussite', canvas.width / 2, 290)
+
+    ctx.font = 'italic 16px Arial, sans-serif'
+    ctx.fillStyle = '#64748b'
+    ctx.fillText(academySlogan || 'L\'excellence par la formation en ligne', canvas.width / 2, 335)
+
+    ctx.font = '22px Arial, sans-serif'
+    ctx.fillStyle = '#64748b'
+    ctx.fillText('Ce diplôme officiel est fièrement décerné à', canvas.width / 2, 420)
+
+    ctx.font = 'bold italic 68px Georgia, serif'
+    ctx.fillStyle = '#0f172a'
+    ctx.fillText('Jean Dupont (Exemple)', canvas.width / 2, 530)
+
+    ctx.strokeStyle = '#cbd5e1'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.moveTo(canvas.width / 2 - 250, 560)
+    ctx.lineTo(canvas.width / 2 + 250, 560)
+    ctx.stroke()
+
+    ctx.font = '22px Arial, sans-serif'
+    ctx.fillStyle = '#64748b'
+    ctx.fillText('pour avoir complété avec succès la formation en ligne', canvas.width / 2, 630)
+
+    ctx.font = 'bold 46px Georgia, serif'
+    ctx.fillStyle = '#1e293b'
+    ctx.fillText('Exemple de Formation Branded', canvas.width / 2, 720)
+
+    const today = new Date().toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    })
+    ctx.font = 'italic 20px Arial, sans-serif'
+    ctx.fillStyle = '#64748b'
+    ctx.fillText(`Délivré le ${today}`, canvas.width / 2, 810)
+
+    // Signature (droite)
+    const sigX = canvas.width / 2 + 280
+    const sigY = 930
+    ctx.strokeStyle = '#94a3b8'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.moveTo(sigX - 120, sigY + 20)
+    ctx.lineTo(sigX + 120, sigY + 20)
+    ctx.stroke()
+
+    ctx.font = '16px Arial, sans-serif'
+    ctx.fillStyle = '#64748b'
+    ctx.fillText(`La Direction ${academyName || 'Mon Académie'}`, sigX, sigY + 45)
+
+    ctx.font = 'italic 34px Georgia, serif'
+    ctx.fillStyle = '#1e3a8a'
+    ctx.fillText(academyName || 'Mon Académie', sigX, sigY - 5)
+
+    try {
+      const dataUrl = canvas.toDataURL('image/png')
+      const link = document.createElement('a')
+      link.download = `Apercu_Certificat_${(academyName || 'Academie').replace(/[^a-zA-Z0-9]/g, '_')}.png`
+      link.href = dataUrl
+      link.click()
+      toast.success('Aperçu du certificat généré et téléchargé !')
+    } catch (err) {
+      toast.error('Erreur de génération.')
+    }
+  }
+
+  const previewReceipt = () => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 1200
+    canvas.height = 1000
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+    ctx.fillStyle = academyColor || '#0d9488'
+    ctx.fillRect(0, 0, canvas.width, 180)
+
+    ctx.fillStyle = '#ffffff'
+    ctx.font = 'bold 36px Arial, sans-serif'
+    ctx.fillText(academyName || 'Mon Académie', 80, 105)
+
+    ctx.textAlign = 'right'
+    ctx.font = '28px Arial, sans-serif'
+    ctx.fillText('REÇU DE PAIEMENT', canvas.width - 80, 105)
+
+    ctx.textAlign = 'left'
+    ctx.fillStyle = '#1e293b'
+    ctx.font = 'bold 20px Arial, sans-serif'
+    ctx.fillText('Facturé à :', 80, 260)
+    
+    ctx.font = '16px Arial, sans-serif'
+    ctx.fillStyle = '#64748b'
+    ctx.fillText('Nom: Jean Dupont', 80, 300)
+    ctx.fillText('Email: jean.dupont@gmail.com', 80, 330)
+
+    ctx.textAlign = 'right'
+    ctx.fillStyle = '#1e293b'
+    ctx.font = 'bold 20px Arial, sans-serif'
+    ctx.fillText('Détails du reçu :', canvas.width - 80, 260)
+    
+    ctx.font = '16px Arial, sans-serif'
+    ctx.fillStyle = '#64748b'
+    ctx.fillText('Reçu N°: #REC-884920', canvas.width - 80, 300)
+    ctx.fillText('Date: ' + new Date().toLocaleDateString('fr-FR'), canvas.width - 80, 330)
+    ctx.fillText('Méthode: Mobile Money (Wave/Orange)', canvas.width - 80, 360)
+
+    ctx.fillStyle = '#f8fafc'
+    ctx.fillRect(80, 460, canvas.width - 160, 50)
+    
+    ctx.textAlign = 'left'
+    ctx.fillStyle = '#475569'
+    ctx.font = 'bold 16px Arial, sans-serif'
+    ctx.fillText('Description de la formation', 100, 492)
+    ctx.textAlign = 'right'
+    ctx.fillText('Montant', canvas.width - 100, 492)
+
+    ctx.textAlign = 'left'
+    ctx.fillStyle = '#1e293b'
+    ctx.font = '16px Arial, sans-serif'
+    ctx.fillText('Formation Complète en Intelligence Artificielle', 100, 570)
+    ctx.textAlign = 'right'
+    ctx.fillText('15 000 FCFA', canvas.width - 100, 570)
+
+    ctx.strokeStyle = '#e2e8f0'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.moveTo(80, 635)
+    ctx.lineTo(canvas.width - 80, 635)
+    ctx.stroke()
+
+    ctx.textAlign = 'right'
+    ctx.fillStyle = '#1e293b'
+    ctx.font = 'bold 20px Arial, sans-serif'
+    ctx.fillText('Total Payé : 15 000 FCFA', canvas.width - 80, 700)
+
+    ctx.textAlign = 'center'
+    ctx.fillStyle = '#94a3b8'
+    ctx.font = '14px Arial, sans-serif'
+    ctx.fillText('Merci pour votre confiance. Ce document sert de preuve officielle de paiement.', canvas.width / 2, 850)
+
+    try {
+      const dataUrl = canvas.toDataURL('image/png')
+      const link = document.createElement('a')
+      link.download = `Apercu_Recu_${(academyName || 'Academie').replace(/[^a-zA-Z0-9]/g, '_')}.png`
+      link.href = dataUrl
+      link.click()
+      toast.success('Aperçu du reçu de paiement généré !')
+    } catch (err) {
+      toast.error('Erreur de génération.')
+    }
+  }
+
   const handleSave = async () => {
     if (!name.trim() || !user) return
     setSaving(true)
@@ -193,15 +406,37 @@ function ProfilTab({ user }: { user: any }) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-xs font-medium">URL du Logo de l'Académie</label>
-                <Input 
-                  value={academyLogo} 
-                  onChange={e => setAcademyLogo(e.target.value)} 
-                  placeholder="Ex: https://lien-image.com/mon-logo.png" 
-                />
-                <span className="text-[9px] text-muted-foreground block">
-                  Saisissez l'URL directe de votre image ou logo de marque.
-                </span>
+                <label className="text-xs font-medium">Logo de l'Académie (Format PNG ou JPEG)</label>
+                <div className="flex items-center gap-4">
+                  {academyLogo ? (
+                    <div className="h-16 w-16 rounded-xl border border-border bg-slate-800 overflow-hidden flex items-center justify-center p-1.5 shrink-0">
+                      <img src={academyLogo} alt="Logo Académie" className="w-full h-full object-contain rounded-lg" />
+                    </div>
+                  ) : (
+                    <div className="h-16 w-16 rounded-xl border-2 border-dashed border-border flex items-center justify-center text-muted-foreground shrink-0 bg-slate-900 text-xs font-bold">
+                      Logo
+                    </div>
+                  )}
+                  <div className="space-y-1.5 flex-1">
+                    <input 
+                      type="file" 
+                      accept="image/png, image/jpeg" 
+                      id="logo-upload" 
+                      className="hidden" 
+                      onChange={handleLogoUpload} 
+                    />
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-8 text-xs font-semibold" 
+                      onClick={() => document.getElementById('logo-upload')?.click()}
+                    >
+                      Sélectionner un fichier
+                    </Button>
+                    <p className="text-[9px] text-muted-foreground block mt-0.5">PNG transparent ou JPG carré recommandé.</p>
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -226,23 +461,46 @@ function ProfilTab({ user }: { user: any }) {
               <div>
                 <h4 className="text-xs font-bold text-foreground">Aperçu & Modèles de Documents officiels</h4>
                 <p className="text-[10px] text-muted-foreground mt-0.5">
-                  Ces modèles seront automatiquement générés à l'effigie de votre académie.
+                  Visualisez instantanément vos documents personnalisés aux couleurs et nom de votre académie.
                 </p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 rounded-lg bg-accent/40 border border-border/80 space-y-2">
-                  <span className="text-[10px] bg-teal-500/10 text-teal-400 font-bold px-1.5 py-0.5 rounded border border-teal-500/20">Modèle de Reçu</span>
-                  <h5 className="font-semibold text-xs mt-1 text-white">Reçu de paiement élève</h5>
-                  <p className="text-[9px] text-muted-foreground leading-relaxed">
-                    Génère un reçu PDF officiel affichant le logo <strong>{academyName || 'Votre Académie'}</strong>, sa couleur primaire, et le détail de la transaction Mobile Money.
-                  </p>
+                <div className="p-4 rounded-lg bg-accent/40 border border-border/80 space-y-3 flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <span className="text-[10px] bg-teal-500/10 text-teal-400 font-bold px-1.5 py-0.5 rounded border border-teal-500/20">Modèle de Reçu</span>
+                    <h5 className="font-semibold text-xs mt-1 text-white">Reçu de paiement élève</h5>
+                    <p className="text-[9px] text-muted-foreground leading-relaxed">
+                      Génère un reçu PDF officiel affichant le logo et la couleur primaire de <strong>{academyName || 'Votre Académie'}</strong>.
+                    </p>
+                  </div>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full text-[10px] h-8 font-semibold bg-slate-900 border-slate-800 hover:bg-slate-800"
+                    onClick={previewReceipt}
+                  >
+                    👁️ Télécharger l'aperçu du reçu
+                  </Button>
                 </div>
-                <div className="p-4 rounded-lg bg-accent/40 border border-border/80 space-y-2">
-                  <span className="text-[10px] bg-teal-500/10 text-teal-400 font-bold px-1.5 py-0.5 rounded border border-teal-500/20">Modèle de Diplôme</span>
-                  <h5 className="font-semibold text-xs mt-1 text-white">Certificat de fin de formation</h5>
-                  <p className="text-[9px] text-muted-foreground leading-relaxed">
-                    Délivre un diplôme numérique officiel à l'élève ayant terminé 100% des chapitres, signé par <strong>{academyName || 'Votre Académie'}</strong>.
-                  </p>
+
+                <div className="p-4 rounded-lg bg-accent/40 border border-border/80 space-y-3 flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <span className="text-[10px] bg-teal-500/10 text-teal-400 font-bold px-1.5 py-0.5 rounded border border-teal-500/20">Modèle de Diplôme</span>
+                    <h5 className="font-semibold text-xs mt-1 text-white">Certificat de fin de formation</h5>
+                    <p className="text-[9px] text-muted-foreground leading-relaxed">
+                      Délivre un diplôme numérique officiel signé par <strong>{academyName || 'Votre Académie'}</strong> avec sa couleur de marque.
+                    </p>
+                  </div>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full text-[10px] h-8 font-semibold bg-slate-900 border-slate-800 hover:bg-slate-800"
+                    onClick={previewCertificate}
+                  >
+                    👁️ Télécharger l'aperçu du certificat
+                  </Button>
                 </div>
               </div>
             </div>

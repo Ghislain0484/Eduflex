@@ -1,7 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useTeachersList } from '@/hooks/useStats'
-import { Card, CardContent, Badge, Button, Skeleton, EmptyState } from '@blinkdotnew/ui'
-import { GraduationCap, Mail } from 'lucide-react'
+import { Card, CardContent, Badge, Button, Input, Skeleton, EmptyState } from '@blinkdotnew/ui'
+import { GraduationCap, Mail, Plus } from 'lucide-react'
+import { useState } from 'react'
+import { supabase } from '@/lib/supabase'
+import { toast } from '@blinkdotnew/ui'
 
 export const Route = createFileRoute('/_app/enseignants')({
   component: EnseignantsPage,
@@ -9,6 +12,11 @@ export const Route = createFileRoute('/_app/enseignants')({
 
 function EnseignantsPage() {
   const { data: teachers, isLoading } = useTeachersList()
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [newEmail, setNewEmail] = useState('')
+  const [newName, setNewName] = useState('')
+  const [adding, setAdding] = useState(false)
+
   const teacherList = teachers || []
 
   const getInitials = (name: string) => {
@@ -20,8 +28,93 @@ function EnseignantsPage() {
       .toUpperCase()
   }
 
+  const handleAddTeacher = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newEmail.trim() || !newName.trim()) return
+    setAdding(true)
+    try {
+      const tempId = crypto.randomUUID()
+      const { error } = await supabase
+        .from('profiles')
+        .insert([{
+          id: tempId,
+          email: newEmail.trim().toLowerCase(),
+          display_name: newName.trim(),
+          role: 'teacher',
+          approved: true,
+        }])
+
+      if (error) throw error
+      toast.success("L'enseignant a été ajouté avec succès !")
+      setNewEmail('')
+      setNewName('')
+      setShowAddForm(false)
+      window.location.reload()
+    } catch (err: any) {
+      console.error(err)
+      toast.error("Erreur d'inscription : " + err.message)
+    } finally {
+      setAdding(false)
+    }
+  }
+
   return (
     <div className="flex-1 space-y-6 p-6">
+      {showAddForm && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <Card className="max-w-md w-full border-border/80 bg-slate-900 text-slate-100">
+            <CardContent className="pt-6 space-y-4">
+              <div>
+                <h3 className="font-bold text-lg text-white">Ajouter un enseignant</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Inscrivez un nouveau formateur dans l'académie pour lui donner accès au créateur de cours.
+                </p>
+              </div>
+              <form onSubmit={handleAddTeacher} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-350">Nom Complet *</label>
+                  <Input 
+                    required 
+                    value={newName} 
+                    onChange={e => setNewName(e.target.value)} 
+                    placeholder="Ex: Dr. Martin Luther"
+                    className="h-9 text-xs"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-350">Adresse Email *</label>
+                  <Input 
+                    required 
+                    type="email"
+                    value={newEmail} 
+                    onChange={e => setNewEmail(e.target.value)} 
+                    placeholder="Ex: martin.luther@ecole.com"
+                    className="h-9 text-xs"
+                  />
+                </div>
+                <div className="flex items-center gap-3 pt-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="flex-1 text-xs h-9" 
+                    onClick={() => setShowAddForm(false)}
+                  >
+                    Annuler
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    className="flex-1 text-xs h-9 bg-teal-600 hover:bg-teal-500 text-white font-medium" 
+                    disabled={adding}
+                  >
+                    {adding ? 'Création...' : 'Ajouter'}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Gestion des enseignants</h1>
@@ -29,6 +122,9 @@ function EnseignantsPage() {
             {isLoading ? 'Chargement...' : `${teacherList.length} enseignant(s) actif(s)`}
           </p>
         </div>
+        <Button onClick={() => setShowAddForm(true)} className="gap-2 bg-teal-600 hover:bg-teal-500 text-white font-medium">
+          <Plus className="h-4 w-4" /> Recruter un enseignant
+        </Button>
       </div>
 
       {isLoading ? (
@@ -52,7 +148,12 @@ function EnseignantsPage() {
         <EmptyState
           icon={<GraduationCap className="h-8 w-8" />}
           title="Aucun enseignant"
-          description="Aucun compte utilisateur ne possède le rôle d'enseignant (teacher) pour le moment."
+          description="Aucun compte formateur n'est encore enregistré pour votre académie."
+          action={
+            <Button onClick={() => setShowAddForm(true)} className="gap-2 bg-teal-600 hover:bg-teal-500 text-white font-medium">
+              <Plus className="h-4 w-4" /> Ajouter mon premier formateur
+            </Button>
+          }
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -70,18 +171,18 @@ function EnseignantsPage() {
                       <p className="font-semibold truncate">{name}</p>
                       <p className="text-sm text-muted-foreground">Formateur certifié</p>
                     </div>
-                    <Badge variant="default" className="shrink-0">
+                    <Badge variant="default" className="shrink-0 bg-teal-500/10 text-teal-400 border-teal-500/20">
                       Actif
                     </Badge>
                   </div>
-                  <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1.5 truncate">
-                      <Mail className="h-3.5 w-3.5 shrink-0" />
+                  <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground border-t border-border/40 pt-3">
+                    <span className="flex items-center gap-1.5 truncate text-xs">
+                      <Mail className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                       <span className="truncate">{enseignant.email}</span>
                     </span>
                   </div>
                   <div className="mt-4 flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1" asChild>
+                    <Button variant="outline" size="sm" className="flex-1 h-9 text-xs" asChild>
                       <a href={`mailto:${enseignant.email}`}>Contacter par email</a>
                     </Button>
                   </div>

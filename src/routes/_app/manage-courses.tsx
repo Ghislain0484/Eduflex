@@ -418,6 +418,22 @@ function ManageCoursesPage() {
                 />
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Dashed Add Course Card */}
+                  <button
+                    onClick={openCreateForm}
+                    className="h-full min-h-[250px] border-2 border-dashed border-border/80 rounded-xl hover:border-teal-500/50 hover:bg-teal-500/5 transition-all flex flex-col items-center justify-center gap-3 p-6 text-center group bg-card"
+                  >
+                    <div className="h-12 w-12 rounded-full bg-slate-800 flex items-center justify-center group-hover:bg-teal-500/10 group-hover:text-teal-400 transition-colors">
+                      <Plus className="h-6 w-6 text-muted-foreground group-hover:text-teal-400" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm text-foreground">Ajouter une formation</p>
+                      <p className="text-xs text-muted-foreground mt-1 max-w-[200px] mx-auto">
+                        Créez un nouveau cours et ajoutez vos chapitres et supports.
+                      </p>
+                    </div>
+                  </button>
+
                   {courses.map((course) => (
                     <Card key={course.id} className="overflow-hidden border border-border/80">
                       <div className="h-40 bg-gradient-to-br from-primary/10 to-accent/10 relative overflow-hidden">
