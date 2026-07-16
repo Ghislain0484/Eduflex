@@ -105,6 +105,7 @@ export function useStudentsList() {
         .from('profiles')
         .select('*')
         .eq('role', 'student')
+        .is('academy_name', null)
         .order('created_at', { ascending: false })
 
       if (error) throw error
@@ -210,6 +211,33 @@ export function useAllEnrollments() {
         method: item.courses?.price > 0 ? 'Mobile Money / CB' : 'Gratuit',
         status: 'Payé'
       })) as EnrollmentRecord[]
+    },
+  })
+}
+
+export function useAcademiesList() {
+  return useQuery({
+    queryKey: ['profiles', 'academies'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .not('academy_name', 'is', null)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      return (data || []).map(row => ({
+        id: row.id,
+        email: row.email,
+        displayName: row.display_name,
+        role: row.role,
+        academyName: row.academy_name,
+        academySlogan: row.academy_slogan,
+        academyColor: row.academy_color,
+        approved: row.approved,
+        academyPlan: row.academy_plan || 'Découverte',
+        createdAt: row.created_at,
+      }))
     },
   })
 }

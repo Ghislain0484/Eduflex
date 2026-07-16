@@ -401,5 +401,7 @@ alter table public.chapters add column if not exists live_url text default null;
 alter table public.profiles add column if not exists academy_name text default null;
 alter table public.profiles add column if not exists academy_slogan text default null;
 alter table public.profiles add column if not exists academy_color text default '#6366f1';
+alter table public.profiles add column if not exists approved boolean not null default true;
+alter table public.profiles add column if not exists academy_plan text default 'Découverte';
 
 

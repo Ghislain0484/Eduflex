@@ -71,7 +71,9 @@ function RegisterPage() {
             academy_name: academyName || `${prenom} ${nom} Académie`,
             academy_slogan: academySlogan || 'Votre excellence en ligne',
             academy_color: '#0d9488', // Default custom color: Teal
-            role: 'teacher',          // Grant instructor permissions
+            role: 'student',          // Keep as student until validated by general admin
+            approved: false,          // Awaiting admin validation
+            academy_plan: 'Académie B2B',
           })
           .eq('id', signUpData.user.id)
       }

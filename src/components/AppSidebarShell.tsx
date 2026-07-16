@@ -34,6 +34,7 @@ import {
   BookOpen,
   Sun,
   Moon,
+  Building,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -112,6 +113,9 @@ export function AppSidebarShell() {
     { href: '/dashboard', icon: <LayoutDashboard className="h-4 w-4" />, label: 'Tableau de bord' },
     ...((user?.role === 'teacher' || user?.role === 'admin') ? [
       { href: '/manage-courses', icon: <BookOpen className="h-4 w-4" />, label: 'Gérer les formations' }
+    ] : []),
+    ...(user?.role === 'admin' ? [
+      { href: '/academies', icon: <Building className="h-4 w-4" />, label: 'Académies B2B' }
     ] : []),
     { href: '/eleves', icon: <Users className="h-4 w-4" />, label: 'Élèves' },
     { href: '/enseignants', icon: <GraduationCap className="h-4 w-4" />, label: 'Enseignants' },
