@@ -26,7 +26,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts'
-import { useDashboardStats, useRecentEnrollments } from '@/hooks/useStats'
+import { useDashboardStats, useRecentEnrollments, useAllEnrollments } from '@/hooks/useStats'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { Sparkles } from 'lucide-react'
@@ -35,26 +35,7 @@ export const Route = createFileRoute('/_app/dashboard')({
   component: DashboardPage,
 })
 
-const enrollmentData = [
-  { mois: 'Jan', inscriptions: 45 },
-  { mois: 'Fév', inscriptions: 62 },
-  { mois: 'Mar', inscriptions: 78 },
-  { mois: 'Avr', inscriptions: 95 },
-  { mois: 'Mai', inscriptions: 120 },
-  { mois: 'Jun', inscriptions: 145 },
-  { mois: 'Jul', inscriptions: 168 },
-  { mois: 'Aoû', inscriptions: 182 },
-  { mois: 'Sep', inscriptions: 210 },
-  { mois: 'Oct', inscriptions: 245 },
-  { mois: 'Nov', inscriptions: 278 },
-  { mois: 'Déc', inscriptions: 310 },
-]
-
-const revenueData = [
-  { categorie: 'Marketing', revenus: 8500 },
-  { categorie: 'Business', revenus: 12400 },
-  { categorie: 'Productivité', revenus: 6200 },
-]
+const MONTH_LABELS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
 
 function KpiCard({ title, value, trend, trendLabel, icon }: {
   title: string; value: React.ReactNode; trend: number; trendLabel: string; icon: React.ReactNode
@@ -88,6 +69,24 @@ function DashboardPage() {
   const { user } = useAuth()
   const { data: stats, isLoading: statsLoading } = useDashboardStats()
   const { data: recentEnrollments, isLoading: enrollmentsLoading } = useRecentEnrollments()
+  const { data: allEnrollments } = useAllEnrollments()
+
+  // Build REAL monthly inscriptions from enrollment data
+  const enrollmentData = (() => {
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const counts: Record<number, number> = {}
+    for (let i = 0; i < 12; i++) counts[i] = 0
+    if (allEnrollments) {
+      allEnrollments.forEach(e => {
+        const d = new Date(e.enrolledAt)
+        if (d.getFullYear() === currentYear) {
+          counts[d.getMonth()] = (counts[d.getMonth()] || 0) + 1
+        }
+      })
+    }
+    return MONTH_LABELS.map((mois, i) => ({ mois, inscriptions: counts[i] || 0 }))
+  })()
 
   if (user?.academyName && !user.approved) {
     return (
@@ -151,10 +150,10 @@ function DashboardPage() {
             title="Revenus" 
             value={
               <div className="flex flex-col items-start leading-tight">
-                <span>{((stats?.totalRevenue || 0) / 100).toLocaleString('fr-FR')} €</span>
+                <span>{(stats?.totalRevenue || 0).toLocaleString('fr-FR')} FCFA</span>
                 {stats?.totalRevenue ? (
                   <span className="text-[10px] font-semibold text-muted-foreground mt-0.5">
-                    ~ {Math.round(((stats.totalRevenue || 0) / 100) * 655.957).toLocaleString('fr-FR')} F CFA
+                    ~ {Math.round((stats.totalRevenue || 0) / 655.957).toLocaleString('fr-FR')} €
                   </span>
                 ) : null}
               </div>
@@ -245,11 +244,11 @@ function DashboardPage() {
                   </div>
                   <div className="flex flex-col items-end shrink-0">
                     <Badge variant="secondary" className="text-xs font-semibold">
-                      {((enrollment.coursePrice || 0) / 100).toLocaleString('fr-FR')} €
+                      {(enrollment.coursePrice || 0).toLocaleString('fr-FR')} FCFA
                     </Badge>
                     {enrollment.coursePrice > 0 && (
                       <span className="text-[9px] text-muted-foreground mt-0.5">
-                        ~ {Math.round(((enrollment.coursePrice || 0) / 100) * 655.957).toLocaleString('fr-FR')} F CFA
+                        ~ {Math.round((enrollment.coursePrice || 0) / 655.957).toLocaleString('fr-FR')} €
                       </span>
                     )}
                   </div>

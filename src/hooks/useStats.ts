@@ -75,7 +75,7 @@ export function useDashboardStats() {
 
       const categoryRevenue = Array.from(categoryMap.entries()).map(([categorie, revenus]) => ({
         categorie,
-        revenus: revenus / 100,
+        revenus, // Store raw FCFA — prices are NOT stored as cents
       }))
 
       // Calculate average progress

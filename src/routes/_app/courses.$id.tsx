@@ -42,7 +42,7 @@ function CourseDetailPage() {
   const [promoApplied, setPromoApplied] = useState(false)
   const [promoError, setPromoError] = useState('')
 
-  const isUserEnrolled = enrollments?.some(e => Number(e.courseId) === Number(id))
+  const isUserEnrolled = enrolled || enrollments?.some(e => Number(e.courseId) === Number(id))
 
   const handleApplyPromoCode = async () => {
     if (!promoCode.trim()) return
@@ -91,6 +91,8 @@ function CourseDetailPage() {
 
   const handleEnroll = async () => {
     if (!isAuthenticated || !user) return
+    // Prevent double-clicking: if already enrolled, redirect to study
+    if (isUserEnrolled) return
 
     // Free course or 100% discount
     if (finalPrice <= 0) {
@@ -99,10 +101,10 @@ function CourseDetailPage() {
     }
 
     // Paid course: Launch Flutterwave payment popup
+    // Prices are stored directly in FCFA — NO /100 conversion needed
     try {
-      const priceInXof = Math.round((finalPrice / 100) * 655.957)
       await makePayment({
-        amount: priceInXof * 100, // will be divided by 100 in the hook to pass main unit to Flutterwave
+        amount: finalPrice, // Already in FCFA — Flutterwave will use this directly
         currency: 'XOF',
         courseTitle: course.title,
         userEmail: user.email || '',
@@ -119,7 +121,7 @@ function CourseDetailPage() {
           if (typeof window !== 'undefined') {
             const referrerId = sessionStorage.getItem('affiliate_ref')
             if (referrerId && referrerId !== user.id) {
-              const commission = Math.round(finalPrice * 0.15) // 15% commission
+              const commission = Math.round(finalPrice * 0.15) // 15% commission in FCFA
               try {
                 await supabase
                   .from('affiliate_referrals')

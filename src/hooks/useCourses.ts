@@ -277,10 +277,12 @@ export function useUserCourses() {
   return useQuery({
     queryKey: ['courses', 'user', user?.id],
     queryFn: async () => {
+      // Guard: must have user (enabled check should prevent this, but belt-and-suspenders)
+      if (!user?.id) return []
       const { data, error } = await supabase
         .from('courses')
         .select('*')
-        .eq('user_id', user!.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
       if (error) throw error
@@ -296,10 +298,12 @@ export function useManageCourses() {
 
   const createCourse = useMutation({
     mutationFn: async (course: Omit<Course, 'id' | 'createdAt' | 'updatedAt' | 'studentsCount' | 'userId'>) => {
+      // Guard: must have authenticated user
+      if (!user?.id) throw new Error('Vous devez être connecté pour créer une formation.')
       const { data, error } = await supabase
         .from('courses')
         .insert([{
-          user_id: user!.id,
+          user_id: user.id,
           title: course.title,
           description: course.description,
           category: course.category,

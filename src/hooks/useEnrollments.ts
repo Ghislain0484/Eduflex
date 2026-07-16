@@ -33,10 +33,12 @@ export function useEnrollments() {
   return useQuery({
     queryKey: ['enrollments', user?.id],
     queryFn: async () => {
+      // Guard: user must be defined (enabled check should prevent this, but belt-and-suspenders)
+      if (!user?.id) return []
       const { data, error } = await supabase
         .from('enrollments')
         .select('*')
-        .eq('user_id', user!.id)
+        .eq('user_id', user.id)
         .order('enrolled_at', { ascending: false })
 
       if (error) throw error
@@ -49,6 +51,7 @@ export function useEnrollments() {
 /**
  * Mutation to enroll the current user in a course.
  * Requires auth — callers should guard with `isAuthenticated` before invoking.
+ * Uses upsert with onConflict to prevent duplicate enrollment records.
  *
  * @example
  *   const enroll = useEnroll()
@@ -60,17 +63,52 @@ export function useEnroll() {
 
   return useMutation({
     mutationFn: async (courseId: number) => {
+      // Guard: must have authenticated user
+      if (!user?.id) throw new Error('Vous devez être connecté pour vous inscrire.')
+
+      // Duplicate guard: check if already enrolled before inserting
+      const { data: existing } = await supabase
+        .from('enrollments')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('course_id', courseId)
+        .maybeSingle()
+
+      if (existing) {
+        // Already enrolled — return the existing record without creating a duplicate
+        const { data: existingFull, error: fetchErr } = await supabase
+          .from('enrollments')
+          .select('*')
+          .eq('id', existing.id)
+          .single()
+        if (fetchErr) throw fetchErr
+        return mapEnrollment(existingFull)
+      }
+
+      // New enrollment
       const { data, error } = await supabase
         .from('enrollments')
         .insert([{
-          user_id: user!.id,
+          user_id: user.id,
           course_id: courseId,
           progress_percent: 0,
         }])
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        // Handle unique constraint violation (race condition — another tab enrolled simultaneously)
+        if (error.code === '23505') {
+          const { data: race } = await supabase
+            .from('enrollments')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('course_id', courseId)
+            .single()
+          if (race) return mapEnrollment(race)
+        }
+        throw error
+      }
       return mapEnrollment(data)
     },
     onSuccess: () => {
@@ -79,4 +117,3 @@ export function useEnroll() {
     },
   })
 }
-

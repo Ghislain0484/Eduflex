@@ -49,8 +49,9 @@ function SettingsPage() {
 
   // Calculations
   const totalEarnings = referrals.reduce((sum, r) => sum + (r.commission_amount || 0), 0)
-  const totalEarningsEur = totalEarnings / 100
-  const totalEarningsXof = Math.round(totalEarningsEur * 655.957)
+  // Commission amounts are stored in FCFA (not cents), do NOT divide by 100
+  const totalEarningsFcfa = totalEarnings
+  const totalEarningsEur = Math.round(totalEarningsFcfa / 655.957)
 
   const paidEarnings = referrals.filter(r => r.status === 'paye').reduce((sum, r) => sum + (r.commission_amount || 0), 0)
   const pendingEarnings = referrals.filter(r => r.status === 'en_attente').reduce((sum, r) => sum + (r.commission_amount || 0), 0)
@@ -72,13 +73,13 @@ function SettingsPage() {
         <TabsContent value="securite"><SecuriteTab /></TabsContent>
         <TabsContent value="affiliation">
           <AffiliationTab 
-            referrals={referrals} 
-            loading={referralsLoading} 
-            totalEur={totalEarningsEur}
-            totalXof={totalEarningsXof}
-            paidEur={paidEarnings / 100}
-            pendingEur={pendingEarnings / 100}
-          />
+          referrals={referrals} 
+          loading={referralsLoading} 
+          totalFcfa={totalEarningsFcfa}
+          totalEur={totalEarningsEur}
+          paidFcfa={paidEarnings}
+          pendingFcfa={pendingEarnings}
+        />
         </TabsContent>
         <TabsContent value="notifications"><NotificationsTab /></TabsContent>
       </Tabs>
@@ -119,12 +120,18 @@ function ProfilTab({ user }: { user: any }) {
       toast.error('Veuillez sélectionner un fichier image (PNG ou JPEG).')
       return
     }
+    // Limit logo size to 300KB to avoid exceeding Supabase row size limits
+    const maxSizeKB = 300
+    if (file.size > maxSizeKB * 1024) {
+      toast.error(`L\'image est trop lourde (${Math.round(file.size / 1024)} KB). Maximum autorisé : ${maxSizeKB} KB. Compressez votre image avant de l\'uploader.`)
+      return
+    }
 
     const reader = new FileReader()
     reader.onload = (event) => {
       const base64 = event.target?.result as string
       setAcademyLogo(base64)
-      toast.success('Logo chargé localement avec succès ! Cliquez sur "Sauvegarder" pour appliquer.')
+      toast.success('Logo chargé ! Cliquez sur "Enregistrer les modifications" pour sauvegarder.')
     }
     reader.readAsDataURL(file)
   }
@@ -348,10 +355,12 @@ function ProfilTab({ user }: { user: any }) {
         .eq('id', user.id)
       if (dbError) throw dbError
 
-      toast.success('Modifications enregistrées avec succès ! Application de votre charte graphique...')
+      toast.success('Modifications enregistrées ! Actualisation de l\'interface...')
+      // Refresh user profile in auth state — reload is needed only here because
+      // useAuth reads profile once at login and must be refreshed to reflect new color/logo.
       setTimeout(() => {
         window.location.reload()
-      }, 1000)
+      }, 800)
     } catch (err: any) {
       toast.error(err.message || 'Erreur lors de la sauvegarde.')
     } finally {
@@ -522,15 +531,7 @@ function ProfilTab({ user }: { user: any }) {
           </div>
         )}
 
-        <div className="flex justify-start pt-2 border-t border-border/40">
-          <Button 
-            onClick={handleSave} 
-            disabled={saving} 
-            className="bg-teal-600 hover:bg-teal-500 text-white font-bold h-10 border-none shadow-md"
-          >
-            {saving ? 'Enregistrement...' : 'Enregistrer les modifications'}
-          </Button>
-        </div>
+        {/* Only ONE save button — removed duplicate that was below */}
       </CardContent>
     </Card>
   )
@@ -590,13 +591,13 @@ function SecuriteTab() {
 interface AffiliationTabProps {
   referrals: any[]
   loading: boolean
+  totalFcfa: number
   totalEur: number
-  totalXof: number
-  paidEur: number
-  pendingEur: number
+  paidFcfa: number
+  pendingFcfa: number
 }
 
-function AffiliationTab({ referrals, loading, totalEur, totalXof, paidEur, pendingEur }: AffiliationTabProps) {
+function AffiliationTab({ referrals, loading, totalFcfa, totalEur, paidFcfa, pendingFcfa }: AffiliationTabProps) {
   return (
     <div className="space-y-6 mt-6">
       {/* Cards summary */}
@@ -608,8 +609,8 @@ function AffiliationTab({ referrals, loading, totalEur, totalXof, paidEur, pendi
               <DollarSign className="h-4.5 w-4.5 text-amber-600" />
             </div>
             <div className="mt-2.5">
-              <p className="text-2xl font-bold text-amber-900 dark:text-amber-300">{totalEur.toLocaleString('fr-FR')} €</p>
-              <p className="text-[10px] text-amber-700 dark:text-amber-500 font-medium">~ {totalXof.toLocaleString('fr-FR')} F CFA</p>
+              <p className="text-2xl font-bold text-amber-900 dark:text-amber-300">{totalFcfa.toLocaleString('fr-FR')} F CFA</p>
+              <p className="text-[10px] text-amber-700 dark:text-amber-500 font-medium">~ {totalEur.toLocaleString('fr-FR')} €</p>
             </div>
           </CardContent>
         </Card>
@@ -621,8 +622,8 @@ function AffiliationTab({ referrals, loading, totalEur, totalXof, paidEur, pendi
               <CheckCircle className="h-4.5 w-4.5 text-emerald-600" />
             </div>
             <div className="mt-2.5">
-              <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-300">{paidEur.toLocaleString('fr-FR')} €</p>
-              <p className="text-[10px] text-emerald-700 dark:text-emerald-500 font-medium">~ {Math.round(paidEur * 655.957).toLocaleString('fr-FR')} F CFA</p>
+              <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-300">{paidFcfa.toLocaleString('fr-FR')} F CFA</p>
+              <p className="text-[10px] text-emerald-700 dark:text-emerald-500 font-medium">~ {Math.round(paidFcfa / 655.957).toLocaleString('fr-FR')} €</p>
             </div>
           </CardContent>
         </Card>
@@ -634,8 +635,8 @@ function AffiliationTab({ referrals, loading, totalEur, totalXof, paidEur, pendi
               <Clock className="h-4.5 w-4.5 text-blue-600" />
             </div>
             <div className="mt-2.5">
-              <p className="text-2xl font-bold text-blue-900 dark:text-blue-300">{pendingEur.toLocaleString('fr-FR')} €</p>
-              <p className="text-[10px] text-blue-700 dark:text-blue-500 font-medium">~ {Math.round(pendingEur * 655.957).toLocaleString('fr-FR')} F CFA</p>
+              <p className="text-2xl font-bold text-blue-900 dark:text-blue-300">{pendingFcfa.toLocaleString('fr-FR')} F CFA</p>
+              <p className="text-[10px] text-blue-700 dark:text-blue-500 font-medium">~ {Math.round(pendingFcfa / 655.957).toLocaleString('fr-FR')} €</p>
             </div>
           </CardContent>
         </Card>
@@ -675,16 +676,16 @@ function AffiliationTab({ referrals, loading, totalEur, totalXof, paidEur, pendi
                       month: 'short',
                       year: 'numeric'
                     })
-                    const commissionEur = (ref.commission_amount || 0) / 100
-                    const commissionXof = Math.round(commissionEur * 655.957)
+                    const commissionFcfa = ref.commission_amount || 0
+                    const commissionEur = Math.round(commissionFcfa / 655.957)
                     return (
                       <tr key={ref.id} className="border-b border-border/30 hover:bg-muted/10 transition-colors">
                         <td className="py-3.5 px-4 text-muted-foreground">{date}</td>
                         <td className="py-3.5 px-4 font-medium text-foreground">{ref.referred_email}</td>
                         <td className="py-3.5 px-4 text-muted-foreground truncate max-w-xs">{ref.courses?.title || 'Formation'}</td>
                         <td className="py-3.5 px-4">
-                          <span className="font-semibold text-primary">{commissionEur.toLocaleString('fr-FR')} €</span>
-                          <span className="text-[10px] text-muted-foreground block">~ {commissionXof.toLocaleString('fr-FR')} F CFA</span>
+                          <span className="font-semibold text-primary">{commissionFcfa.toLocaleString('fr-FR')} F CFA</span>
+                          <span className="text-[10px] text-muted-foreground block">~ {commissionEur.toLocaleString('fr-FR')} €</span>
                         </td>
                         <td className="py-3.5 px-4">
                           <Badge variant={ref.status === 'paye' ? 'default' : 'secondary'}>
