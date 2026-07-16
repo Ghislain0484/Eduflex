@@ -23,6 +23,15 @@ create policy "Allow users to update their own profile"
   using (auth.uid() = id)
   with check (auth.uid() = id);
 
+create policy "Allow admins to update all profiles"
+  on public.profiles for update
+  using (
+    exists (
+      select 1 from public.profiles
+      where id = auth.uid() and role = 'admin'
+    )
+  );
+
 -- Trigger function to automatically create a profile on user sign up
 create or replace function public.handle_new_user()
 returns trigger as $$
