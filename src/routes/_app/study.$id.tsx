@@ -699,32 +699,41 @@ function StudyRoomPage() {
                   {/* Video Player */}
                   {activeChapter.videoUrl && (
                     <div className="space-y-2">
-                      <div className="aspect-video w-full rounded-xl overflow-hidden bg-black shadow-lg">
-                        {/* Basic HTML5 Video Player support */}
-                        <video
-                          key={activeChapter.videoUrl}
-                          ref={videoRef}
-                          controls
-                          className="w-full h-full object-contain"
-                          src={activeChapter.videoUrl}
-                        >
-                          Votre navigateur ne prend pas en charge la lecture de cette vidéo.
-                        </video>
+                      <div className="aspect-video w-full rounded-xl overflow-hidden bg-black shadow-lg relative">
+                        {activeChapter.videoUrl.endsWith('.html') || activeChapter.videoUrl.includes('/scorm/') || activeChapter.videoUrl.includes('/embed/') ? (
+                          <iframe
+                            src={activeChapter.videoUrl}
+                            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                            className="w-full h-full border-0 absolute inset-0 bg-white"
+                          />
+                        ) : (
+                          <video
+                            key={activeChapter.videoUrl}
+                            ref={videoRef}
+                            controls
+                            className="w-full h-full object-contain"
+                            src={activeChapter.videoUrl}
+                          >
+                            Votre navigateur ne prend pas en charge la lecture de cette vidéo.
+                          </video>
+                        )}
                       </div>
                       
                       {/* Playback speed selector */}
-                      <div className="flex items-center gap-2 px-1">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Vitesse :</span>
-                        {[0.5, 1, 1.25, 1.5, 2].map((rate) => (
-                          <button
-                            key={rate}
-                            onClick={() => handleSpeedChange(rate)}
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded transition-all ${playbackRate === rate ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-muted/80 text-muted-foreground'}`}
-                          >
-                            {rate}x
-                          </button>
-                        ))}
-                      </div>
+                      {!(activeChapter.videoUrl.endsWith('.html') || activeChapter.videoUrl.includes('/scorm/') || activeChapter.videoUrl.includes('/embed/')) && (
+                        <div className="flex items-center gap-2 px-1">
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Vitesse :</span>
+                          {[0.5, 1, 1.25, 1.5, 2].map((rate) => (
+                            <button
+                              key={rate}
+                              onClick={() => handleSpeedChange(rate)}
+                              className={`text-[10px] font-bold px-2 py-0.5 rounded transition-all ${playbackRate === rate ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-muted/80 text-muted-foreground'}`}
+                            >
+                              {rate}x
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
 

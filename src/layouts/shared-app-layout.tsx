@@ -14,6 +14,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@blinkdotnew/ui'
 import { Link } from '@tanstack/react-router'
 import { Sparkles } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
 
 export type SharedLayoutContextValue = {
   appName: string
@@ -43,13 +44,63 @@ export function SharedAppLayout({
   children,
 }: SharedAppLayoutProps) {
   const { isAuthenticated, user } = useAuth()
-  const displayedAppName = user?.academyName || appName
+  
+  // Dynamic tenant-aware white-label branding resolver
+  const [academyInfo, setAcademyInfo] = React.useState<{ name: string; color: string } | null>(null)
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    // 1. Check URL parameters
+    const params = new URLSearchParams(window.location.search)
+    const urlAcademy = params.get('academy')
+
+    // 2. Check tenant subdomains (e.g. hec.eduflex.com)
+    const host = window.location.hostname
+    const parts = host.split('.')
+    let tenantSubdomain = ''
+    if (parts.length > 2 && parts[0] !== 'www' && parts[0] !== 'localhost') {
+      tenantSubdomain = parts[0]
+    }
+
+    const academyKey = urlAcademy || tenantSubdomain
+
+    if (academyKey) {
+      const fetchBranding = async () => {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('academy_name, academy_color')
+          .or(`academy_name.ilike.%${academyKey}%,display_name.ilike.%${academyKey}%`)
+          .maybeSingle()
+
+        if (!error && data && data.academy_name) {
+          const info = {
+            name: data.academy_name,
+            color: data.academy_color || '#6366f1'
+          }
+          setAcademyInfo(info)
+          localStorage.setItem('cached_academy_theme', JSON.stringify(info))
+        }
+      }
+      fetchBranding()
+    } else {
+      const cached = localStorage.getItem('cached_academy_theme')
+      if (cached) {
+        setAcademyInfo(JSON.parse(cached))
+      }
+    }
+  }, [])
+
+  // Resolve branding: prioritize logged-in user profile, then resolved tenant info, then default settings
+  const displayedAppName = user?.academyName || academyInfo?.name || appName
+  const activeColor = user?.academyColor || academyInfo?.color || null
+
   const value = React.useMemo(() => ({ appName: displayedAppName }), [displayedAppName])
 
   React.useEffect(() => {
-    if (typeof window !== 'undefined' && user?.academyColor) {
-      document.documentElement.style.setProperty('--primary', user.academyColor)
-      const hex = user.academyColor.replace('#', '')
+    if (typeof window !== 'undefined' && activeColor) {
+      document.documentElement.style.setProperty('--primary', activeColor)
+      const hex = activeColor.replace('#', '')
       if (hex.length === 6) {
         const r = parseInt(hex.substring(0, 2), 16)
         const g = parseInt(hex.substring(2, 4), 16)
@@ -57,7 +108,7 @@ export function SharedAppLayout({
         document.documentElement.style.setProperty('--primary-rgb', `${r}, ${g}, ${b}`)
       }
     }
-  }, [user?.academyColor])
+  }, [activeColor])
 
   if (!isAuthenticated) {
     return (
