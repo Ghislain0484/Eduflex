@@ -42,6 +42,7 @@ function StudyRoomPage() {
   const { user } = useAuth()
 
   const [activeChapterId, setActiveChapterId] = useState<number | null>(null)
+  const [isDarkMode, setIsDarkMode] = useState(false)
 
   // Quiz states
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
@@ -363,7 +364,7 @@ function StudyRoomPage() {
   const progressPercent = totalChapters > 0 ? Math.round((completedChaptersCount * 100) / totalChapters) : 0
 
   return (
-    <div className="flex flex-col lg:flex-row h-dvh overflow-hidden bg-background">
+    <div className={`flex flex-col lg:flex-row h-dvh overflow-hidden transition-colors duration-200 ${isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-background'}`}>
       {/* ── Sidebar (Chapter List) ──────────────────────────── */}
       <aside className="w-full lg:w-80 border-b lg:border-b-0 lg:border-r border-border flex flex-col h-[40dvh] lg:h-full bg-card">
         <div className="p-4 border-b border-border space-y-3 shrink-0">
@@ -459,9 +460,22 @@ function StudyRoomPage() {
       </aside>
 
       {/* ── Main content (Course Player) ────────────────────── */}
-      <main className="flex-1 overflow-y-auto flex flex-col h-[60dvh] lg:h-full bg-background/40">
+      <main className={`flex-1 overflow-y-auto flex flex-col h-[60dvh] lg:h-full transition-colors duration-200 ${isDarkMode ? 'bg-slate-900/40' : 'bg-background/40'}`}>
         {activeChapter ? (
           <div className="flex-1 p-6 md:p-10 max-w-4xl w-full mx-auto space-y-8 flex flex-col justify-between">
+            <div>
+              {/* Cinema Mode Switch Bar */}
+              <div className="flex items-center justify-between border-b border-border/50 pb-4 mb-6">
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Espace d'Étude</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsDarkMode(!isDarkMode)}
+                  className={`text-[11px] font-bold gap-1.5 h-8 px-3 rounded-lg border border-border/60 transition-all ${isDarkMode ? 'bg-slate-900 text-teal-400 border-teal-800/40 hover:bg-slate-800' : 'hover:bg-muted/40'}`}
+                >
+                  {isDarkMode ? '☀️ Mode Clair' : '🎬 Mode Cinéma'}
+                </Button>
+              </div>
             <div className="space-y-6">
               {activeChapter.chapterType === 'live' ? (
                 <div className="space-y-6">
@@ -643,8 +657,9 @@ function StudyRoomPage() {
                 </>
               )}
             </div>
+          </div>
 
-            {/* Discussion Thread */}
+          {/* Discussion Thread */}
             <div className="border-t border-border/60 pt-8 space-y-4">
               <h3 className="text-base font-bold text-foreground">Discussion de la communauté</h3>
               
