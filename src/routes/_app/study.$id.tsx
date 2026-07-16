@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useParams } from '@tanstack/react-router'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Button,
   Card,
@@ -65,7 +65,22 @@ function StudyRoomPage() {
       setParticles([])
     }, 2200)
   }
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [playbackRate, setPlaybackRate] = useState(1)
 
+  const handleSpeedChange = (rate: number) => {
+    setPlaybackRate(rate)
+    if (videoRef.current) {
+      videoRef.current.playbackRate = rate
+    }
+  }
+
+  // Restore playback rate when chapter or video changes
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = playbackRate
+    }
+  }, [activeChapterId, playbackRate])
   // Quiz states
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
   const [quizSubmitted, setQuizSubmitted] = useState(false)
@@ -127,6 +142,36 @@ function StudyRoomPage() {
   useEffect(() => {
     fetchComments()
   }, [activeChapterId])
+
+  // Real-time WebSocket notifications for live sessions starting
+  useEffect(() => {
+    if (!course) return
+
+    const channel = supabase
+      .channel(`live-chapters-${course.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'chapters',
+        },
+        (payload: any) => {
+          // If a chapter belongs to this course and is updated as live
+          if (payload.new && payload.new.course_id === course.id && payload.new.chapter_type === 'live') {
+            toast.success(
+              `📢 Session en direct mise à jour : "${payload.new.title}". Cliquez sur le chapitre pour rejoindre !`,
+              { duration: 6000 }
+            )
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [course])
 
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -653,16 +698,33 @@ function StudyRoomPage() {
                 <>
                   {/* Video Player */}
                   {activeChapter.videoUrl && (
-                    <div className="aspect-video w-full rounded-xl overflow-hidden bg-black shadow-lg">
-                      {/* Basic HTML5 Video Player support */}
-                      <video
-                        key={activeChapter.videoUrl}
-                        controls
-                        className="w-full h-full object-contain"
-                        src={activeChapter.videoUrl}
-                      >
-                        Votre navigateur ne prend pas en charge la lecture de cette vidéo.
-                      </video>
+                    <div className="space-y-2">
+                      <div className="aspect-video w-full rounded-xl overflow-hidden bg-black shadow-lg">
+                        {/* Basic HTML5 Video Player support */}
+                        <video
+                          key={activeChapter.videoUrl}
+                          ref={videoRef}
+                          controls
+                          className="w-full h-full object-contain"
+                          src={activeChapter.videoUrl}
+                        >
+                          Votre navigateur ne prend pas en charge la lecture de cette vidéo.
+                        </video>
+                      </div>
+                      
+                      {/* Playback speed selector */}
+                      <div className="flex items-center gap-2 px-1">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Vitesse :</span>
+                        {[0.5, 1, 1.25, 1.5, 2].map((rate) => (
+                          <button
+                            key={rate}
+                            onClick={() => handleSpeedChange(rate)}
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded transition-all ${playbackRate === rate ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-muted/80 text-muted-foreground'}`}
+                          >
+                            {rate}x
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
 
