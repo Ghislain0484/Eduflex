@@ -178,7 +178,28 @@ export function useCourses() {
           return data.map(mapCourse)
         }
       } catch (err) {
-        console.warn('Backend courses error, using default fallback data:', err)
+        console.warn('Backend courses query error with logo, trying fallback select...', err)
+        try {
+          const { data, error } = await supabase
+            .from('courses')
+            .select(`
+              *,
+              profiles:user_id (
+                display_name,
+                academy_name,
+                academy_color,
+                academy_slogan
+              )
+            `)
+            .eq('status', 'publie')
+            .order('created_at', { ascending: false })
+          if (error) throw error
+          if (data && data.length > 0) {
+            return data.map(mapCourse)
+          }
+        } catch (e2) {
+          console.warn('Backend courses fallback failed, using default mock:', e2)
+        }
       }
       return DEFAULT_MOCK_COURSES
     },
@@ -216,7 +237,26 @@ export function useCourse(id: number | undefined) {
         if (error) throw error
         if (data) return mapCourse(data)
       } catch (err) {
-        console.warn('Backend course fetch error, using default fallback data:', err)
+        console.warn('Backend course fetch error with logo, trying fallback select...', err)
+        try {
+          const { data, error } = await supabase
+            .from('courses')
+            .select(`
+              *,
+              profiles:user_id (
+                display_name,
+                academy_name,
+                academy_color,
+                academy_slogan
+              )
+            `)
+            .eq('id', id)
+            .maybeSingle()
+          if (error) throw error
+          if (data) return mapCourse(data)
+        } catch (e2) {
+          console.warn('Backend course fallback failed, using default mock:', e2)
+        }
       }
 
       // Fallback lookup

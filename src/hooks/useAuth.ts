@@ -26,13 +26,27 @@ export function useAuth() {
     }
 
     try {
-      const { data: profile, error } = await supabase
+      let profile: any = null
+      let { data, error } = await supabase
         .from('profiles')
         .select('role, display_name, academy_name, academy_slogan, academy_color, approved, academy_plan, academy_logo')
         .eq('id', sessionUser.id)
         .maybeSingle()
 
-      if (error) throw error
+      if (error && error.message.includes('academy_logo')) {
+        // Fallback query if client has not run database update sql yet
+        const fallback = await supabase
+          .from('profiles')
+          .select('role, display_name, academy_name, academy_slogan, academy_color, approved, academy_plan')
+          .eq('id', sessionUser.id)
+          .maybeSingle()
+        if (fallback.error) throw fallback.error
+        profile = fallback.data
+      } else if (error) {
+        throw error
+      } else {
+        profile = data
+      }
 
       setUser({
         id: sessionUser.id,
