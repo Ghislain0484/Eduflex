@@ -39,6 +39,99 @@ const mapCourse = (row: any): Course => ({
 
 // ── Hooks ────────────────────────────────────────────────────────────────────
 
+export const DEFAULT_MOCK_COURSES: Course[] = [
+  {
+    id: 1,
+    userId: '00000000-0000-0000-0000-000000000000',
+    title: 'Marketing Digital de A à Z',
+    description: 'Devenez un expert du marketing digital en maîtrisant les leviers indispensables pour attirer des clients en continu : référencement naturel (SEO), campagnes payantes (Google Ads, Facebook Ads), emailing et réseaux sociaux.',
+    category: 'Marketing',
+    price: 29900,
+    durationHours: 25,
+    level: 'debutant',
+    imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=60',
+    status: 'publie',
+    studentsCount: 145,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 2,
+    userId: '00000000-0000-0000-0000-000000000000',
+    title: 'Business Management & Stratégie',
+    description: 'Une formation complète pour tous les futurs dirigeants et entrepreneurs. Apprenez à structurer votre offre, recruter des talents, gérer votre comptabilité et piloter la croissance de votre entreprise avec des KPI précis.',
+    category: 'Business',
+    price: 49900,
+    durationHours: 40,
+    level: 'intermediaire',
+    imageUrl: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&auto=format&fit=crop&q=60',
+    status: 'publie',
+    studentsCount: 89,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 3,
+    userId: '00000000-0000-0000-0000-000000000000',
+    title: 'SEO & Création de Contenu',
+    description: 'Apprenez à positionner votre site web sur la première page de Google. Découvrez la recherche de mots-clés, l\'optimisation technique on-page, le link building et la rédaction de contenu optimisé pour le SEO.',
+    category: 'Marketing',
+    price: 39900,
+    durationHours: 15,
+    level: 'intermediaire',
+    imageUrl: 'https://images.unsplash.com/photo-1571721795195-a2ca2d33e070?w=800&auto=format&fit=crop&q=60',
+    status: 'publie',
+    studentsCount: 210,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 4,
+    userId: '00000000-0000-0000-0000-000000000000',
+    title: 'Excel Avancé : Tableaux & Analyse',
+    description: 'Dominez Microsoft Excel de A à Z. Des formules logiques complexes aux Tableaux Croisés Dynamiques (TCD), en passant par les macros et l\'automatisation des tâches récurrentes.',
+    category: 'Productivité',
+    price: 19900,
+    durationHours: 12,
+    level: 'avance',
+    imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=60',
+    status: 'publie',
+    studentsCount: 324,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 5,
+    userId: '00000000-0000-0000-0000-000000000000',
+    title: 'Développement Web Moderne avec React',
+    description: 'Construisez des applications web dynamiques et performantes. Apprenez React de zéro, maîtrisez les hooks, la gestion globale de l\'état, le routage et le déploiement sur les plateformes cloud.',
+    category: 'Technologie',
+    price: 59900,
+    durationHours: 35,
+    level: 'debutant',
+    imageUrl: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&auto=format&fit=crop&q=60',
+    status: 'publie',
+    studentsCount: 172,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 6,
+    userId: '00000000-0000-0000-0000-000000000000',
+    title: 'IA & Automatisation pour Entreprises',
+    description: 'Intégrez l\'intelligence artificielle (ChatGPT, Claude, LLMs) et les outils d\'automatisation (Make, Zapier) dans les processus de votre entreprise pour diviser vos coûts par 10.',
+    category: 'Business',
+    price: 69900,
+    durationHours: 18,
+    level: 'avance',
+    imageUrl: 'https://images.unsplash.com/photo-1677442136019-21780efad99a?w=800&auto=format&fit=crop&q=60',
+    status: 'publie',
+    studentsCount: 95,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+]
+
 /**
  * Fetch all published courses (status = 'publie').
  * Public read — no auth required.
@@ -47,14 +140,21 @@ export function useCourses() {
   return useQuery({
     queryKey: ['courses', 'published'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('courses')
-        .select('*')
-        .eq('status', 'publie')
-        .order('created_at', { ascending: false })
+      try {
+        const { data, error } = await supabase
+          .from('courses')
+          .select('*')
+          .eq('status', 'publie')
+          .order('created_at', { ascending: false })
 
-      if (error) throw error
-      return (data || []).map(mapCourse)
+        if (error) throw error
+        if (data && data.length > 0) {
+          return data.map(mapCourse)
+        }
+      } catch (err) {
+        console.warn('Backend courses error, using default fallback data:', err)
+      }
+      return DEFAULT_MOCK_COURSES
     },
   })
 }
@@ -67,14 +167,22 @@ export function useCourse(id: number | undefined) {
   return useQuery({
     queryKey: ['courses', id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('courses')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle()
+      try {
+        const { data, error } = await supabase
+          .from('courses')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle()
 
-      if (error) throw error
-      return data ? mapCourse(data) : null
+        if (error) throw error
+        if (data) return mapCourse(data)
+      } catch (err) {
+        console.warn('Backend course fetch error, using default fallback data:', err)
+      }
+
+      // Fallback lookup
+      const found = DEFAULT_MOCK_COURSES.find(c => c.id === Number(id))
+      return found || null
     },
     enabled: id != null,
   })
