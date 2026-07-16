@@ -66,23 +66,59 @@ function LandingPage() {
 
   return (
     <div className="min-h-dvh flex flex-col bg-background text-foreground transition-colors duration-200">
-      {/* Navigation Header */}
-      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-lg">
-        <nav className="max-w-7xl mx-auto flex items-center justify-between h-16 px-6">
+      {/* Navigation Header (Teachizy Premium Style) */}
+      <header className="sticky top-0 z-50 bg-[#061d1d] border-b border-teal-950/40 shadow-md">
+        <nav className="max-w-7xl mx-auto flex items-center justify-between h-20 px-6">
+          
+          {/* Left: Logo */}
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center">
-              <Sparkles className="h-5 w-5 text-primary-foreground" />
+            <div className="h-9 w-9 rounded-xl bg-teal-600 flex items-center justify-center shadow-lg shadow-teal-950/50">
+              <BookOpen className="h-5 w-5 text-white" />
             </div>
-            <span className="font-bold text-lg tracking-tight">EduFlex</span>
+            <span className="font-extrabold text-xl tracking-tight text-white">
+              eduflex<span className="text-teal-400">.</span>
+            </span>
           </Link>
-          <div className="flex items-center gap-3">
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/login">Se connecter</Link>
-            </Button>
-            <Button asChild size="sm" className="bg-primary hover:bg-primary/95">
-              <Link to="/register">S'inscrire gratuitement</Link>
-            </Button>
+
+          {/* Center: Navigation Links */}
+          <div className="hidden md:flex items-center gap-8">
+            {/* Services Dropdown */}
+            <div className="relative group">
+              <button className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-300 hover:text-teal-400 transition-colors py-2">
+                Services <ChevronDown className="h-3.5 w-3.5 text-slate-450 group-hover:text-teal-400" />
+              </button>
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-52 rounded-xl border border-teal-900/60 bg-[#072424] p-2 shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <Link to="/courses" className="block rounded-lg px-3 py-2 text-xs font-medium text-slate-200 hover:bg-teal-900/50 hover:text-white transition-colors">
+                  🎓 Catalogue de formations
+                </Link>
+                <Link to="/register" className="block rounded-lg px-3 py-2 text-xs font-medium text-slate-200 hover:bg-teal-900/50 hover:text-white transition-colors">
+                  🏫 Solutions Académie
+                </Link>
+              </div>
+            </div>
+
+            <a href="#features" className="text-[13px] font-semibold text-slate-300 hover:text-teal-400 transition-colors py-2">
+              Fonctionnalités & Tarifs
+            </a>
+
+            <Link to="/register" className="text-[13px] font-semibold text-slate-300 hover:text-teal-400 transition-colors py-2">
+              EduFlex+ Entreprises
+            </Link>
           </div>
+
+          {/* Right: Auth Buttons */}
+          <div className="flex items-center gap-5">
+            <Link to="/login" className="text-[13px] font-semibold text-slate-300 hover:text-teal-400 transition-colors">
+              Connexion
+            </Link>
+            <Link 
+              to="/register" 
+              className="border-2 border-teal-400/80 hover:border-teal-355 text-white hover:bg-teal-500/10 rounded-full px-6 py-1.5 text-[13px] font-semibold tracking-wide transition-all shadow-sm"
+            >
+              Inscription
+            </Link>
+          </div>
+
         </nav>
       </header>
 
