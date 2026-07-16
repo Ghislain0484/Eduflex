@@ -36,6 +36,7 @@ function LandingPage() {
   const { isAuthenticated, isLoading } = useAuth()
   const { data: courses, isLoading: coursesLoading } = useCourses()
   const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(null)
+  const [priceCurrency, setPriceCurrency] = useState<'CFA' | 'EUR'>('CFA')
 
   const publishedCourses = (courses || [])
     .filter(c => c.status === 'publie')
@@ -87,13 +88,46 @@ function LandingPage() {
               <button className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-300 hover:text-teal-400 transition-colors py-2">
                 Services <ChevronDown className="h-3.5 w-3.5 text-slate-450 group-hover:text-teal-400" />
               </button>
-              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-52 rounded-xl border border-teal-900/60 bg-[#072424] p-2 shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <Link to="/courses" className="block rounded-lg px-3 py-2 text-xs font-medium text-slate-200 hover:bg-teal-900/50 hover:text-white transition-colors">
-                  🎓 Catalogue de formations
-                </Link>
-                <Link to="/register" className="block rounded-lg px-3 py-2 text-xs font-medium text-slate-200 hover:bg-teal-900/50 hover:text-white transition-colors">
-                  🏫 Solutions Académie
-                </Link>
+              
+              {/* Mega Dropdown Panel (Teachizy style Solutions / Fonctionnalités / Secteurs) */}
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-[600px] rounded-2xl border border-teal-900/60 bg-[#072424] p-6 shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 grid grid-cols-3 gap-6 text-left">
+                
+                {/* Column 1: Solutions */}
+                <div className="space-y-3.5">
+                  <h4 className="text-[11px] font-bold text-teal-400 uppercase tracking-wider">Solutions</h4>
+                  <ul className="space-y-2.5 text-xs text-slate-300">
+                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Créer une formation</Link></li>
+                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Vendre en Francs CFA</Link></li>
+                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Digitaliser les écoles</Link></li>
+                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Suivi Mobile Money</Link></li>
+                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Classes en Direct</Link></li>
+                  </ul>
+                </div>
+
+                {/* Column 2: Fonctionnalités */}
+                <div className="space-y-3.5">
+                  <h4 className="text-[11px] font-bold text-teal-400 uppercase tracking-wider">Fonctionnalités</h4>
+                  <ul className="space-y-2.5 text-xs text-slate-300">
+                    <li><Link to="/courses" className="hover:text-teal-400 block transition-colors">• LMS Localisé</Link></li>
+                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Créateur de Quiz</Link></li>
+                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Vidéos économes data</Link></li>
+                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Affiliation 15%</Link></li>
+                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Certificats HD</Link></li>
+                  </ul>
+                </div>
+
+                {/* Column 3: Secteurs */}
+                <div className="space-y-3.5">
+                  <h4 className="text-[11px] font-bold text-teal-400 uppercase tracking-wider">Secteurs</h4>
+                  <ul className="space-y-2.5 text-xs text-slate-300">
+                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Écoles & Universités</Link></li>
+                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Organismes de formation</Link></li>
+                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Formateurs indépendants</Link></li>
+                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Coachs & Experts</Link></li>
+                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Entreprises locales</Link></li>
+                  </ul>
+                </div>
+
               </div>
             </div>
 
@@ -156,6 +190,17 @@ function LandingPage() {
             </div>
           </div>
         </section>
+
+        {/* Trust Banner (Teachizy style) */}
+        <div className="bg-[#0b2626] border-y border-teal-950/60 py-3 text-center text-[10px] md:text-xs text-teal-300 font-semibold tracking-wide flex flex-wrap justify-center items-center gap-x-8 gap-y-2 px-6">
+          <span className="flex items-center gap-1.5">⚡ Sans engagement</span>
+          <span className="text-teal-900/50 hidden md:inline">|</span>
+          <span className="flex items-center gap-1.5">📱 Mobile Money local intégré (Wave, Orange, MTN, Moov)</span>
+          <span className="text-teal-900/50 hidden md:inline">|</span>
+          <span className="flex items-center gap-1.5">🌍 Conforme ministères de l'enseignement régionaux</span>
+          <span className="text-teal-900/50 hidden md:inline">|</span>
+          <span className="flex items-center gap-1.5">📡 Optimisé pour connexions bas-débit (3G/4G)</span>
+        </div>
 
         {/* Statistics Bar */}
         <section className="border-y border-border/50 bg-muted/20 py-10">
@@ -326,6 +371,123 @@ function LandingPage() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </section>
+
+        {/* Solutions & Tarifs Section (Teachizy Premium style) */}
+        <section id="features" className="max-w-7xl mx-auto px-6 py-24 border-t border-border/40 space-y-16">
+          <div className="text-center space-y-3">
+            <h2 className="text-3xl md:text-5xl font-bold tracking-tight">Découvrez nos tarifs transparents</h2>
+            <p className="text-sm text-muted-foreground max-w-xl mx-auto">
+              Choisissez l'offre idéale pour propulser votre académie en ligne. Pas de coûts cachés, payez en devise locale ou en Euros.
+            </p>
+            
+            {/* Currency Selector Toggle */}
+            <div className="flex items-center justify-center gap-3 pt-6">
+              <span className={`text-xs font-semibold ${priceCurrency === 'CFA' ? 'text-foreground' : 'text-muted-foreground'}`}>Francs CFA (XOF/XAF)</span>
+              <button 
+                onClick={() => setPriceCurrency(priceCurrency === 'CFA' ? 'EUR' : 'CFA')}
+                className="w-12 h-6.5 rounded-full bg-teal-900/40 p-1 flex items-center transition-colors relative"
+              >
+                <div className={`w-4.5 h-4.5 rounded-full bg-teal-400 transition-all ${priceCurrency === 'EUR' ? 'translate-x-5.5' : 'translate-x-0'}`} />
+              </button>
+              <span className={`text-xs font-semibold ${priceCurrency === 'EUR' ? 'text-foreground' : 'text-muted-foreground'}`}>Euros (€)</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+            {/* Plan 1: Découverte */}
+            <Card className="border-border/80 flex flex-col justify-between hover:border-teal-900/30 transition-all relative overflow-hidden bg-card/60">
+              <div className="p-6 md:p-8 space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-foreground">Découverte</h3>
+                  <p className="text-xs text-muted-foreground mt-1">Pour lancer votre premier produit et tester l'écosystème.</p>
+                </div>
+                <div className="pt-2">
+                  <span className="text-3xl md:text-4xl font-extrabold text-foreground">
+                    {priceCurrency === 'CFA' ? '0 CFA' : '0 €'}
+                  </span>
+                  <span className="text-xs text-muted-foreground font-semibold"> / mois</span>
+                  <p className="text-[10px] text-teal-500 font-bold mt-1">Gratuit à vie · Sans engagement</p>
+                </div>
+                <ul className="space-y-3 text-xs text-muted-foreground pt-4 border-t border-border/40">
+                  <li className="flex items-center gap-2">✓ Jusqu'à 3 formations</li>
+                  <li className="flex items-center gap-2">✓ 50 apprenants enregistrés</li>
+                  <li className="flex items-center gap-2">✓ Quiz de validation basiques</li>
+                  <li className="flex items-center gap-2">✓ Certificats de réussite standards</li>
+                  <li className="flex items-center gap-2">✓ Frais de transaction : 10%</li>
+                </ul>
+              </div>
+              <div className="p-6 md:p-8 pt-0">
+                <Button asChild className="w-full bg-secondary hover:bg-secondary/90 text-foreground" size="lg">
+                  <Link to="/register">Commencer gratuitement</Link>
+                </Button>
+              </div>
+            </Card>
+
+            {/* Plan 2: Pro */}
+            <Card className="border-teal-500/50 shadow-lg shadow-teal-950/10 flex flex-col justify-between hover:border-teal-500/80 transition-all relative overflow-hidden bg-[#072424]/40">
+              <div className="absolute top-0 right-0 bg-teal-500 text-teal-950 text-[9px] font-black uppercase tracking-wider py-1 px-4 rounded-bl-lg">
+                Populaire
+              </div>
+              <div className="p-6 md:p-8 space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-foreground">Pro</h3>
+                  <p className="text-xs text-muted-foreground mt-1">Le tout inclus pour les formateurs, coachs et infopreneurs.</p>
+                </div>
+                <div className="pt-2">
+                  <span className="text-3xl md:text-4xl font-extrabold text-teal-400">
+                    {priceCurrency === 'CFA' ? '19 000 CFA' : '29 €'}
+                  </span>
+                  <span className="text-xs text-muted-foreground font-semibold"> / mois</span>
+                  <p className="text-[10px] text-teal-500 font-bold mt-1">2 mois offerts en paiement annuel</p>
+                </div>
+                <ul className="space-y-3 text-xs text-muted-foreground pt-4 border-t border-teal-950/40">
+                  <li className="flex items-center gap-2 text-foreground font-medium">✓ Formations illimitées</li>
+                  <li className="flex items-center gap-2 text-foreground font-medium">✓ Apprenants illimités</li>
+                  <li className="flex items-center gap-2">✓ Quiz et examens avancés</li>
+                  <li className="flex items-center gap-2">✓ Certificats Canvas HD automatisés</li>
+                  <li className="flex items-center gap-2">✓ Visioconférences en Direct (1h/live)</li>
+                  <li className="flex items-center gap-2">✓ Support prioritaire 24h/7j</li>
+                  <li className="flex items-center gap-2 text-teal-400 font-bold">✓ Frais de transaction : 5%</li>
+                </ul>
+              </div>
+              <div className="p-6 md:p-8 pt-0">
+                <Button asChild className="w-full bg-teal-600 hover:bg-teal-500 text-white" size="lg">
+                  <Link to="/register">Lancer mon Académie Pro</Link>
+                </Button>
+              </div>
+            </Card>
+
+            {/* Plan 3: Institution & Académie */}
+            <Card className="border-border/80 flex flex-col justify-between hover:border-teal-900/30 transition-all relative overflow-hidden bg-card/60">
+              <div className="p-6 md:p-8 space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-foreground">Académie B2B</h3>
+                  <p className="text-xs text-muted-foreground mt-1">Pour les universités, lycées et centres de formation officiels.</p>
+                </div>
+                <div className="pt-2">
+                  <span className="text-3xl md:text-4xl font-extrabold text-foreground">
+                    {priceCurrency === 'CFA' ? '59 000 CFA' : '89 €'}
+                  </span>
+                  <span className="text-xs text-muted-foreground font-semibold"> / mois</span>
+                  <p className="text-[10px] text-teal-500 font-bold mt-1">Support d'intégration sur-mesure inclus</p>
+                </div>
+                <ul className="space-y-3 text-xs text-muted-foreground pt-4 border-t border-border/40">
+                  <li className="flex items-center gap-2 text-foreground font-semibold">✓ Personnalisation White-Label (Marque)</li>
+                  <li className="flex items-center gap-2 text-foreground font-semibold">✓ Visioconférences Jitsi illimitées</li>
+                  <li className="flex items-center gap-2">✓ Multi-comptes formateurs (jusqu'à 10)</li>
+                  <li className="flex items-center gap-2">✓ Rapports d'assiduité ministériels</li>
+                  <li className="flex items-center gap-2">✓ Hébergement dédié réseaux bas-débit</li>
+                  <li className="flex items-center gap-2 text-teal-500 font-bold">✓ Frais de transaction : 2%</li>
+                </ul>
+              </div>
+              <div className="p-6 md:p-8 pt-0">
+                <Button asChild className="w-full bg-secondary hover:bg-secondary/90 text-foreground" size="lg">
+                  <Link to="/register">Contacter le service Académie</Link>
+                </Button>
+              </div>
+            </Card>
           </div>
         </section>
 
