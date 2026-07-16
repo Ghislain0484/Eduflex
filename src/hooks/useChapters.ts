@@ -159,24 +159,46 @@ export function useManageChapters(courseId: number) {
 
   const createChapter = useMutation({
     mutationFn: async (chapter: Omit<Chapter, 'id' | 'createdAt'>) => {
-      const { data, error } = await supabase
-        .from('chapters')
-        .insert([{
-          course_id: chapter.courseId,
-          title: chapter.title,
-          content: chapter.content,
-          video_url: chapter.videoUrl,
-          sort_order: chapter.sortOrder,
-          quiz_data: chapter.quizData || null,
-          chapter_type: chapter.chapterType || 'standard',
-          scheduled_at: chapter.scheduledAt || null,
-          live_url: chapter.liveUrl || null,
-        }])
-        .select()
-        .single()
+      try {
+        const { data, error } = await supabase
+          .from('chapters')
+          .insert([{
+            course_id: chapter.courseId,
+            title: chapter.title,
+            content: chapter.content,
+            video_url: chapter.videoUrl,
+            sort_order: chapter.sortOrder,
+            quiz_data: chapter.quizData || null,
+            chapter_type: chapter.chapterType || 'standard',
+            scheduled_at: chapter.scheduledAt || null,
+            live_url: chapter.liveUrl || null,
+          }])
+          .select()
+          .single()
 
-      if (error) throw error
-      return mapChapter(data)
+        if (error) throw error
+        return mapChapter(data)
+      } catch (err: any) {
+        // PostgREST/Postgres error code 42703 means Undefined Column (e.g. quiz_data or live_url missing)
+        const isColumnError = err.code === '42703' || (err.message && (err.message.includes('column') || err.message.includes('schema cache')))
+        if (isColumnError) {
+          console.warn('DB schema drift detected on chapters table. Retrying with original basic columns only.')
+          const { data, error } = await supabase
+            .from('chapters')
+            .insert([{
+              course_id: chapter.courseId,
+              title: chapter.title,
+              content: chapter.content,
+              video_url: chapter.videoUrl,
+              sort_order: chapter.sortOrder,
+            }])
+            .select()
+            .single()
+          if (error) throw error
+          return mapChapter(data)
+        }
+        throw err
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['chapters', 'course', courseId] })
@@ -185,24 +207,45 @@ export function useManageChapters(courseId: number) {
 
   const updateChapter = useMutation({
     mutationFn: async (chapter: Partial<Chapter> & { id: number }) => {
-      const { data, error } = await supabase
-        .from('chapters')
-        .update({
-          title: chapter.title,
-          content: chapter.content,
-          video_url: chapter.videoUrl,
-          sort_order: chapter.sortOrder,
-          quiz_data: chapter.quizData,
-          chapter_type: chapter.chapterType,
-          scheduled_at: chapter.scheduledAt,
-          live_url: chapter.liveUrl,
-        })
-        .eq('id', chapter.id)
-        .select()
-        .single()
+      try {
+        const { data, error } = await supabase
+          .from('chapters')
+          .update({
+            title: chapter.title,
+            content: chapter.content,
+            video_url: chapter.videoUrl,
+            sort_order: chapter.sortOrder,
+            quiz_data: chapter.quizData,
+            chapter_type: chapter.chapterType,
+            scheduled_at: chapter.scheduledAt,
+            live_url: chapter.liveUrl,
+          })
+          .eq('id', chapter.id)
+          .select()
+          .single()
 
-      if (error) throw error
-      return mapChapter(data)
+        if (error) throw error
+        return mapChapter(data)
+      } catch (err: any) {
+        const isColumnError = err.code === '42703' || (err.message && (err.message.includes('column') || err.message.includes('schema cache')))
+        if (isColumnError) {
+          console.warn('DB schema drift detected on chapters update. Retrying with original basic columns only.')
+          const { data, error } = await supabase
+            .from('chapters')
+            .update({
+              title: chapter.title,
+              content: chapter.content,
+              video_url: chapter.videoUrl,
+              sort_order: chapter.sortOrder,
+            })
+            .eq('id', chapter.id)
+            .select()
+            .single()
+          if (error) throw error
+          return mapChapter(data)
+        }
+        throw err
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['chapters', 'course', courseId] })

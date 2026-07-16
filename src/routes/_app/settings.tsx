@@ -342,18 +342,46 @@ function ProfilTab({ user }: { user: any }) {
       })
       if (authError) throw authError
 
-      // 2. Update profiles table in DB
-      const { error: dbError } = await supabase
-        .from('profiles')
-        .update({ 
-          display_name: name.trim(),
-          academy_name: academyName.trim() || null,
-          academy_slogan: academySlogan.trim() || null,
-          academy_color: academyColor || '#6366f1',
-          academy_logo: academyLogo.trim() || null
-        })
-        .eq('id', user.id)
-      if (dbError) throw dbError
+      // 2. Update profiles table in DB with fallbacks for missing columns
+      try {
+        const { error: dbError } = await supabase
+          .from('profiles')
+          .update({ 
+            display_name: name.trim(),
+            academy_name: academyName.trim() || null,
+            academy_slogan: academySlogan.trim() || null,
+            academy_color: academyColor || '#6366f1',
+            academy_logo: academyLogo.trim() || null
+          })
+          .eq('id', user.id)
+        if (dbError) throw dbError
+      } catch (err: any) {
+        const isColumnError = err.code === '42703' || (err.message && (err.message.includes('column') || err.message.includes('schema cache')))
+        if (isColumnError) {
+          console.warn('academy_logo column might be missing. Trying fallback profile update.')
+          const { error: fallbackError } = await supabase
+            .from('profiles')
+            .update({ 
+              display_name: name.trim(),
+              academy_name: academyName.trim() || null,
+              academy_slogan: academySlogan.trim() || null,
+              academy_color: academyColor || '#6366f1',
+            })
+            .eq('id', user.id)
+          if (fallbackError) {
+            console.warn('Academy columns might be missing entirely. Trying basic profile update.')
+            const { error: basicError } = await supabase
+              .from('profiles')
+              .update({ 
+                display_name: name.trim(),
+              })
+              .eq('id', user.id)
+            if (basicError) throw basicError
+          }
+        } else {
+          throw err
+        }
+      }
 
       toast.success('Modifications enregistrées ! Actualisation de l\'interface...')
       // Refresh user profile in auth state — reload is needed only here because

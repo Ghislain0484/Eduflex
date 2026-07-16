@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 
 export interface AppUser {
@@ -15,94 +16,117 @@ export interface AppUser {
 }
 
 export function useAuth() {
-  const [user, setUser] = useState<AppUser | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const queryClient = useQueryClient()
 
-  const fetchProfileAndSetUser = async (sessionUser: any) => {
-    if (!sessionUser) {
-      setUser(null)
-      setIsLoading(false)
-      return
-    }
+  // 1. Session Query — cached in react-query to prevent duplicate calls
+  const { data: session, isLoading: isSessionLoading } = useQuery({
+    queryKey: ['auth_session'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      return session
+    },
+    staleTime: Infinity, // Maintain stable session state
+  })
 
-    try {
-      let profile: any = null
-      let { data, error } = await supabase
-        .from('profiles')
-        .select('role, display_name, academy_name, academy_slogan, academy_color, approved, academy_plan, academy_logo')
-        .eq('id', sessionUser.id)
-        .maybeSingle()
+  // 2. Profile/User Query — depends on session user id
+  const { data: user, isLoading: isUserLoading } = useQuery({
+    queryKey: ['auth_user', session?.user?.id],
+    queryFn: async () => {
+      const sessionUser = session?.user
+      if (!sessionUser) return null
 
-      if (error && error.message.includes('academy_logo')) {
-        // Fallback query if client has not run database update sql yet
-        const fallback = await supabase
+      try {
+        let profile: any = null
+        const { data, error } = await supabase
           .from('profiles')
-          .select('role, display_name, academy_name, academy_slogan, academy_color, approved, academy_plan')
+          .select('role, display_name, academy_name, academy_slogan, academy_color, approved, academy_plan, academy_logo')
           .eq('id', sessionUser.id)
           .maybeSingle()
-        if (fallback.error) throw fallback.error
-        profile = fallback.data
-      } else if (error) {
-        throw error
-      } else {
-        profile = data
+
+        if (error && error.message.includes('academy_logo')) {
+          // Fallback query if client has not run database update sql yet
+          const fallback = await supabase
+            .from('profiles')
+            .select('role, display_name, academy_name, academy_slogan, academy_color, approved, academy_plan')
+            .eq('id', sessionUser.id)
+            .maybeSingle()
+          if (fallback.error) throw fallback.error
+          profile = fallback.data
+        } else if (error) {
+          throw error
+        } else {
+          profile = data
+        }
+
+        return {
+          id: sessionUser.id,
+          email: sessionUser.email,
+          displayName: profile?.display_name || sessionUser.user_metadata?.display_name || sessionUser.user_metadata?.full_name || sessionUser.email?.split('@')[0] || 'Utilisateur',
+          role: profile?.role || 'student',
+          academyName: profile?.academy_name || null,
+          academySlogan: profile?.academy_slogan || null,
+          academyColor: profile?.academy_color || '#6366f1',
+          approved: profile?.approved !== false, // default to true
+          academyPlan: profile?.academy_plan || null,
+          academyLogo: profile?.academy_logo || null,
+        } as AppUser
+      } catch (e) {
+        console.error('Error fetching profile:', e)
+        // Fallback profile if fetch fails
+        return {
+          id: sessionUser.id,
+          email: sessionUser.email,
+          displayName: sessionUser.user_metadata?.display_name || sessionUser.user_metadata?.full_name || sessionUser.email?.split('@')[0] || 'Utilisateur',
+          role: 'student',
+          academyName: null,
+          academySlogan: null,
+          academyColor: '#6366f1',
+          approved: true,
+          academyPlan: null,
+          academyLogo: null,
+        } as AppUser
       }
+    },
+    enabled: session !== undefined && !!session?.user?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes caching for the profile
+  })
 
-      setUser({
-        id: sessionUser.id,
-        email: sessionUser.email,
-        displayName: profile?.display_name || sessionUser.user_metadata?.display_name || sessionUser.user_metadata?.full_name || sessionUser.email?.split('@')[0] || 'Utilisateur',
-        role: profile?.role || 'student',
-        academyName: profile?.academy_name || null,
-        academySlogan: profile?.academy_slogan || null,
-        academyColor: profile?.academy_color || '#6366f1',
-        approved: profile?.approved !== false, // default to true
-        academyPlan: profile?.academy_plan || null,
-        academyLogo: profile?.academy_logo || null,
-      })
-    } catch (e) {
-      console.error('Error fetching profile:', e)
-      // Fallback
-      setUser({
-        id: sessionUser.id,
-        email: sessionUser.email,
-        displayName: sessionUser.user_metadata?.display_name || sessionUser.user_metadata?.full_name || sessionUser.email?.split('@')[0] || 'Utilisateur',
-        role: 'student',
-        academyName: null,
-        academySlogan: null,
-        academyColor: '#6366f1',
-        approved: true,
-        academyPlan: null,
-        academyLogo: null,
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
+  // Synchronize state changes globally via onAuthStateChange
   useEffect(() => {
-    // Initial fetch of session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      fetchProfileAndSetUser(session?.user ?? null)
-    })
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      fetchProfileAndSetUser(session?.user ?? null)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      // Update session query cache
+      queryClient.setQueryData(['auth_session'], newSession)
+      
+      // If logging out, clear auth user cache
+      if (!newSession) {
+        queryClient.setQueryData(['auth_user', undefined], null)
+        queryClient.invalidateQueries({ queryKey: ['auth_user'] })
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['auth_user', newSession.user.id] })
+      }
     })
 
     return () => {
       subscription.unsubscribe()
     }
-  }, [])
+  }, [queryClient])
 
   const login = () => {
-    // Redirect or trigger login flow if needed (usually handled in login page)
+    // Handled in login page
   }
   
-  const logout = () => supabase.auth.signOut()
+  const logout = async () => {
+    await supabase.auth.signOut()
+    queryClient.clear() // Clear all query caches on logout
+  }
 
-  return { user, isLoading, isAuthenticated: !!user, login, logout }
+  const isLoading = isSessionLoading || (session !== undefined && !!session?.user?.id && isUserLoading)
+
+  return { 
+    user: user || null, 
+    isLoading, 
+    isAuthenticated: !!user, 
+    login, 
+    logout 
+  }
 }
-
-
