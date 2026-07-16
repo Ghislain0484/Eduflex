@@ -152,14 +152,14 @@ function TarifsPage() {
 
               <ul className="space-y-3 text-[11px] text-slate-300">
                 <li className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-teal-500 shrink-0" /> **Marque blanche totale (100% neutre)**</li>
-                <li className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-teal-500 shrink-0" /> **Propre nom de domaine** (ex: cours.ecole.com)</li>
+                <li className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-teal-500 shrink-0" /> Propre nom de domaine (ex: cours.ecole.com)</li>
                 <li className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-teal-500 shrink-0" /> Jitsi Meet Live illimité</li>
                 <li className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-teal-500 shrink-0" /> Intégration de modules interactifs SCORM</li>
                 <li className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-teal-500 shrink-0" /> Support technique dédié 24/7 (WhatsApp)</li>
               </ul>
             </CardContent>
             <div className="p-6 pt-0">
-              <Button asChild className="w-full bg-teal-600 hover:bg-teal-555 text-white font-bold h-10 border-none shadow-lg shadow-teal-500/20">
+              <Button asChild className="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold h-10 border-none shadow-lg shadow-teal-500/20">
                 <Link to="/register" search={{ plan: 'B2B' }}>Activer EduFlex+</Link>
               </Button>
             </div>

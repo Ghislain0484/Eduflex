@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Card, CardHeader, CardTitle, CardContent, Skeleton } from '@blinkdotnew/ui'
 import { BarChart3, TrendingUp, Users, BookOpen } from 'lucide-react'
-import { useDashboardStats } from '@/hooks/useStats'
+import { useDashboardStats, useAllEnrollments } from '@/hooks/useStats'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
@@ -11,16 +11,9 @@ export const Route = createFileRoute('/_app/statistiques')({
   component: StatistiquesPage,
 })
 
-const monthlyData = [
-  { mois: 'Jan', inscriptions: 45 }, { mois: 'Fév', inscriptions: 62 },
-  { mois: 'Mar', inscriptions: 78 }, { mois: 'Avr', inscriptions: 95 },
-  { mois: 'Mai', inscriptions: 120 }, { mois: 'Jun', inscriptions: 145 },
-  { mois: 'Jul', inscriptions: 168 }, { mois: 'Aoû', inscriptions: 182 },
-  { mois: 'Sep', inscriptions: 210 }, { mois: 'Oct', inscriptions: 245 },
-  { mois: 'Nov', inscriptions: 278 }, { mois: 'Déc', inscriptions: 310 },
-]
-
 const COLORS = ['hsl(225 73% 50%)', 'hsl(25 95% 53%)', 'hsl(262 52% 47%)', 'hsl(200 65% 45%)']
+
+const MONTH_LABELS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
 
 function StatCard({ icon, label, value, subtext }: { icon: React.ReactNode; label: string; value: string; subtext: string }) {
   return (
@@ -41,6 +34,27 @@ function StatCard({ icon, label, value, subtext }: { icon: React.ReactNode; labe
 
 function StatistiquesPage() {
   const { data: stats, isLoading } = useDashboardStats()
+  const { data: allEnrollments } = useAllEnrollments()
+
+  // Build REAL monthly inscriptions from actual enrollment data
+  const monthlyData = (() => {
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const counts: Record<number, number> = {}
+    // Initialize all 12 months to 0
+    for (let i = 0; i < 12; i++) counts[i] = 0
+
+    // Count enrollments per month for the current year
+    if (allEnrollments) {
+      allEnrollments.forEach(e => {
+        const d = new Date(e.enrolledAt)
+        if (d.getFullYear() === currentYear) {
+          counts[d.getMonth()] = (counts[d.getMonth()] || 0) + 1
+        }
+      })
+    }
+    return MONTH_LABELS.map((mois, i) => ({ mois, inscriptions: counts[i] || 0 }))
+  })()
 
   // Build category pie chart data from real database stats
   const categoryData = stats?.categoryRevenue?.map(item => ({
@@ -48,9 +62,9 @@ function StatistiquesPage() {
     value: item.revenus
   })).filter(c => c.value > 0) || []
 
-  // Default values if loading or empty
-  const totalRevenueEur = stats ? stats.totalRevenue / 100 : 0
-  const totalRevenueXof = Math.round(totalRevenueEur * 655.957)
+  // Revenue in FCFA (prices stored directly as FCFA integers)
+  const totalRevenueFcfa = stats ? stats.totalRevenue : 0
+  const totalRevenueEur = Math.round(totalRevenueFcfa / 655.957)
 
   return (
     <div className="flex-1 space-y-6 p-6">
@@ -70,23 +84,25 @@ function StatistiquesPage() {
           <StatCard icon={<BookOpen className="h-5 w-5" />} label="Formations actives" value={String(stats?.coursesCount || 0)} subtext="Formations publiées" />
           <StatCard icon={<Users className="h-5 w-5" />} label="Total apprenants" value={String(stats?.studentsCount || 0)} subtext="Inscrits sur la plateforme" />
           <StatCard icon={<TrendingUp className="h-5 w-5" />} label="Taux de complétion" value={`${stats?.averageProgress || 0}%`} subtext="Progression moyenne" />
-          <StatCard icon={<BarChart3 className="h-5 w-5" />} label="Revenus total" value={`${totalRevenueEur.toLocaleString('fr-FR')} €`} subtext={`~ ${totalRevenueXof.toLocaleString('fr-FR')} F CFA`} />
+          <StatCard icon={<BarChart3 className="h-5 w-5" />} label="Revenus total" value={`${totalRevenueFcfa.toLocaleString('fr-FR')} FCFA`} subtext={`~ ${totalRevenueEur.toLocaleString('fr-FR')} €`} />
         </div>
       )}
 
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Monthly enrollment chart */}
         <Card className="animate-fade-in border-border/80">
-          <CardHeader className="pb-2"><CardTitle className="text-base font-semibold">Inscriptions mensuelles (Vue globale)</CardTitle></CardHeader>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold">Inscriptions mensuelles {new Date().getFullYear()} (Données réelles)</CardTitle>
+          </CardHeader>
           <CardContent>
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={monthlyData}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis dataKey="mois" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
-                  <Bar dataKey="inscriptions" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} name="Inscriptions" />
+                  <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} formatter={(v: number) => [v, 'Inscriptions']} />
+                  <Bar dataKey="inscriptions" fill="hsl(166 72% 40%)" radius={[6, 6, 0, 0]} name="Inscriptions" />
                 </BarChart>
               </ResponsiveContainer>
             </div>

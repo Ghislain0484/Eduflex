@@ -29,21 +29,29 @@ function AcademiesPage() {
   })
 
   const handleApprove = async (id: string, approve: boolean) => {
+    if (!approve && !confirm("Êtes-vous sûr de vouloir suspendre cette académie ? L'accès sera bloqué mais les données seront conservées.")) {
+      return
+    }
     setUpdatingId(id)
     try {
+      // Only toggle 'approved' — NEVER change the role on suspension
+      // Changing role to 'student' would permanently strip teacher access
+      const updatePayload: any = { approved: approve }
+      // Only promote to 'academy' role when first approving
+      if (approve) {
+        updatePayload.role = 'teacher'
+      }
+
       const { error } = await supabase
         .from('profiles')
-        .update({
-          approved: approve,
-          role: approve ? 'teacher' : 'student', // Promote to teacher on approval, demote to student on suspension
-        })
+        .update(updatePayload)
         .eq('id', id)
 
       if (error) throw error
-      toast.success(approve ? "L'académie a été approuvée et activée avec succès !" : "L'académie a été suspendue.")
+      toast.success(approve ? "✅ L'académie a été approuvée et activée !" : "⏸️ L'académie a été suspendue. Ses données sont conservées.")
       
-      // Invalidate queries to refresh listing
-      queryClient.invalidateQueries({ queryKey: ['profiles'] })
+      // Use targeted query key to avoid unnecessary refetches
+      queryClient.invalidateQueries({ queryKey: ['profiles', 'academies'] })
     } catch (err: any) {
       console.error(err)
       toast.error("Erreur lors de la modification du statut : " + err.message)

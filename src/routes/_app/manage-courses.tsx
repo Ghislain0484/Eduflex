@@ -1061,8 +1061,19 @@ function ChaptersManagerSection({ course, onBack }: { course: any; onBack: () =>
     if (editingChapterId == null) {
       createChapter.mutate(payload, {
         onSuccess: () => {
-          toast.success('Chapitre ajouté !')
+          toast.success('Chapitre ajouté avec succès !')
           setFormOpen(false)
+          // Reset form
+          setTitle('')
+          setContent('')
+          setVideoUrl('')
+          setQuestions([])
+          setChapterType('standard')
+          setScheduledAt('')
+          setLiveUrl('')
+        },
+        onError: (err) => {
+          toast.error('Erreur lors de la création du chapitre : ' + err.message)
         },
       })
     } else {
@@ -1072,6 +1083,9 @@ function ChaptersManagerSection({ course, onBack }: { course: any; onBack: () =>
           onSuccess: () => {
             toast.success('Chapitre mis à jour !')
             setFormOpen(false)
+          },
+          onError: (err) => {
+            toast.error('Erreur lors de la mise à jour : ' + err.message)
           },
         }
       )

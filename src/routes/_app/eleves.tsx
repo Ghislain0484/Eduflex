@@ -1,11 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useStudentsList } from '@/hooks/useStats'
 import { Card, CardContent, Badge, Button, Input, EmptyState, Skeleton } from '@blinkdotnew/ui'
-import { Users, Search, Mail } from 'lucide-react'
+import { Users, Search, Mail, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { toast } from '@blinkdotnew/ui'
 import { Plus } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
 
 export const Route = createFileRoute('/_app/eleves')({
   component: ElevesPage,
@@ -13,6 +14,7 @@ export const Route = createFileRoute('/_app/eleves')({
 
 function ElevesPage() {
   const { data: students, isLoading } = useStudentsList()
+  const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
   const [newEmail, setNewEmail] = useState('')
@@ -32,27 +34,49 @@ function ElevesPage() {
     if (!newEmail.trim() || !newName.trim()) return
     setAdding(true)
     try {
-      const tempId = crypto.randomUUID()
-      const { error } = await supabase
-        .from('profiles')
-        .insert([{
-          id: tempId,
-          email: newEmail.trim().toLowerCase(),
-          display_name: newName.trim(),
-          role: 'student',
-          approved: true,
-        }])
+      // Generate a secure random temporary password
+      const tempPassword = crypto.randomUUID().replace(/-/g, '') + 'Aa1!'
 
-      if (error) throw error
-      toast.success("L'élève a été inscrit avec succès !")
+      // Create a REAL Supabase Auth user (not a ghost profile)
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: newEmail.trim().toLowerCase(),
+        password: tempPassword,
+        options: {
+          data: {
+            display_name: newName.trim(),
+            role: 'student',
+          },
+        },
+      })
+
+      if (signUpError) throw signUpError
+
+      // Update profile row with correct role and approval
+      if (signUpData.user?.id) {
+        await supabase
+          .from('profiles')
+          .upsert({
+            id: signUpData.user.id,
+            email: newEmail.trim().toLowerCase(),
+            display_name: newName.trim(),
+            role: 'student',
+            approved: true,
+          }, { onConflict: 'id' })
+      }
+
+      toast.success(`✅ L'élève a été inscrit ! Un email de confirmation a été envoyé à ${newEmail.trim()}.`)
       setNewEmail('')
       setNewName('')
       setShowAddForm(false)
-      // refresh listing
-      window.location.reload()
+      // Proper React Query cache invalidation — no page reload needed
+      queryClient.invalidateQueries({ queryKey: ['profiles', 'students'] })
     } catch (err: any) {
       console.error(err)
-      toast.error("Erreur d'inscription : " + err.message)
+      if (err.message?.includes('already registered')) {
+        toast.error('Cet email est déjà enregistré sur la plateforme.')
+      } else {
+        toast.error("Erreur d'inscription : " + err.message)
+      }
     } finally {
       setAdding(false)
     }
@@ -72,31 +96,32 @@ function ElevesPage() {
               </div>
               <form onSubmit={handleAddStudent} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-350">Nom Complet *</label>
+                  <label className="text-xs font-semibold text-slate-300">Nom Complet *</label>
                   <Input 
                     required 
                     value={newName} 
                     onChange={e => setNewName(e.target.value)} 
                     placeholder="Ex: Jean Dupont"
-                    className="h-9 text-xs"
+                    className="h-9 text-xs bg-slate-800 border-slate-600 text-slate-100 placeholder:text-slate-500"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-350">Adresse Email *</label>
+                  <label className="text-xs font-semibold text-slate-300">Adresse Email *</label>
                   <Input 
                     required 
                     type="email"
                     value={newEmail} 
                     onChange={e => setNewEmail(e.target.value)} 
                     placeholder="Ex: jean.dupont@gmail.com"
-                    className="h-9 text-xs"
+                    className="h-9 text-xs bg-slate-800 border-slate-600 text-slate-100 placeholder:text-slate-500"
                   />
+                  <p className="text-[10px] text-slate-400">Un email de bienvenue avec lien de connexion sera envoyé automatiquement.</p>
                 </div>
                 <div className="flex items-center gap-3 pt-2">
                   <Button 
                     type="button" 
                     variant="outline" 
-                    className="flex-1 text-xs h-9" 
+                    className="flex-1 text-xs h-9 border-slate-600 text-slate-300" 
                     onClick={() => setShowAddForm(false)}
                   >
                     Annuler
@@ -106,7 +131,7 @@ function ElevesPage() {
                     className="flex-1 text-xs h-9 bg-teal-600 hover:bg-teal-500 text-white font-medium" 
                     disabled={adding}
                   >
-                    {adding ? 'Inscription...' : 'Inscrire'}
+                    {adding ? <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Inscription...</> : 'Inscrire'}
                   </Button>
                 </div>
               </form>

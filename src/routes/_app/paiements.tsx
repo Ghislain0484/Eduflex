@@ -19,10 +19,10 @@ function PaiementsPage() {
     p.studentEmail.toLowerCase().includes(search.toLowerCase())
   )
 
-  // Calculate dynamic total revenue in EUR and XOF
-  const totalRevenue = enrollmentList.reduce((sum, item) => sum + (item.coursePrice || 0), 0)
-  const totalRevenueEur = totalRevenue / 100
-  const totalRevenueXof = Math.round(totalRevenueEur * 655.957)
+  // Prices are stored in FCFA directly (e.g. 15000 = 15,000 FCFA)
+  // Do NOT divide by 100 — they are not stored as cents
+  const totalRevenueFcfa = enrollmentList.reduce((sum, item) => sum + (item.coursePrice || 0), 0)
+  const totalRevenueEur = Math.round(totalRevenueFcfa / 655.957)
 
   return (
     <div className="flex-1 space-y-6 p-6">
@@ -37,12 +37,12 @@ function PaiementsPage() {
         <Card className="animate-fade-in border-border/80">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 shrink-0">
-                <Euro className="h-5 w-5" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 shrink-0">
+                <CreditCard className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground font-medium">Revenus cumulés (Euros)</p>
-                <p className="text-2xl font-bold mt-0.5">{totalRevenueEur.toLocaleString('fr-FR')} €</p>
+                <p className="text-xs text-muted-foreground font-medium">Revenus cumulés (FCFA)</p>
+                <p className="text-2xl font-bold mt-0.5">{totalRevenueFcfa.toLocaleString('fr-FR')} F CFA</p>
               </div>
             </div>
           </CardContent>
@@ -51,12 +51,12 @@ function PaiementsPage() {
         <Card className="animate-fade-in border-border/80">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 shrink-0">
-                <CreditCard className="h-5 w-5" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 shrink-0">
+                <Euro className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground font-medium">Revenus cumulés (CFA)</p>
-                <p className="text-2xl font-bold mt-0.5">~ {totalRevenueXof.toLocaleString('fr-FR')} F CFA</p>
+                <p className="text-xs text-muted-foreground font-medium">Revenus cumulés (Euros)</p>
+                <p className="text-2xl font-bold mt-0.5">~ {totalRevenueEur.toLocaleString('fr-FR')} €</p>
               </div>
             </div>
           </CardContent>
@@ -117,8 +117,8 @@ function PaiementsPage() {
                         </td>
                         <td className="py-3.5 px-4 text-muted-foreground truncate max-w-xs">{paiement.courseTitle}</td>
                         <td className="py-3.5 px-4">
-                          <span className="font-semibold text-foreground block">{priceEur.toLocaleString('fr-FR')} €</span>
-                          {priceEur > 0 && <span className="text-[10px] text-muted-foreground">~ {priceXof.toLocaleString('fr-FR')} FCFA</span>}
+                          <span className="font-semibold text-foreground block">{(paiement.coursePrice || 0).toLocaleString('fr-FR')} FCFA</span>
+                          {paiement.coursePrice > 0 && <span className="text-[10px] text-muted-foreground">~ {Math.round((paiement.coursePrice || 0) / 655.957).toLocaleString('fr-FR')} €</span>}
                         </td>
                         <td className="py-3.5 px-4 text-muted-foreground">{date}</td>
                         <td className="py-3.5 px-4 text-muted-foreground">{paiement.method}</td>
