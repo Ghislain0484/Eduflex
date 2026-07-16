@@ -2,7 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { Button, Card, CardContent, Skeleton, Badge } from '@blinkdotnew/ui'
 import { useAuth } from '@/hooks/useAuth'
 import { useCourses } from '@/hooks/useCourses'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Sparkles,
   Monitor,
@@ -37,6 +37,19 @@ function LandingPage() {
   const { data: courses, isLoading: coursesLoading } = useCourses()
   const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(null)
   const [priceCurrency, setPriceCurrency] = useState<'CFA' | 'EUR'>('CFA')
+  const [platformName, setPlatformName] = useState('EduFlex')
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const globalConfig = localStorage.getItem('global_platform_config')
+      if (globalConfig) {
+        try {
+          const parsed = JSON.parse(globalConfig)
+          if (parsed.name) setPlatformName(parsed.name)
+        } catch {}
+      }
+    }
+  }, [])
 
   const publishedCourses = (courses || [])
     .filter(c => c.status === 'publie')
@@ -76,8 +89,8 @@ function LandingPage() {
             <div className="h-9 w-9 rounded-xl bg-teal-600 flex items-center justify-center shadow-lg shadow-teal-950/50">
               <BookOpen className="h-5 w-5 text-white" />
             </div>
-            <span className="font-extrabold text-xl tracking-tight text-white">
-              eduflex<span className="text-teal-400">.</span>
+            <span className="font-extrabold text-xl tracking-tight text-white uppercase">
+              {platformName}<span className="text-teal-400">.</span>
             </span>
           </Link>
 
@@ -642,7 +655,7 @@ function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4.5 w-4.5 text-primary" />
-            <span className="font-bold text-foreground">EduFlex</span>
+            <span className="font-bold text-foreground">{platformName}</span>
             <span>&copy; 2026. Tous droits réservés.</span>
           </div>
           <div className="flex gap-4">

@@ -118,8 +118,8 @@ export function AppSidebarShell() {
     ...(user?.role === 'admin' ? [
       { href: '/academies', icon: <Building className="h-4 w-4" />, label: 'Académies B2B' }
     ] : []),
-    ...(user?.academyName ? [
-      { href: '/settings', icon: <Settings className="h-4 w-4" />, label: 'Paramètres Académie' }
+    ...((user?.academyName || user?.role === 'admin') ? [
+      { href: '/settings', icon: <Settings className="h-4 w-4" />, label: user.role === 'admin' ? 'Configuration Plateforme' : 'Paramètres Académie' }
     ] : []),
     { href: '/eleves', icon: <Users className="h-4 w-4" />, label: 'Élèves' },
     { href: '/enseignants', icon: <GraduationCap className="h-4 w-4" />, label: 'Enseignants' },

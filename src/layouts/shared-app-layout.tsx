@@ -100,9 +100,26 @@ export function SharedAppLayout({
     }
   }, [])
 
-  // Resolve branding: prioritize logged-in user profile, then resolved tenant info, then default settings
-  const displayedAppName = user?.academyName || academyInfo?.name || appName
-  const activeColor = user?.academyColor || academyInfo?.color || null
+  // Load global platform config from settings
+  const [globalPlatformName, setGlobalPlatformName] = React.useState('EduFlex')
+  const [globalPlatformColor, setGlobalPlatformColor] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const globalConfig = localStorage.getItem('global_platform_config')
+      if (globalConfig) {
+        try {
+          const parsed = JSON.parse(globalConfig)
+          if (parsed.name) setGlobalPlatformName(parsed.name)
+          if (parsed.color) setGlobalPlatformColor(parsed.color)
+        } catch {}
+      }
+    }
+  }, [])
+
+  // Resolve branding: prioritize logged-in user profile, then resolved tenant info, then custom global platform name, then default appName
+  const displayedAppName = user?.academyName || academyInfo?.name || globalPlatformName
+  const activeColor = user?.academyColor || academyInfo?.color || globalPlatformColor || null
 
   const value = React.useMemo(() => ({ appName: displayedAppName }), [displayedAppName])
 
