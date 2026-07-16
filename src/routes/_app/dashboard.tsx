@@ -129,8 +129,12 @@ function DashboardPage() {
   return (
     <div className="flex-1 space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Tableau de bord</h1>
-        <p className="text-muted-foreground text-sm mt-1">Vue d'ensemble de votre plateforme EduFlex</p>
+        <h1 className="text-2xl font-bold tracking-tight">
+          {user?.academyName ? `Tableau de bord — ${user.academyName}` : 'Tableau de bord'}
+        </h1>
+        <p className="text-muted-foreground text-sm mt-1">
+          {user?.academySlogan || "Vue d'ensemble de votre plateforme EduFlex"}
+        </p>
       </div>
 
       {statsLoading ? (

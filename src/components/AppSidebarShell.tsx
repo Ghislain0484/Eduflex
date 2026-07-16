@@ -151,10 +151,15 @@ export function AppSidebarShell() {
         >
           {!collapsed && (
             <>
-              <div className="flex items-center justify-center h-7 w-7 rounded-md bg-primary text-primary-foreground text-xs font-bold shrink-0">
-                E
+              <div 
+                className="flex items-center justify-center h-7 w-7 rounded-md text-white text-xs font-bold shrink-0 bg-primary"
+                style={user?.academyColor ? { backgroundColor: user.academyColor } : {}}
+              >
+                {(user?.academyName || 'E')[0].toUpperCase()}
               </div>
-              <span className="flex-1 font-semibold text-sm truncate">EduFlex</span>
+              <span className="flex-1 font-semibold text-sm truncate">
+                {user?.academyName || 'EduFlex'}
+              </span>
             </>
           )}
 
@@ -216,38 +221,48 @@ export function AppSidebarShell() {
           )}
         >
           {/* User row */}
-          {collapsed ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button className="flex items-center justify-center h-8 w-8 rounded-md hover:bg-accent transition-colors cursor-pointer">
-                  <Avatar className="h-6 w-6 shrink-0">
-                    <AvatarFallback className="text-[10px] bg-muted">
-                      {(user?.displayName || 'U')[0].toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                {user?.displayName || 'Utilisateur'} ({ROLE_MAP[user?.role || 'student']}) · {user?.email || ''}
-              </TooltipContent>
-            </Tooltip>
-          ) : (
-            <button className="flex items-center gap-2 rounded-md hover:bg-accent transition-colors cursor-pointer w-full px-2 py-1.5">
-              <Avatar className="h-6 w-6 shrink-0">
-                <AvatarFallback className="text-[10px] bg-muted">
-                  {(user?.displayName || 'U')[0].toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0 text-left">
-                <p className="text-xs font-medium leading-tight truncate">
-                  {user?.displayName || 'Utilisateur'}
-                </p>
-                <p className="text-[10px] text-muted-foreground leading-tight truncate">
-                  {ROLE_MAP[user?.role || 'student']} · {user?.email || 'Non connecté'}
-                </p>
-              </div>
-            </button>
-          )}
+          {(() => {
+            const displayedRoleLabel = user?.academyName 
+              ? (user.approved ? 'Gérant Académie' : 'Académie (En attente)')
+              : (ROLE_MAP[user?.role || 'student'] || 'Apprenant');
+
+            if (collapsed) {
+              return (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button className="flex items-center justify-center h-8 w-8 rounded-md hover:bg-accent transition-colors cursor-pointer">
+                      <Avatar className="h-6 w-6 shrink-0">
+                        <AvatarFallback className="text-[10px] bg-muted">
+                          {(user?.displayName || 'U')[0].toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    {user?.displayName || 'Utilisateur'} ({displayedRoleLabel}) · {user?.email || ''}
+                  </TooltipContent>
+                </Tooltip>
+              )
+            }
+
+            return (
+              <button className="flex items-center gap-2 rounded-md hover:bg-accent transition-colors cursor-pointer w-full px-2 py-1.5">
+                <Avatar className="h-6 w-6 shrink-0">
+                  <AvatarFallback className="text-[10px] bg-muted">
+                    {(user?.displayName || 'U')[0].toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-xs font-medium leading-tight truncate">
+                    {user?.displayName || 'Utilisateur'}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground leading-tight truncate">
+                    {displayedRoleLabel} · {user?.email || 'Non connecté'}
+                  </p>
+                </div>
+              </button>
+            )
+          })()}
 
           {/* Sign out or Sign in */}
           {!user ? (
