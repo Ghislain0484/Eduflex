@@ -39,7 +39,12 @@ export const Route = createFileRoute('/_app/manage-courses')({
   component: ManageCoursesPage,
 })
 
-const CATEGORIES = ['Marketing', 'Business', 'Productivité']
+const CATEGORIES = [
+  'Marketing Digital', 'Business & Entrepreneuriat', 'Productivité & Organisation',
+  'Développement Web', 'Intelligence Artificielle', 'Langues & Communication',
+  'Finance & Comptabilité', 'Design Graphique', 'Religion & Spiritualité',
+  'Santé & Bien-être', 'Éducation & Formation', 'Autre'
+]
 const LEVELS = [
   { value: 'debutant', label: 'Débutant' },
   { value: 'intermediaire', label: 'Intermédiaire' },
@@ -282,9 +287,9 @@ function ManageCoursesPage() {
     setSelectedCourseId(course.id)
     setTitle(course.title || '')
     setDescription(course.description || '')
-    setCategory(course.category || 'Marketing')
+    setCategory(course.category || 'Marketing Digital')
     setLevel(course.level || 'debutant')
-    setPrice(String((course.price || 0) / 100))
+    setPrice(String(course.price || 0)) // Already stored in FCFA
     setDurationHours(String(course.durationHours || 0))
     setImageUrl(course.imageUrl || '')
     setStatus(course.status || 'publie')
@@ -298,9 +303,10 @@ function ManageCoursesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const parsedPrice = Math.round(parseFloat(price) * 100)
-    if (isNaN(parsedPrice)) {
-      toast.error('Prix invalide.')
+    // Price is stored as integer (FCFA directly, e.g. 15000)
+    const parsedPrice = parseInt(price) || 0
+    if (parsedPrice < 0) {
+      toast.error('Prix invalide. Veuillez entrer un prix en FCFA.')
       return
     }
 
@@ -309,7 +315,7 @@ function ManageCoursesPage() {
       description: description || null,
       category,
       level,
-      price: parsedPrice,
+      price: parsedPrice, // stored as raw FCFA integer
       durationHours: parseInt(durationHours) || 0,
       imageUrl: imageUrl || null,
       status,
@@ -461,7 +467,7 @@ function ManageCoursesPage() {
                         <div>
                           <h3 className="font-semibold text-base truncate">{course.title}</h3>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {((course.price || 0) / 100).toLocaleString('fr-FR')} € ·{' '}
+                            {(course.price || 0).toLocaleString('fr-FR')} FCFA ·{' '}
                             {course.durationHours}h
                           </p>
                         </div>
@@ -829,14 +835,14 @@ function ManageCoursesPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-sm font-medium">Catégorie</label>
+                    <label className="text-sm font-semibold text-foreground">Catégorie</label>
                     <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
-                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="w-full rounded-md border border-slate-600 bg-slate-800 text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                     >
                       {CATEGORIES.map((cat) => (
-                        <option key={cat} value={cat}>
+                        <option key={cat} value={cat} className="bg-slate-800 text-slate-100">
                           {cat}
                         </option>
                       ))}
@@ -844,14 +850,14 @@ function ManageCoursesPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-sm font-medium">Niveau</label>
+                    <label className="text-sm font-semibold text-foreground">Niveau</label>
                     <select
                       value={level}
                       onChange={(e) => setLevel(e.target.value)}
-                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="w-full rounded-md border border-slate-600 bg-slate-800 text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                     >
                       {LEVELS.map((lvl) => (
-                        <option key={lvl.value} value={lvl.value}>
+                        <option key={lvl.value} value={lvl.value} className="bg-slate-800 text-slate-100">
                           {lvl.label}
                         </option>
                       ))}
@@ -861,67 +867,77 @@ function ManageCoursesPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-sm font-medium">Prix (€) *</label>
+                    <label className="text-sm font-semibold text-foreground">Prix (FCFA) *</label>
                     <Input
                       required
                       type="number"
-                      step="0.01"
+                      step="100"
                       min="0"
                       value={price}
                       onChange={(e) => setPrice(e.target.value)}
-                      placeholder="Ex: 49.99"
+                      placeholder="Ex: 15000"
+                      className="bg-slate-800 border-slate-600 text-slate-100 placeholder:text-slate-400"
                     />
+                    <span className="text-[9px] text-muted-foreground">Valeur en FCFA. Ex: 15000 = 15 000 FCFA.</span>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-sm font-medium">Durée totale (heures)</label>
+                    <label className="text-sm font-semibold text-foreground">Durée totale (heures)</label>
                     <Input
                       type="number"
                       min="0"
                       value={durationHours}
                       onChange={(e) => setDurationHours(e.target.value)}
                       placeholder="Ex: 12"
+                      className="bg-slate-800 border-slate-600 text-slate-100 placeholder:text-slate-400"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium">URL de l'image de couverture</label>
+                  <label className="text-sm font-semibold text-foreground">URL de l'image de couverture</label>
                   <Input
                     type="url"
                     value={imageUrl}
                     onChange={(e) => setImageUrl(e.target.value)}
                     placeholder="https://images.unsplash.com/..."
+                    className="bg-slate-800 border-slate-600 text-slate-100 placeholder:text-slate-400"
                   />
+                  <span className="text-[9px] text-muted-foreground">Laissez vide pour utiliser un visuel générique.</span>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium">Statut</label>
+                  <label className="text-sm font-semibold text-foreground">Statut de publication</label>
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="w-full rounded-md border border-slate-600 bg-slate-800 text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                   >
-                    <option value="publie">Publiée (Visible sur le catalogue)</option>
-                    <option value="brouillon">Brouillon (Masquée)</option>
+                    <option value="publie" className="bg-slate-800">✅ Publiée — Visible sur le catalogue public</option>
+                    <option value="brouillon" className="bg-slate-800">📝 Brouillon — Masquée (modifications en cours)</option>
                   </select>
                 </div>
 
-                <div className="flex gap-3 pt-4">
+                <div className="flex gap-3 pt-4 border-t border-border/40">
                   <Button
                     type="submit"
                     disabled={createCourse.isPending || updateCourse.isPending}
-                    className="flex-1"
+                    className="flex-1 bg-teal-600 hover:bg-teal-500 text-white font-bold h-11 border-none shadow-md text-sm"
                   >
                     {createCourse.isPending || updateCourse.isPending ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enregistrement...
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enregistrement en cours...
                       </>
                     ) : (
-                      'Sauvegarder la formation'
+                      view === 'create' ? '✅ Créer la formation' : '💾 Mettre à jour la formation'
                     )}
                   </Button>
-                  <Button type="button" variant="outline" onClick={() => setView('list')}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-11 px-6 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+                    onClick={() => setView('list')}
+                  >
                     Annuler
                   </Button>
                 </div>
@@ -1089,7 +1105,11 @@ function ChaptersManagerSection({ course, onBack }: { course: any; onBack: () =>
           </p>
         </div>
         {!formOpen && (
-          <Button onClick={openAddForm} size="sm" className="gap-1.5">
+          <Button
+            onClick={openAddForm}
+            size="sm"
+            className="gap-1.5 bg-teal-600 hover:bg-teal-500 text-white font-bold border-none shadow-md"
+          >
             <Plus className="h-4 w-4" /> Ajouter un chapitre
           </Button>
         )}
@@ -1289,20 +1309,26 @@ function ChaptersManagerSection({ course, onBack }: { course: any; onBack: () =>
                 />
               </div>
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-2 pt-4 border-t border-border/40">
                 <Button
                   type="submit"
                   disabled={createChapter.isPending || updateChapter.isPending}
+                  className="flex-1 bg-teal-600 hover:bg-teal-500 text-white font-bold h-11 border-none shadow-md"
                 >
                   {createChapter.isPending || updateChapter.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enregistrement...
                     </>
                   ) : (
-                    'Sauvegarder le chapitre'
+                    editingChapterId == null ? '✅ Ajouter le chapitre' : '💾 Mettre à jour le chapitre'
                   )}
                 </Button>
-                <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11 px-6 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+                  onClick={() => setFormOpen(false)}
+                >
                   Annuler
                 </Button>
               </div>
