@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TarifsRouteImport } from './routes/tarifs'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as EduflexPlusRouteImport } from './routes/eduflex-plus'
@@ -26,6 +27,11 @@ import { Route as AppAcademiesRouteImport } from './routes/_app/academies'
 import { Route as AppStudyIdRouteImport } from './routes/_app/study.$id'
 import { Route as AppCoursesIdRouteImport } from './routes/_app/courses.$id'
 
+const TarifsRoute = TarifsRouteImport.update({
+  id: '/tarifs',
+  path: '/tarifs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
@@ -111,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/eduflex-plus': typeof EduflexPlusRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/tarifs': typeof TarifsRoute
   '/academies': typeof AppAcademiesRoute
   '/courses': typeof AppCoursesRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
@@ -128,6 +135,7 @@ export interface FileRoutesByTo {
   '/eduflex-plus': typeof EduflexPlusRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/tarifs': typeof TarifsRoute
   '/academies': typeof AppAcademiesRoute
   '/courses': typeof AppCoursesRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
@@ -147,6 +155,7 @@ export interface FileRoutesById {
   '/eduflex-plus': typeof EduflexPlusRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/tarifs': typeof TarifsRoute
   '/_app/academies': typeof AppAcademiesRoute
   '/_app/courses': typeof AppCoursesRouteWithChildren
   '/_app/dashboard': typeof AppDashboardRoute
@@ -166,6 +175,7 @@ export interface FileRouteTypes {
     | '/eduflex-plus'
     | '/login'
     | '/register'
+    | '/tarifs'
     | '/academies'
     | '/courses'
     | '/dashboard'
@@ -183,6 +193,7 @@ export interface FileRouteTypes {
     | '/eduflex-plus'
     | '/login'
     | '/register'
+    | '/tarifs'
     | '/academies'
     | '/courses'
     | '/dashboard'
@@ -201,6 +212,7 @@ export interface FileRouteTypes {
     | '/eduflex-plus'
     | '/login'
     | '/register'
+    | '/tarifs'
     | '/_app/academies'
     | '/_app/courses'
     | '/_app/dashboard'
@@ -220,10 +232,18 @@ export interface RootRouteChildren {
   EduflexPlusRoute: typeof EduflexPlusRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  TarifsRoute: typeof TarifsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tarifs': {
+      id: '/tarifs'
+      path: '/tarifs'
+      fullPath: '/tarifs'
+      preLoaderRoute: typeof TarifsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/register': {
       id: '/register'
       path: '/register'
@@ -385,6 +405,7 @@ const rootRouteChildren: RootRouteChildren = {
   EduflexPlusRoute: EduflexPlusRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  TarifsRoute: TarifsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -131,9 +131,9 @@ function LandingPage() {
               </div>
             </div>
 
-            <a href="#features" className="text-[13px] font-semibold text-slate-300 hover:text-teal-400 transition-colors py-2">
+            <Link to="/tarifs" className="text-[13px] font-semibold text-slate-300 hover:text-teal-400 transition-colors py-2">
               Fonctionnalités & Tarifs
-            </a>
+            </Link>
 
             <Link to="/eduflex-plus" className="text-[13px] font-semibold text-slate-300 hover:text-teal-400 transition-colors py-2">
               EduFlex+ Entreprises
