@@ -373,7 +373,10 @@ function ManageCoursesPage() {
               </p>
             </div>
             {activeTab === 'courses' && (
-              <Button onClick={openCreateForm} className="gap-2">
+              <Button 
+                onClick={openCreateForm} 
+                className="gap-2 bg-teal-600 hover:bg-teal-500 text-white font-bold h-10 border-none shadow-md"
+              >
                 <Plus className="h-4 w-4" /> Nouvelle formation
               </Button>
             )}

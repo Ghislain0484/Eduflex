@@ -348,7 +348,10 @@ function ProfilTab({ user }: { user: any }) {
         .eq('id', user.id)
       if (dbError) throw dbError
 
-      toast.success('Profil mis à jour avec succès ! Réactualisez la page pour appliquer les personnalisations.')
+      toast.success('Modifications enregistrées avec succès ! Application de votre charte graphique...')
+      setTimeout(() => {
+        window.location.reload()
+      }, 1000)
     } catch (err: any) {
       toast.error(err.message || 'Erreur lors de la sauvegarde.')
     } finally {
@@ -504,12 +507,30 @@ function ProfilTab({ user }: { user: any }) {
                 </div>
               </div>
             </div>
+
+            {/* Save button for branding */}
+            <div className="flex justify-end pt-2 border-t border-border/40">
+              <Button 
+                type="button" 
+                onClick={handleSave} 
+                disabled={saving} 
+                className="bg-teal-600 hover:bg-teal-500 text-white font-bold h-9 text-xs border-none shadow-md"
+              >
+                {saving ? 'Enregistrement...' : 'Enregistrer les modifications'}
+              </Button>
+            </div>
           </div>
         )}
 
-        <Button onClick={handleSave} disabled={saving} className="mt-4">
-          {saving ? 'Sauvegarde...' : 'Sauvegarder'}
-        </Button>
+        <div className="flex justify-start pt-2 border-t border-border/40">
+          <Button 
+            onClick={handleSave} 
+            disabled={saving} 
+            className="bg-teal-600 hover:bg-teal-500 text-white font-bold h-10 border-none shadow-md"
+          >
+            {saving ? 'Enregistrement...' : 'Enregistrer les modifications'}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   )
