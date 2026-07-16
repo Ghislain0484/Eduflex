@@ -11,6 +11,7 @@ export interface AppUser {
   academyColor?: string | null
   approved?: boolean
   academyPlan?: string | null
+  academyLogo?: string | null
 }
 
 export function useAuth() {
@@ -27,7 +28,7 @@ export function useAuth() {
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('role, display_name, academy_name, academy_slogan, academy_color, approved, academy_plan')
+        .select('role, display_name, academy_name, academy_slogan, academy_color, approved, academy_plan, academy_logo')
         .eq('id', sessionUser.id)
         .maybeSingle()
 
@@ -43,6 +44,7 @@ export function useAuth() {
         academyColor: profile?.academy_color || '#6366f1',
         approved: profile?.approved !== false, // default to true
         academyPlan: profile?.academy_plan || null,
+        academyLogo: profile?.academy_logo || null,
       })
     } catch (e) {
       console.error('Error fetching profile:', e)
@@ -57,6 +59,7 @@ export function useAuth() {
         academyColor: '#6366f1',
         approved: true,
         academyPlan: null,
+        academyLogo: null,
       })
     } finally {
       setIsLoading(false)

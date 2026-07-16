@@ -91,6 +91,7 @@ function ProfilTab({ user }: { user: any }) {
   const [academyName, setAcademyName] = useState(user?.academyName || '')
   const [academySlogan, setAcademySlogan] = useState(user?.academySlogan || '')
   const [academyColor, setAcademyColor] = useState(user?.academyColor || '#6366f1')
+  const [academyLogo, setAcademyLogo] = useState(user?.academyLogo || '')
   const [saving, setSaving] = useState(false)
 
   // Pre-fill when user changes
@@ -100,6 +101,7 @@ function ProfilTab({ user }: { user: any }) {
       setAcademyName(user.academyName || '')
       setAcademySlogan(user.academySlogan || '')
       setAcademyColor(user.academyColor || '#6366f1')
+      setAcademyLogo(user.academyLogo || '')
     }
   }, [user])
 
@@ -127,7 +129,8 @@ function ProfilTab({ user }: { user: any }) {
           display_name: name.trim(),
           academy_name: academyName.trim() || null,
           academy_slogan: academySlogan.trim() || null,
-          academy_color: academyColor || '#6366f1'
+          academy_color: academyColor || '#6366f1',
+          academy_logo: academyLogo.trim() || null
         })
         .eq('id', user.id)
       if (dbError) throw dbError
@@ -159,7 +162,7 @@ function ProfilTab({ user }: { user: any }) {
           <Input value={userRole} disabled className="opacity-60 font-semibold" />
         </div>
 
-        {(user?.role === 'teacher' || user?.role === 'admin') && (
+        {(user?.role === 'teacher' || user?.role === 'admin' || !!user?.academyName) && (
           <div className="border-t border-border/80 pt-6 mt-6 space-y-6">
             <div>
               <h3 className="text-sm font-bold text-foreground">Personnalisation de l'Académie (White-Label)</h3>
@@ -188,18 +191,58 @@ function ProfilTab({ user }: { user: any }) {
               </div>
             </div>
 
-            <div className="space-y-2.5">
-              <label className="text-xs font-medium">Couleur d'accentuation de la marque</label>
-              <div className="flex items-center gap-3">
-                <input 
-                  type="color" 
-                  value={academyColor} 
-                  onChange={e => setAcademyColor(e.target.value)} 
-                  className="w-10 h-10 rounded-md border border-input cursor-pointer bg-transparent"
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-xs font-medium">URL du Logo de l'Académie</label>
+                <Input 
+                  value={academyLogo} 
+                  onChange={e => setAcademyLogo(e.target.value)} 
+                  placeholder="Ex: https://lien-image.com/mon-logo.png" 
                 />
-                <div>
-                  <span className="text-xs font-medium text-foreground block">{academyColor}</span>
-                  <span className="text-[9px] text-muted-foreground">Cette couleur sera appliquée comme couleur de marque pour vos étudiants.</span>
+                <span className="text-[9px] text-muted-foreground block">
+                  Saisissez l'URL directe de votre image ou logo de marque.
+                </span>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-medium">Couleur d'accentuation de la marque</label>
+                <div className="flex items-center gap-3">
+                  <input 
+                    type="color" 
+                    value={academyColor} 
+                    onChange={e => setAcademyColor(e.target.value)} 
+                    className="w-10 h-10 rounded-md border border-input cursor-pointer bg-transparent"
+                  />
+                  <div>
+                    <span className="text-xs font-semibold text-foreground block">{academyColor}</span>
+                    <span className="text-[9px] text-muted-foreground">Appliquée aux boutons, en-têtes et thèmes de lecture.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Certificats & Reçus templates preview */}
+            <div className="border-t border-border/60 pt-6 mt-6 space-y-4">
+              <div>
+                <h4 className="text-xs font-bold text-foreground">Aperçu & Modèles de Documents officiels</h4>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  Ces modèles seront automatiquement générés à l'effigie de votre académie.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 rounded-lg bg-accent/40 border border-border/80 space-y-2">
+                  <span className="text-[10px] bg-teal-500/10 text-teal-400 font-bold px-1.5 py-0.5 rounded border border-teal-500/20">Modèle de Reçu</span>
+                  <h5 className="font-semibold text-xs mt-1 text-white">Reçu de paiement élève</h5>
+                  <p className="text-[9px] text-muted-foreground leading-relaxed">
+                    Génère un reçu PDF officiel affichant le logo <strong>{academyName || 'Votre Académie'}</strong>, sa couleur primaire, et le détail de la transaction Mobile Money.
+                  </p>
+                </div>
+                <div className="p-4 rounded-lg bg-accent/40 border border-border/80 space-y-2">
+                  <span className="text-[10px] bg-teal-500/10 text-teal-400 font-bold px-1.5 py-0.5 rounded border border-teal-500/20">Modèle de Diplôme</span>
+                  <h5 className="font-semibold text-xs mt-1 text-white">Certificat de fin de formation</h5>
+                  <p className="text-[9px] text-muted-foreground leading-relaxed">
+                    Délivre un diplôme numérique officiel à l'élève ayant terminé 100% des chapitres, signé par <strong>{academyName || 'Votre Académie'}</strong>.
+                  </p>
                 </div>
               </div>
             </div>

@@ -236,6 +236,7 @@ export function useAcademiesList() {
         academyColor: row.academy_color,
         approved: row.approved,
         academyPlan: row.academy_plan || 'Découverte',
+        academyLogo: row.academy_logo || null,
         createdAt: row.created_at,
       }))
     },

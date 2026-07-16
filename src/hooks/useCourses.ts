@@ -18,6 +18,13 @@ export interface Course {
   studentsCount: number
   createdAt: string
   updatedAt: string
+  profiles?: {
+    displayName: string
+    academyName?: string | null
+    academyLogo?: string | null
+    academyColor?: string | null
+    academySlogan?: string | null
+  } | null
 }
 
 // Helper to map snake_case columns from Postgres/Supabase to camelCase used in React
@@ -35,6 +42,13 @@ const mapCourse = (row: any): Course => ({
   studentsCount: Number(row.students_count),
   createdAt: row.created_at,
   updatedAt: row.updated_at,
+  profiles: row.profiles ? {
+    displayName: row.profiles.display_name,
+    academyName: row.profiles.academy_name,
+    academyLogo: row.profiles.academy_logo,
+    academyColor: row.profiles.academy_color,
+    academySlogan: row.profiles.academy_slogan,
+  } : null
 })
 
 // ── Hooks ────────────────────────────────────────────────────────────────────
@@ -146,7 +160,16 @@ export function useCourses() {
       try {
         const { data, error } = await supabase
           .from('courses')
-          .select('*')
+          .select(`
+            *,
+            profiles:user_id (
+              display_name,
+              academy_name,
+              academy_logo,
+              academy_color,
+              academy_slogan
+            )
+          `)
           .eq('status', 'publie')
           .order('created_at', { ascending: false })
 
@@ -177,7 +200,16 @@ export function useCourse(id: number | undefined) {
       try {
         const { data, error } = await supabase
           .from('courses')
-          .select('*')
+          .select(`
+            *,
+            profiles:user_id (
+              display_name,
+              academy_name,
+              academy_logo,
+              academy_color,
+              academy_slogan
+            )
+          `)
           .eq('id', id)
           .maybeSingle()
 

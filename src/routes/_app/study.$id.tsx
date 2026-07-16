@@ -290,13 +290,16 @@ function StudyRoomPage() {
 
     const studentName = user.displayName || user.email?.split('@')[0] || 'Apprenant'
 
+    const academyName = course.profiles?.academyName || 'EDUFLEX ACADEMY'
+    const academyColor = course.profiles?.academyColor || '#ca8a04'
+    const academySlogan = course.profiles?.academySlogan || 'L\'excellence par la formation en ligne'
+
     // 1. Fond beige/crème premium
     ctx.fillStyle = '#fdfbf7'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    // 2. Bordure double dorée
-    // Bordure extérieure
-    ctx.strokeStyle = '#c5a880'
+    // 2. Bordure double dorée/thème
+    ctx.strokeStyle = academyColor
     ctx.lineWidth = 15
     ctx.strokeRect(30, 30, canvas.width - 60, canvas.height - 60)
 
@@ -326,11 +329,16 @@ function StudyRoomPage() {
     
     // Titre principal
     ctx.font = '600 24px Arial, sans-serif'
-    ctx.fillText('E D U F L E X   A C A D E M Y', canvas.width / 2, 180)
+    ctx.fillText(academyName.toUpperCase().split('').join(' '), canvas.width / 2, 180)
 
     ctx.font = 'italic 62px Georgia, serif'
-    ctx.fillStyle = '#854d0e' // Marron doré
+    ctx.fillStyle = academyColor // Custom primary brand color or gold
     ctx.fillText('Certificat de Réussite', canvas.width / 2, 290)
+
+    // Slogan de l'académie
+    ctx.font = 'italic 16px Arial, sans-serif'
+    ctx.fillStyle = '#64748b'
+    ctx.fillText(academySlogan, canvas.width / 2, 335)
 
     // Texte descriptif
     ctx.font = '22px Arial, sans-serif'
@@ -378,7 +386,7 @@ function StudyRoomPage() {
     ctx.arc(sealX, sealY, 65, 0, Math.PI * 2)
     ctx.fillStyle = '#fef08a'
     ctx.fill()
-    ctx.strokeStyle = '#ca8a04'
+    ctx.strokeStyle = academyColor
     ctx.lineWidth = 4
     ctx.stroke()
 
@@ -393,7 +401,7 @@ function StudyRoomPage() {
     ctx.fillText('OFFICIEL', sealX, sealY - 10)
     ctx.fillText('AGRÉÉ', sealX, sealY + 10)
     ctx.font = '8px Arial, sans-serif'
-    ctx.fillText('EDUFLEX', sealX, sealY + 25)
+    ctx.fillText(academyName.substring(0, 10).toUpperCase(), sealX, sealY + 25)
 
     // Signature (droite)
     const sigX = canvas.width / 2 + 280
@@ -410,18 +418,18 @@ function StudyRoomPage() {
     // Texte signature
     ctx.font = '16px Arial, sans-serif'
     ctx.fillStyle = '#64748b'
-    ctx.fillText('La Direction EduFlex', sigX, sigY + 45)
+    ctx.fillText(`La Direction ${academyName}`, sigX, sigY + 45)
 
     // Écrit à la main
     ctx.font = 'italic 34px Georgia, serif'
     ctx.fillStyle = '#1e3a8a' // Bleu encre
-    ctx.fillText('EduFlex Academy', sigX, sigY - 5)
+    ctx.fillText(academyName, sigX, sigY - 5)
 
     // Déclencher le téléchargement
     try {
       const dataUrl = canvas.toDataURL('image/png')
       const link = document.createElement('a')
-      link.download = `Certificat_EduFlex_${course.title.replace(/[^a-zA-Z0-9]/g, '_')}.png`
+      link.download = `Certificat_${academyName.replace(/[^a-zA-Z0-9]/g, '_')}_${course.title.replace(/[^a-zA-Z0-9]/g, '_')}.png`
       link.href = dataUrl
       link.click()
       toast.success('Certificat généré et téléchargé avec succès !')
