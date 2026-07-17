@@ -6,6 +6,7 @@ import { toast } from '@blinkdotnew/ui'
 import { User, Shield, Bell, Percent, DollarSign, Clock, CheckCircle, Users, Settings, Plus, Search, Trash2, UserCheck, UserX, Key, ShieldAlert, Edit } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { uploadToStorage } from '@/utils/storage'
 
 export const Route = createFileRoute('/_app/settings')({
   component: SettingsPage,
@@ -122,27 +123,23 @@ function ProfilTab({ user }: { user: any }) {
   }
   const userRole = ROLE_MAP[user?.role || 'student'] || 'Élève'
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     if (!file.type.startsWith('image/')) {
       toast.error('Veuillez sélectionner un fichier image (PNG ou JPEG).')
       return
     }
-    // Limit logo size to 300KB to avoid exceeding Supabase row size limits
-    const maxSizeKB = 300
-    if (file.size > maxSizeKB * 1024) {
-      toast.error(`L\'image est trop lourde (${Math.round(file.size / 1024)} KB). Maximum autorisé : ${maxSizeKB} KB. Compressez votre image avant de l\'uploader.`)
-      return
-    }
 
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      const base64 = event.target?.result as string
-      setAcademyLogo(base64)
-      toast.success('Logo chargé ! Cliquez sur "Enregistrer les modifications" pour sauvegarder.')
+    try {
+      const toastId = toast.loading("Téléversement du logo...")
+      const publicUrl = await uploadToStorage(file, 'academy-branding', user?.id || 'anonymous')
+      setAcademyLogo(publicUrl)
+      toast.dismiss(toastId)
+      toast.success('Logo téléversé ! Enregistrez pour appliquer.')
+    } catch (err) {
+      toast.error("Erreur de téléversement.")
     }
-    reader.readAsDataURL(file)
   }
 
   const previewCertificate = async () => {

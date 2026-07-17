@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { uploadToStorage } from '@/utils/storage'
 
 export const Route = createFileRoute('/_app/admin-settings')({
   component: AdminSettingsPage,
@@ -49,6 +50,7 @@ function AdminSettingsPage() {
           <TabsTrigger value="domaines" className="gap-2 text-xs"><Globe className="h-4 w-4" />Domaines & B2B</TabsTrigger>
           <TabsTrigger value="utilisateurs" className="gap-2 text-xs"><Users className="h-4 w-4" />Gestion des Comptes</TabsTrigger>
           <TabsTrigger value="securite" className="gap-2 text-xs"><ShieldCheck className="h-4 w-4" />RLS & Sécurité</TabsTrigger>
+          <TabsTrigger value="sms" className="gap-2 text-xs"><MailWarning className="h-4 w-4" />Réseau SMS</TabsTrigger>
         </TabsList>
 
         <TabsContent value="branding"><BrandingTab /></TabsContent>
@@ -56,6 +58,7 @@ function AdminSettingsPage() {
         <TabsContent value="domaines"><DomainesTab /></TabsContent>
         <TabsContent value="utilisateurs"><UtilisateursTab /></TabsContent>
         <TabsContent value="securite"><SecuriteTab /></TabsContent>
+        <TabsContent value="sms"><SmsTab /></TabsContent>
       </Tabs>
     </div>
   )
@@ -92,19 +95,18 @@ function BrandingTab() {
     }
   }, [])
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.size > 300 * 1024) {
-      toast.error('L\'image est trop lourde. Maximum autorisé : 300 KB.')
-      return
+    try {
+      const toastId = toast.loading("Téléversement du logo plateforme...")
+      const publicUrl = await uploadToStorage(file, 'platform-branding', 'admin')
+      setLogo(publicUrl)
+      toast.dismiss(toastId)
+      toast.success('Logo plateforme téléversé ! Enregistrez pour appliquer.')
+    } catch {
+      toast.error("Erreur de téléversement du logo.")
     }
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      setLogo(event.target?.result as string)
-      toast.success('Logo chargé localement !')
-    }
-    reader.readAsDataURL(file)
   }
 
   const handleSave = () => {
@@ -798,6 +800,154 @@ function SecuriteTab() {
           <Button onClick={handleSaveConfig} disabled={saving} className="bg-teal-600 hover:bg-teal-500 text-white font-bold h-9 text-xs border-none shadow-md">
             {saving ? 'Sauvegarde...' : 'Enregistrer la configuration de sécurité'}
           </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function SmsTab() {
+  const [provider, setProvider] = useState<'twilio' | 'bulksms' | 'custom'>('twilio')
+  const [accountSid, setAccountSid] = useState('')
+  const [authToken, setAuthToken] = useState('')
+  const [senderId, setSenderId] = useState('EDUFLEX')
+  const [notifyPurchase, setNotifyPurchase] = useState(false)
+  const [notifyWithdrawal, setNotifyWithdrawal] = useState(false)
+  const [testNumber, setTestNumber] = useState('')
+  const [testing, setTesting] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('global_sms_config')
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved)
+          if (parsed.provider) setProvider(parsed.provider)
+          if (parsed.accountSid) setAccountSid(parsed.accountSid)
+          if (parsed.authToken) setAuthToken(parsed.authToken)
+          if (parsed.senderId) setSenderId(parsed.senderId)
+          if (parsed.enabledEvents) {
+            setNotifyPurchase(!!parsed.enabledEvents.purchase)
+            setNotifyWithdrawal(!!parsed.enabledEvents.withdrawal)
+          }
+        } catch {}
+      }
+    }
+  }, [])
+
+  const handleSave = () => {
+    setSaving(true)
+    try {
+      localStorage.setItem('global_sms_config', JSON.stringify({
+        provider,
+        accountSid: accountSid.trim(),
+        authToken: authToken.trim(),
+        senderId: senderId.trim(),
+        enabledEvents: {
+          purchase: notifyPurchase,
+          withdrawal: notifyWithdrawal
+        }
+      }))
+      toast.success('Configuration SMS enregistrée avec succès !')
+    } catch {
+      toast.error('Erreur lors de la sauvegarde.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleSendTest = async () => {
+    if (!testNumber.trim()) {
+      toast.error('Veuillez saisir un numéro de téléphone de test.')
+      return
+    }
+    setTesting(true)
+    try {
+      const { sendSMS } = await import('@/utils/sms')
+      const success = await sendSMS(testNumber.trim(), 'Test SMS d\'EduFlex. Votre passerelle SMS est fonctionnelle !')
+      if (success) {
+        toast.success('SMS de test envoyé avec succès ! (Vérifiez les logs de la console)')
+      } else {
+        toast.error('Échec de l\'envoi du SMS de test.')
+      }
+    } catch (err: any) {
+      toast.error('Erreur : ' + err.message)
+    } finally {
+      setTesting(false)
+    }
+  }
+
+  return (
+    <Card className="mt-6 bg-slate-900 border-slate-800 text-slate-100">
+      <CardHeader>
+        <CardTitle className="text-white text-base">Configuration de la Passerelle SMS Globale</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-slate-300">Fournisseur de Service SMS</label>
+            <select value={provider} onChange={e => setProvider(e.target.value as any)} className="w-full h-9 rounded bg-slate-800 border border-slate-700 text-slate-100 text-xs px-2.5 outline-none font-medium">
+              <option value="twilio">Twilio SMS</option>
+              <option value="bulksms">BulkSMS Gateway</option>
+              <option value="custom">API HTTP Personnalisée</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-slate-300">Nom d'expéditeur (Sender ID)</label>
+            <Input value={senderId} onChange={e => setSenderId(e.target.value)} placeholder="Ex: EDUFLEX" className="bg-slate-800 border-slate-700 text-slate-100 text-xs font-mono" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-slate-300 font-mono">Account SID / API Key</label>
+            <Input type="text" value={accountSid} onChange={e => setAccountSid(e.target.value)} placeholder="Saisir Account SID" className="bg-slate-800 border-slate-700 text-slate-100 text-xs font-mono" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-slate-300 font-mono">Auth Token / API Secret</label>
+            <Input type="password" value={authToken} onChange={e => setAuthToken(e.target.value)} placeholder="••••••••••••••••" className="bg-slate-800 border-slate-700 text-slate-100 text-xs font-mono" />
+          </div>
+        </div>
+
+        <div className="border-t border-slate-800 pt-4 space-y-3">
+          <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Déclencheurs SMS automatiques</h4>
+          
+          <div className="flex items-center justify-between py-2 border-b border-slate-800/40">
+            <div>
+              <p className="text-xs font-semibold text-white">SMS d'achat de formation</p>
+              <p className="text-[10px] text-slate-400">Envoyer un SMS de félicitations à l'élève à l'achat d'un cours.</p>
+            </div>
+            <button onClick={() => setNotifyPurchase(!notifyPurchase)} className={`relative h-5 w-10 rounded-full transition-colors ${notifyPurchase ? 'bg-teal-500' : 'bg-slate-800'}`}>
+              <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${notifyPurchase ? 'left-[22px]' : 'left-0.5'}`} />
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between py-2 border-b border-slate-800/40">
+            <div>
+              <p className="text-xs font-semibold text-white">SMS de validation de retrait</p>
+              <p className="text-[10px] text-slate-400">Envoyer un SMS au formateur dès que sa demande de retrait Mobile Money est payée.</p>
+            </div>
+            <button onClick={() => setNotifyWithdrawal(!notifyWithdrawal)} className={`relative h-5 w-10 rounded-full transition-colors ${notifyWithdrawal ? 'bg-teal-500' : 'bg-slate-800'}`}>
+              <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${notifyWithdrawal ? 'left-[22px]' : 'left-0.5'}`} />
+            </button>
+          </div>
+        </div>
+
+        <div className="flex justify-end pt-4 border-t border-slate-800">
+          <Button onClick={handleSave} disabled={saving} className="bg-teal-600 hover:bg-teal-500 text-white font-bold h-9 text-xs border-none shadow-md">
+            {saving ? 'Sauvegarde...' : 'Enregistrer le réseau SMS'}
+          </Button>
+        </div>
+
+        <div className="border-t border-slate-800 pt-5 space-y-3">
+          <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Test de la Passerelle SMS</h4>
+          <div className="flex items-center gap-3">
+            <Input value={testNumber} onChange={e => setTestNumber(e.target.value)} placeholder="Ex: +2250700000000" className="bg-slate-850 border-slate-800 text-slate-100 text-xs font-mono flex-1 h-9" />
+            <Button onClick={handleSendTest} disabled={testing} variant="outline" className="border-slate-700 text-slate-300 text-xs h-9 font-semibold">
+              {testing ? 'Envoi...' : 'Envoyer un SMS de test'}
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
