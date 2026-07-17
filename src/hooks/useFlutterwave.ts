@@ -17,9 +17,21 @@ export function useFlutterwave() {
         return
       }
 
-      const publicKey = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY
+      let publicKey = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY
+      if (typeof window !== 'undefined') {
+        const globalConfig = localStorage.getItem('global_platform_config')
+        if (globalConfig) {
+          try {
+            const parsed = JSON.parse(globalConfig)
+            if (parsed.flutterwavePublicKey) {
+              publicKey = parsed.flutterwavePublicKey
+            }
+          } catch {}
+        }
+      }
+
       if (!publicKey) {
-        const errMsg = "La clé publique Flutterwave n'est pas configurée (VITE_FLUTTERWAVE_PUBLIC_KEY dans le fichier .env)."
+        const errMsg = "La clé publique Flutterwave n'est pas configurée (Console Admin > Passerelle ou variable .env)."
         toast.error(errMsg)
         reject(new Error(errMsg))
         return

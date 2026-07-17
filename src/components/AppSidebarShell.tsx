@@ -36,6 +36,8 @@ import {
   Moon,
   Building,
   Settings,
+  User,
+  ShieldAlert,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -116,11 +118,14 @@ export function AppSidebarShell() {
       { href: '/manage-courses', icon: <BookOpen className="h-4 w-4" />, label: 'Gérer les formations' }
     ] : []),
     ...(user?.role === 'admin' ? [
-      { href: '/academies', icon: <Building className="h-4 w-4" />, label: 'Académies B2B' }
+      { href: '/academies', icon: <Building className="h-4 w-4" />, label: 'Académies B2B' },
+      { href: '/admin-settings', icon: <ShieldAlert className="h-4 w-4" />, label: 'Console Admin' }
     ] : []),
-    ...((user?.academyName || user?.role === 'admin') ? [
-      { href: '/settings', icon: <Settings className="h-4 w-4" />, label: user.role === 'admin' ? 'Configuration Plateforme' : 'Paramètres Académie' }
-    ] : []),
+    { 
+      href: '/settings', 
+      icon: user?.academyName ? <Settings className="h-4 w-4" /> : <User className="h-4 w-4" />, 
+      label: user?.academyName ? 'Paramètres Académie' : 'Mon Profil' 
+    },
     { href: '/eleves', icon: <Users className="h-4 w-4" />, label: 'Élèves' },
     { href: '/enseignants', icon: <GraduationCap className="h-4 w-4" />, label: 'Enseignants' },
     { href: '/statistiques', icon: <BarChart3 className="h-4 w-4" />, label: 'Statistiques' },

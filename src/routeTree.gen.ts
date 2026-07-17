@@ -23,6 +23,7 @@ import { Route as AppEnseignantsRouteImport } from './routes/_app/enseignants'
 import { Route as AppElevesRouteImport } from './routes/_app/eleves'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppCoursesRouteImport } from './routes/_app/courses'
+import { Route as AppAdminSettingsRouteImport } from './routes/_app/admin-settings'
 import { Route as AppAcademiesRouteImport } from './routes/_app/academies'
 import { Route as AppStudyIdRouteImport } from './routes/_app/study.$id'
 import { Route as AppCoursesIdRouteImport } from './routes/_app/courses.$id'
@@ -96,6 +97,11 @@ const AppCoursesRoute = AppCoursesRouteImport.update({
   path: '/courses',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminSettingsRoute = AppAdminSettingsRouteImport.update({
+  id: '/admin-settings',
+  path: '/admin-settings',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAcademiesRoute = AppAcademiesRouteImport.update({
   id: '/academies',
   path: '/academies',
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/tarifs': typeof TarifsRoute
   '/academies': typeof AppAcademiesRoute
+  '/admin-settings': typeof AppAdminSettingsRoute
   '/courses': typeof AppCoursesRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
   '/eleves': typeof AppElevesRoute
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/tarifs': typeof TarifsRoute
   '/academies': typeof AppAcademiesRoute
+  '/admin-settings': typeof AppAdminSettingsRoute
   '/courses': typeof AppCoursesRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
   '/eleves': typeof AppElevesRoute
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/tarifs': typeof TarifsRoute
   '/_app/academies': typeof AppAcademiesRoute
+  '/_app/admin-settings': typeof AppAdminSettingsRoute
   '/_app/courses': typeof AppCoursesRouteWithChildren
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/eleves': typeof AppElevesRoute
@@ -177,6 +186,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/tarifs'
     | '/academies'
+    | '/admin-settings'
     | '/courses'
     | '/dashboard'
     | '/eleves'
@@ -195,6 +205,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/tarifs'
     | '/academies'
+    | '/admin-settings'
     | '/courses'
     | '/dashboard'
     | '/eleves'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/tarifs'
     | '/_app/academies'
+    | '/_app/admin-settings'
     | '/_app/courses'
     | '/_app/dashboard'
     | '/_app/eleves'
@@ -335,6 +347,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCoursesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/admin-settings': {
+      id: '/_app/admin-settings'
+      path: '/admin-settings'
+      fullPath: '/admin-settings'
+      preLoaderRoute: typeof AppAdminSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/academies': {
       id: '/_app/academies'
       path: '/academies'
@@ -373,6 +392,7 @@ const AppCoursesRouteWithChildren = AppCoursesRoute._addFileChildren(
 
 interface AppRouteChildren {
   AppAcademiesRoute: typeof AppAcademiesRoute
+  AppAdminSettingsRoute: typeof AppAdminSettingsRoute
   AppCoursesRoute: typeof AppCoursesRouteWithChildren
   AppDashboardRoute: typeof AppDashboardRoute
   AppElevesRoute: typeof AppElevesRoute
@@ -386,6 +406,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAcademiesRoute: AppAcademiesRoute,
+  AppAdminSettingsRoute: AppAdminSettingsRoute,
   AppCoursesRoute: AppCoursesRouteWithChildren,
   AppDashboardRoute: AppDashboardRoute,
   AppElevesRoute: AppElevesRoute,
