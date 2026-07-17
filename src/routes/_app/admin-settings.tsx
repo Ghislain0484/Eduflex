@@ -71,6 +71,7 @@ function BrandingTab() {
   const [logo, setLogo] = useState('')
   const [metaTitle, setMetaTitle] = useState('EduFlex — Plateforme LMS Premium')
   const [metaDesc, setMetaDesc] = useState('Créez, gérez et vendez vos formations en ligne avec EduFlex.')
+  const [jitsiDomain, setJitsiDomain] = useState('meet.jit.si')
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -85,6 +86,7 @@ function BrandingTab() {
           if (parsed.logo) setLogo(parsed.logo)
           if (parsed.metaTitle) setMetaTitle(parsed.metaTitle)
           if (parsed.metaDesc) setMetaDesc(parsed.metaDesc)
+          if (parsed.jitsiDomain) setJitsiDomain(parsed.jitsiDomain)
         } catch {}
       }
     }
@@ -116,7 +118,8 @@ function BrandingTab() {
         color,
         logo,
         metaTitle: metaTitle.trim(),
-        metaDesc: metaDesc.trim()
+        metaDesc: metaDesc.trim(),
+        jitsiDomain: jitsiDomain.trim()
       }))
       toast.success('Personnalisation front-end mise à jour !')
       setTimeout(() => {
@@ -168,24 +171,32 @@ function BrandingTab() {
           </div>
         </div>
 
-        <div className="space-y-2 pt-2">
-          <label className="text-xs font-semibold text-slate-300">Logo de la Plateforme (Header public)</label>
-          <div className="flex items-center gap-4">
-            {logo ? (
-              <div className="h-16 w-16 rounded-xl border border-slate-800 bg-slate-850 overflow-hidden flex items-center justify-center p-2 shrink-0">
-                <img src={logo} alt="Logo" className="w-full h-full object-contain rounded-lg" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center pt-2">
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-slate-300">Logo de la Plateforme (Header public)</label>
+            <div className="flex items-center gap-4">
+              {logo ? (
+                <div className="h-16 w-16 rounded-xl border border-slate-800 bg-slate-850 overflow-hidden flex items-center justify-center p-2 shrink-0">
+                  <img src={logo} alt="Logo" className="w-full h-full object-contain rounded-lg" />
+                </div>
+              ) : (
+                <div className="h-16 w-16 rounded-xl border-2 border-dashed border-slate-800 flex items-center justify-center text-slate-500 shrink-0 bg-slate-950 text-xs font-bold font-mono">
+                  Aucun
+                </div>
+              )}
+              <div>
+                <input type="file" accept="image/*" id="platform-global-logo" className="hidden" onChange={handleLogoUpload} />
+                <Button type="button" variant="outline" size="sm" className="h-8 text-xs font-semibold border-slate-700 text-slate-300" onClick={() => document.getElementById('platform-global-logo')?.click()}>
+                  Sélectionner un fichier (Max 300KB)
+                </Button>
               </div>
-            ) : (
-              <div className="h-16 w-16 rounded-xl border-2 border-dashed border-slate-800 flex items-center justify-center text-slate-500 shrink-0 bg-slate-950 text-xs font-bold font-mono">
-                Aucun
-              </div>
-            )}
-            <div>
-              <input type="file" accept="image/*" id="platform-global-logo" className="hidden" onChange={handleLogoUpload} />
-              <Button type="button" variant="outline" size="sm" className="h-8 text-xs font-semibold border-slate-700 text-slate-300" onClick={() => document.getElementById('platform-global-logo')?.click()}>
-                Sélectionner un fichier (Max 300KB)
-              </Button>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-slate-300">Serveur Visioconférence Jitsi Global par défaut</label>
+            <Input value={jitsiDomain} onChange={e => setJitsiDomain(e.target.value)} placeholder="Ex: meet.jit.si" className="bg-slate-800 border-slate-700 text-slate-100 text-xs font-mono" />
+            <span className="text-[9px] text-slate-400 block mt-0.5">Serveur de visioconférence appliqué par défaut pour les cours virtuels.</span>
           </div>
         </div>
 

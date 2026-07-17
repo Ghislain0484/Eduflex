@@ -42,8 +42,21 @@ function StudyRoomPage() {
   const toggleMutation = useToggleChapterCompletion(Number(id))
   const { user } = useAuth()
 
-  const [activeChapterId, setActiveChapterId] = useState<number | null>(null)
-  const [isDarkMode, setIsDarkMode] = useState(false)
+  // Load Jitsi server domain
+  const [jitsiDomain, setJitsiDomain] = useState('meet.jit.si')
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const globalConfig = localStorage.getItem('global_platform_config')
+      if (globalConfig) {
+        try {
+          const parsed = JSON.parse(globalConfig)
+          if (parsed.jitsiDomain) {
+            setJitsiDomain(parsed.jitsiDomain.replace(/(^\w+:|^)\/\//, ''))
+          }
+        } catch {}
+      }
+    }
+  }, [])
 
   // Success confetti animation states
   const [showSuccessParticles, setShowSuccessParticles] = useState(false)
@@ -279,7 +292,7 @@ function StudyRoomPage() {
   }
 
   // Canvas Certificate Generator
-  const downloadCertificate = () => {
+  const downloadCertificate = async () => {
     if (!course || !user) return
 
     const canvas = document.createElement('canvas')
@@ -425,14 +438,41 @@ function StudyRoomPage() {
     ctx.fillStyle = '#1e3a8a' // Bleu encre
     ctx.fillText(academyName, sigX, sigY - 5)
 
-    // Déclencher le téléchargement
+    // Déclencher le téléchargement en tant que PDF réel avec jsPDF
+    const loadJsPDF = (): Promise<any> => {
+      return new Promise((resolve, reject) => {
+        if ((window as any).jspdf) {
+          resolve((window as any).jspdf)
+          return
+        }
+        const script = document.createElement('script')
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
+        script.onload = () => {
+          resolve((window as any).jspdf)
+        }
+        script.onerror = () => {
+          reject(new Error("Erreur de chargement du générateur PDF."))
+        }
+        document.body.appendChild(script)
+      })
+    }
+
     try {
-      const dataUrl = canvas.toDataURL('image/png')
-      const link = document.createElement('a')
-      link.download = `Certificat_${academyName.replace(/[^a-zA-Z0-9]/g, '_')}_${course.title.replace(/[^a-zA-Z0-9]/g, '_')}.png`
-      link.href = dataUrl
-      link.click()
-      toast.success('Certificat généré et téléchargé avec succès !')
+      const toastId = toast.loading('Génération de votre certificat PDF...')
+      const jspdfModule = await loadJsPDF()
+      const { jsPDF } = jspdfModule
+
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'px',
+        format: [canvas.width, canvas.height]
+      })
+
+      pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, canvas.width, canvas.height)
+      pdf.save(`Certificat_${academyName.replace(/[^a-zA-Z0-9]/g, '_')}_${course.title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`)
+
+      toast.dismiss(toastId)
+      toast.success('Certificat PDF téléchargé avec succès !')
     } catch (err) {
       toast.error('Erreur lors du téléchargement du certificat.')
     }
@@ -584,7 +624,7 @@ function StudyRoomPage() {
 
                   <div className="w-full aspect-video rounded-xl overflow-hidden border border-border shadow-lg bg-black flex flex-col items-center justify-center relative">
                     <iframe
-                      src={`https://meet.jit.si/eduflex-${course.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${activeChapter.id}`}
+                      src={`https://${jitsiDomain}/eduflex-${course.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${activeChapter.id}`}
                       allow="camera; microphone; fullscreen; display-capture; autoplay"
                       className="w-full h-full border-0 absolute inset-0"
                     />

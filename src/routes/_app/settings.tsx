@@ -94,6 +94,7 @@ function ProfilTab({ user }: { user: any }) {
   const [academySlogan, setAcademySlogan] = useState(user?.academySlogan || '')
   const [academyColor, setAcademyColor] = useState(user?.academyColor || '#6366f1')
   const [academyLogo, setAcademyLogo] = useState(user?.academyLogo || '')
+  const [academyJitsiDomain, setAcademyJitsiDomain] = useState('meet.jit.si')
   const [saving, setSaving] = useState(false)
 
   // Pre-fill when user changes
@@ -104,6 +105,13 @@ function ProfilTab({ user }: { user: any }) {
       setAcademySlogan(user.academySlogan || '')
       setAcademyColor(user.academyColor || '#6366f1')
       setAcademyLogo(user.academyLogo || '')
+      
+      const savedJitsi = localStorage.getItem('academy_jitsi_domain')
+      if (savedJitsi) {
+        setAcademyJitsiDomain(savedJitsi)
+      } else if (user.academyJitsiDomain) {
+        setAcademyJitsiDomain(user.academyJitsiDomain)
+      }
     }
   }, [user])
 
@@ -137,7 +145,7 @@ function ProfilTab({ user }: { user: any }) {
     reader.readAsDataURL(file)
   }
 
-  const previewCertificate = () => {
+  const previewCertificate = async () => {
     const canvas = document.createElement('canvas')
     canvas.width = 1600
     canvas.height = 1130
@@ -233,19 +241,46 @@ function ProfilTab({ user }: { user: any }) {
     ctx.fillStyle = '#1e3a8a'
     ctx.fillText(academyName || 'Mon Académie', sigX, sigY - 5)
 
+    const loadJsPDF = (): Promise<any> => {
+      return new Promise((resolve, reject) => {
+        if ((window as any).jspdf) {
+          resolve((window as any).jspdf)
+          return
+        }
+        const script = document.createElement('script')
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
+        script.onload = () => {
+          resolve((window as any).jspdf)
+        }
+        script.onerror = () => {
+          reject(new Error("Erreur de chargement du générateur PDF."))
+        }
+        document.body.appendChild(script)
+      })
+    }
+
     try {
-      const dataUrl = canvas.toDataURL('image/png')
-      const link = document.createElement('a')
-      link.download = `Apercu_Certificat_${(academyName || 'Academie').replace(/[^a-zA-Z0-9]/g, '_')}.png`
-      link.href = dataUrl
-      link.click()
-      toast.success('Aperçu du certificat généré et téléchargé !')
+      const toastId = toast.loading('Génération de l\'aperçu PDF...')
+      const jspdfModule = await loadJsPDF()
+      const { jsPDF } = jspdfModule
+
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'px',
+        format: [canvas.width, canvas.height]
+      })
+
+      pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, canvas.width, canvas.height)
+      pdf.save(`Apercu_Certificat_${(academyName || 'Academie').replace(/[^a-zA-Z0-9]/g, '_')}.pdf`)
+
+      toast.dismiss(toastId)
+      toast.success('Aperçu du certificat PDF téléchargé !')
     } catch (err) {
       toast.error('Erreur de génération.')
     }
   }
 
-  const previewReceipt = () => {
+  const previewReceipt = async () => {
     const canvas = document.createElement('canvas')
     canvas.width = 1200
     canvas.height = 1000
@@ -321,13 +356,40 @@ function ProfilTab({ user }: { user: any }) {
     ctx.font = '14px Arial, sans-serif'
     ctx.fillText('Merci pour votre confiance. Ce document sert de preuve officielle de paiement.', canvas.width / 2, 850)
 
+    const loadJsPDF = (): Promise<any> => {
+      return new Promise((resolve, reject) => {
+        if ((window as any).jspdf) {
+          resolve((window as any).jspdf)
+          return
+        }
+        const script = document.createElement('script')
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
+        script.onload = () => {
+          resolve((window as any).jspdf)
+        }
+        script.onerror = () => {
+          reject(new Error("Erreur de chargement du générateur PDF."))
+        }
+        document.body.appendChild(script)
+      })
+    }
+
     try {
-      const dataUrl = canvas.toDataURL('image/png')
-      const link = document.createElement('a')
-      link.download = `Apercu_Recu_${(academyName || 'Academie').replace(/[^a-zA-Z0-9]/g, '_')}.png`
-      link.href = dataUrl
-      link.click()
-      toast.success('Aperçu du reçu de paiement généré !')
+      const toastId = toast.loading('Génération du reçu PDF...')
+      const jspdfModule = await loadJsPDF()
+      const { jsPDF } = jspdfModule
+
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'px',
+        format: [canvas.width, canvas.height]
+      })
+
+      pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, canvas.width, canvas.height)
+      pdf.save(`Apercu_Recu_${(academyName || 'Academie').replace(/[^a-zA-Z0-9]/g, '_')}.pdf`)
+
+      toast.dismiss(toastId)
+      toast.success('Aperçu du reçu PDF téléchargé avec succès !')
     } catch (err) {
       toast.error('Erreur de génération.')
     }
@@ -345,6 +407,7 @@ function ProfilTab({ user }: { user: any }) {
 
       // 2. Update profiles table in DB with fallbacks for missing columns
       try {
+        localStorage.setItem('academy_jitsi_domain', academyJitsiDomain.trim())
         const { error: dbError } = await supabase
           .from('profiles')
           .update({ 
@@ -352,14 +415,15 @@ function ProfilTab({ user }: { user: any }) {
             academy_name: academyName.trim() || null,
             academy_slogan: academySlogan.trim() || null,
             academy_color: academyColor || '#6366f1',
-            academy_logo: academyLogo.trim() || null
+            academy_logo: academyLogo.trim() || null,
+            academy_jitsi_domain: academyJitsiDomain.trim() || null
           })
           .eq('id', user.id)
         if (dbError) throw dbError
       } catch (err: any) {
         const isColumnError = err.code === '42703' || (err.message && (err.message.includes('column') || err.message.includes('schema cache')))
         if (isColumnError) {
-          console.warn('academy_logo column might be missing. Trying fallback profile update.')
+          console.warn('academy_logo or academy_jitsi_domain column might be missing. Trying fallback profile update.')
           const { error: fallbackError } = await supabase
             .from('profiles')
             .update({ 
@@ -492,6 +556,35 @@ function ProfilTab({ user }: { user: any }) {
                   <div>
                     <span className="text-xs font-semibold text-foreground block">{academyColor}</span>
                     <span className="text-[9px] text-muted-foreground">Appliquée aux boutons, en-têtes et thèmes de lecture.</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Jitsi meet Custom server domain input */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium">Serveur Visioconférence Jitsi (Optionnel)</label>
+                <Input 
+                  value={academyJitsiDomain} 
+                  onChange={e => setAcademyJitsiDomain(e.target.value)} 
+                  placeholder="Ex: meet.jit.si ou visio.monacademie.com" 
+                  className="h-9 text-xs" 
+                />
+                <p className="text-[9px] text-muted-foreground mt-0.5">Laissez vide ou meet.jit.si pour utiliser le serveur par défaut.</p>
+              </div>
+
+              {/* Live Theme Preview Box */}
+              <div className="p-4 rounded-xl border border-border bg-slate-950/20 space-y-3 col-span-1 md:col-span-2">
+                <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold block">Prévisualisation Dynamique du Thème</span>
+                <div className="flex flex-wrap items-center gap-4">
+                  <button style={{ backgroundColor: academyColor }} className="px-4 py-1.5 rounded-lg text-xs font-bold text-white shadow transition-transform active:scale-95">
+                    Bouton Primaire
+                  </button>
+                  <div style={{ borderColor: academyColor + '30', backgroundColor: academyColor + '10', color: academyColor }} className="border px-2.5 py-0.5 rounded text-[10px] font-bold">
+                    Badge d'Académie
+                  </div>
+                  <div className="text-xs flex items-center gap-1.5 font-medium">
+                    <span className="h-2.5 w-2.5 rounded-full animate-pulse" style={{ backgroundColor: academyColor }} />
+                    Session Active
                   </div>
                 </div>
               </div>
