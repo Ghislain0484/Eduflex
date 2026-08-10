@@ -1053,7 +1053,7 @@ function ChaptersManagerSection({ course, onBack }: { course: any; onBack: () =>
       courseId: course.id,
       title,
       content: chapterType === 'quiz' ? null : (content || null),
-      videoUrl: chapterType === 'standard' ? (videoUrl || null) : null,
+      videoUrl: (chapterType === 'standard' || chapterType === 'live') ? (videoUrl || null) : null,
       sortOrder: parseInt(sortOrder) || 0,
       quizData: chapterType === 'quiz' ? questions : null,
       chapterType,
@@ -1233,6 +1233,16 @@ function ChaptersManagerSection({ course, onBack }: { course: any; onBack: () =>
                   </div>
 
                   <div className="space-y-1.5">
+                    <label className="text-sm font-medium">Lien de la Rediffusion / Replay (Optionnel)</label>
+                    <Input
+                      type="url"
+                      value={videoUrl}
+                      onChange={(e) => setVideoUrl(e.target.value)}
+                      placeholder="URL de la vidéo enregistrée (YouTube, Vimeo, ou .mp4) à afficher une fois le direct terminé"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
                     <label className="text-sm font-medium">Notes & Objectifs de la session</label>
                     <textarea
                       rows={4}
@@ -1355,19 +1365,50 @@ function ChaptersManagerSection({ course, onBack }: { course: any; onBack: () =>
             </form>
           </CardContent>
         </Card>
-      ) : isLoading ? (
-        <div className="space-y-3">
-          {[1, 2].map((i) => (
-            <Skeleton key={i} className="h-14 w-full rounded-lg" />
-          ))}
-        </div>
-      ) : !chapters || chapters.length === 0 ? (
-        <EmptyState
-          icon={<Settings className="h-8 w-8" />}
-          title="Aucun chapitre"
-          description="Cette formation n'a pas encore de chapitres. Ajoutez-en un pour commencer à l'étoffer."
-        />
       ) : (
+        <div className="space-y-6">
+          <Card className="bg-teal-500/5 border border-teal-500/10 rounded-xl overflow-hidden shadow-sm">
+            <CardHeader className="py-4">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2 text-teal-800 dark:text-teal-400">
+                💡 Guide : Comment programmer, lancer et enregistrer vos formations vidéo / direct
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-xs text-teal-850 dark:text-teal-300 leading-relaxed space-y-3 pb-5">
+              <p>
+                EduFlex vous permet de combiner des cours préenregistrés et des classes virtuelles interactives. Voici la marche à suivre :
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                <div className="space-y-1.5">
+                  <h4 className="font-bold text-[10px] uppercase tracking-wider text-teal-700 dark:text-teal-400">🎥 1. Programmation</h4>
+                  <ul className="list-disc pl-4 space-y-1">
+                    <li><strong>Vidéo Classique :</strong> Ajoutez un chapitre <i>Standard</i> et renseignez son adresse vidéo (ex: lien Vimeo ou YouTube).</li>
+                    <li><strong>Direct Live :</strong> Ajoutez un chapitre <i>Classe en Direct</i>, renseignez la date/heure planifiée. Le lien Jitsi est autogénéré par défaut.</li>
+                  </ul>
+                </div>
+                <div className="space-y-1.5">
+                  <h4 className="font-bold text-[10px] uppercase tracking-wider text-teal-700 dark:text-teal-400">🔴 2. Lancement & Replays</h4>
+                  <ul className="list-disc pl-4 space-y-1">
+                    <li><strong>Lancement :</strong> À l'heure du live, ouvrez la page d'étude du cours. L'API Jitsi s'active et vous attribue le rôle de modérateur.</li>
+                    <li><strong>Enregistrer & Publier :</strong> Enregistrez la session avec Jitsi. Une fois fini, modifiez ce chapitre et ajoutez le lien d'enregistrement dans le champ <i>Lien de la Rediffusion</i> pour archiver le replay.</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {isLoading ? (
+            <div className="space-y-3">
+              {[1, 2].map((i) => (
+                <Skeleton key={i} className="h-14 w-full rounded-lg" />
+              ))}
+            </div>
+          ) : !chapters || chapters.length === 0 ? (
+            <EmptyState
+              icon={<Settings className="h-8 w-8" />}
+              title="Aucun chapitre"
+              description="Cette formation n'a pas encore de chapitres. Ajoutez-en un pour commencer à l'étoffer."
+            />
+          ) : (
         <div className="space-y-3">
           {chapters.map((chapter, index) => (
             <div
@@ -1411,6 +1452,8 @@ function ChaptersManagerSection({ course, onBack }: { course: any; onBack: () =>
               </div>
             </div>
           ))}
+        </div>
+      )}
         </div>
       )}
     </div>

@@ -19,6 +19,7 @@ import {
 } from '@/hooks/useChapters'
 import { supabase } from '@/lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
+import { JitsiMeet } from '@/components/JitsiMeet'
 import {
   ArrowLeft,
   CheckCircle,
@@ -41,6 +42,36 @@ function StudyRoomPage() {
   const { data: completedIds } = useCompletedChapters(Number(id))
   const toggleMutation = useToggleChapterCompletion(Number(id))
   const { user } = useAuth()
+
+  const handleDownloadCalendar = () => {
+    if (!activeChapter || !activeChapter.scheduledAt) return
+    const start = new Date(activeChapter.scheduledAt)
+    const end = new Date(start.getTime() + 60 * 60 * 1000)
+    const formatTime = (d: Date) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
+    
+    const icsContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//EduFlex//LMS//FR',
+      'BEGIN:VEVENT',
+      `UID:eduflex-live-${activeChapter.id}@eduflex.app`,
+      `DTSTAMP:${formatTime(new Date())}`,
+      `DTSTART:${formatTime(start)}`,
+      `DTEND:${formatTime(end)}`,
+      `SUMMARY:EduFlex Live : ${activeChapter.title}`,
+      `DESCRIPTION:Rejoignez la visioconférence en direct sur EduFlex : ${activeChapter.content || ''}`,
+      'STATUS:CONFIRMED',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n')
+    
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' })
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = `Live_Eduflex_${activeChapter.title.replace(/[^a-zA-Z0-9]/g, '_')}.ics`
+    link.click()
+    toast.success('Calendrier ICS téléchargé avec succès !')
+  }
 
   // Load Jitsi server domain
   const [jitsiDomain, setJitsiDomain] = useState('meet.jit.si')
@@ -599,45 +630,101 @@ function StudyRoomPage() {
             <div className="space-y-6">
               {activeChapter.chapterType === 'live' ? (
                 <div className="space-y-6">
-                  <div className="flex flex-wrap items-center justify-between gap-3 p-5 rounded-xl border border-primary/20 bg-primary/5 dark:bg-primary/10">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="flex h-2.5 w-2.5 relative">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
-                        </span>
-                        <h2 className="text-base font-bold text-foreground">Classe en Direct Interactive</h2>
+                  {activeChapter.videoUrl ? (
+                    <div className="space-y-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3 p-5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 dark:bg-emerald-500/10">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                            <h2 className="text-base font-bold text-foreground">Rediffusion de la Classe en Direct</h2>
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            Cette session virtuelle est maintenant terminée. Retrouvez son enregistrement ci-dessous.
+                          </p>
+                        </div>
+                        <Badge className="bg-emerald-600 text-white border-0 font-extrabold text-[10px] tracking-wide">REPLAY DISPONIBLE</Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        {activeChapter.scheduledAt ? (
-                          <>Planifié pour le : <span className="font-semibold text-foreground">{new Date(activeChapter.scheduledAt).toLocaleString('fr-FR')}</span></>
-                        ) : (
-                          'Session virtuelle active'
-                        )}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Badge className="bg-red-600 text-white border-0 font-extrabold text-[10px] tracking-wide">DIRECT</Badge>
-                      <Badge variant="outline" className="text-[10px]">Audio, Vidéo & Écran</Badge>
-                    </div>
-                  </div>
 
-                  <div className="w-full aspect-video rounded-xl overflow-hidden border border-border shadow-lg bg-black flex flex-col items-center justify-center relative">
-                    <iframe
-                      src={`https://${jitsiDomain}/eduflex-${course.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${activeChapter.id}`}
-                      allow="camera; microphone; fullscreen; display-capture; autoplay"
-                      className="w-full h-full border-0 absolute inset-0"
-                    />
-                  </div>
+                      <div className="aspect-video w-full rounded-xl overflow-hidden bg-black shadow-lg relative border border-border/80">
+                        {activeChapter.videoUrl.endsWith('.html') || activeChapter.videoUrl.includes('/scorm/') || activeChapter.videoUrl.includes('/embed/') ? (
+                          <iframe
+                            src={activeChapter.videoUrl}
+                            className="w-full h-full border-0 absolute inset-0"
+                            allowFullScreen
+                          />
+                        ) : (
+                          <video
+                            key={activeChapter.videoUrl}
+                            ref={videoRef}
+                            controls
+                            className="w-full h-full object-contain"
+                            src={activeChapter.videoUrl}
+                            controlsList="nodownload"
+                            onContextMenu={e => e.preventDefault()}
+                          >
+                            Votre navigateur ne supporte pas la lecture de vidéos.
+                          </video>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex flex-wrap items-center justify-between gap-3 p-5 rounded-xl border border-primary/20 bg-primary/5 dark:bg-primary/10">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="flex h-2.5 w-2.5 relative">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                            </span>
+                            <h2 className="text-base font-bold text-foreground">Classe en Direct Interactive</h2>
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            {activeChapter.scheduledAt ? (
+                              <>Planifié pour le : <span className="font-semibold text-foreground">{new Date(activeChapter.scheduledAt).toLocaleString('fr-FR')}</span></>
+                            ) : (
+                              'Session virtuelle active'
+                            )}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {activeChapter.scheduledAt && new Date(activeChapter.scheduledAt).getTime() > Date.now() ? (
+                            <>
+                              <Badge className="bg-amber-600 text-white border-0 font-extrabold text-[10px] tracking-wide">PLANIFIÉ</Badge>
+                              <Button
+                                variant="outline"
+                                size="xs"
+                                onClick={handleDownloadCalendar}
+                                className="h-7 text-[10px] font-semibold border-border/80 hover:bg-muted/40"
+                              >
+                                📅 M'ajouter
+                              </Button>
+                            </>
+                          ) : (
+                            <Badge className="bg-red-600 text-white border-0 font-extrabold text-[10px] tracking-wide">EN DIRECT</Badge>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="w-full aspect-video rounded-xl overflow-hidden border border-border shadow-lg bg-black relative min-h-[500px]">
+                        <JitsiMeet
+                          roomName={`eduflex-${course.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${activeChapter.id}`}
+                          displayName={user?.displayName || user?.email || 'Étudiant'}
+                          email={user?.email || ''}
+                          domain={jitsiDomain}
+                          isModerator={user?.role === 'teacher' || user?.role === 'admin'}
+                        />
+                      </div>
+                    </>
+                  )}
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Card className="border-border/80">
                       <CardContent className="p-5 space-y-2">
                         <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Comment participer ?</h3>
                         <p className="text-xs text-muted-foreground leading-relaxed">
-                          1. Cliquez sur le bouton d'activation du microphone/caméra dans l'intégration.<br />
-                          2. Indiquez votre prénom pour que l'instructeur puisse vous identifier.<br />
-                          3. Utilisez le chat intégré de Jitsi pour poser des questions par écrit.
+                          1. Donnez l'autorisation d'accès à votre caméra et microphone si le navigateur le demande.<br />
+                          2. L'enseignant modérateur gère les prises de parole et le partage d'écran.<br />
+                          3. Une fois le cours terminé, l'enregistrement sera mis à disposition par votre enseignant dans cet espace.
                         </p>
                       </CardContent>
                     </Card>

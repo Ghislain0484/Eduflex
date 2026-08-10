@@ -15,6 +15,7 @@ import { Button } from '@blinkdotnew/ui'
 import { Link } from '@tanstack/react-router'
 import { Sparkles } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { useBrandTheme } from '@/hooks/useBrandTheme'
 
 export type SharedLayoutContextValue = {
   appName: string
@@ -123,26 +124,7 @@ export function SharedAppLayout({
 
   const value = React.useMemo(() => ({ appName: displayedAppName }), [displayedAppName])
 
-  React.useEffect(() => {
-    if (typeof window !== 'undefined' && activeColor) {
-      // Validate: only set CSS var for valid hex colors (3 or 6 digit)
-      const hexRaw = activeColor.replace('#', '')
-      const isValidHex = /^([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(hexRaw)
-      if (!isValidHex) return
-
-      document.documentElement.style.setProperty('--primary', activeColor)
-
-      // Expand 3-digit hex to 6-digit for RGB parsing
-      const hex6 = hexRaw.length === 3
-        ? hexRaw.split('').map(c => c + c).join('')
-        : hexRaw
-
-      const r = parseInt(hex6.substring(0, 2), 16)
-      const g = parseInt(hex6.substring(2, 4), 16)
-      const b = parseInt(hex6.substring(4, 6), 16)
-      document.documentElement.style.setProperty('--primary-rgb', `${r}, ${g}, ${b}`)
-    }
-  }, [activeColor])
+  useBrandTheme(activeColor || undefined)
 
   if (!isAuthenticated) {
     return (
