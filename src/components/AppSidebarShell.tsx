@@ -5,10 +5,6 @@
  *
  * Expands to 15rem, collapses to 3rem (icon-only).
  * State is persisted to localStorage. Tooltips appear automatically when collapsed.
- *
- * NOTE: We bypass @blinkdotnew/ui <Sidebar> because it wraps all children in a
- * single overflow-y-auto div, making flex-1/shrink-0 on children no-ops.
- * This native flex-col implementation gives full layout control.
  */
 import { useState, useCallback, useEffect } from 'react'
 import type { ReactNode } from 'react'
@@ -49,6 +45,8 @@ import {
   PanelLeft,
   Sun,
   Moon,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -60,40 +58,93 @@ const ROLE_MAP = {
   admin: 'Admin',
 }
 
+interface NavSubItemDef {
+  href: string
+  label: string
+}
+
 interface NavItemDef {
   href: string
   icon: ReactNode
   label: string
   badge?: string
+  subItems?: NavSubItemDef[]
 }
 
 function NavItem({ item, collapsed }: { item: NavItemDef; collapsed: boolean }) {
   const location = useLocation()
+  const [open, setOpen] = useState(() => {
+    if (item.subItems) {
+      return item.subItems.some(sub => location.pathname === sub.href || location.pathname.startsWith(sub.href.split('?')[0]))
+    }
+    return false
+  })
+
   const isActive = location.pathname === item.href || (item.href !== '/dashboard' && location.pathname.startsWith(item.href))
+
+  const toggleSub = (e: React.MouseEvent) => {
+    if (item.subItems) {
+      e.preventDefault()
+      setOpen(!open)
+    }
+  }
+
   const link = (
-    <a
-      href={item.href}
-      className={cn(
-        'flex items-center gap-2.5 rounded-md text-sm transition-colors cursor-pointer',
-        collapsed ? 'justify-center w-8 h-8 mx-auto' : 'px-3 py-2 w-full',
-        isActive
-          ? 'bg-primary/10 text-primary font-semibold'
-          : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-      )}
-    >
-      <span className="shrink-0">{item.icon}</span>
-      {!collapsed && (
-        <span className="truncate flex-1 flex items-center justify-between">
-          <span>{item.label}</span>
-          {item.badge && (
-            <span className="text-[9px] font-extrabold bg-red-500/10 text-red-500 border border-red-500/20 px-1.5 py-0.5 rounded-full uppercase tracking-tighter ml-1">
-              {item.badge}
+    <div className="w-full">
+      <a
+        href={item.href}
+        onClick={item.subItems ? toggleSub : undefined}
+        className={cn(
+          'flex items-center gap-2.5 rounded-md text-sm transition-colors cursor-pointer',
+          collapsed ? 'justify-center w-8 h-8 mx-auto' : 'px-3 py-2 w-full',
+          isActive || open
+            ? 'bg-primary/10 text-primary font-semibold'
+            : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+        )}
+      >
+        <span className="shrink-0">{item.icon}</span>
+        {!collapsed && (
+          <span className="truncate flex-1 flex items-center justify-between">
+            <span>{item.label}</span>
+            <span className="flex items-center gap-1">
+              {item.badge && (
+                <span className="text-[9px] font-extrabold bg-red-500/10 text-red-500 border border-red-500/20 px-1.5 py-0.5 rounded-full uppercase tracking-tighter">
+                  {item.badge}
+                </span>
+              )}
+              {item.subItems && (
+                open ? <ChevronDown className="h-3.5 w-3.5 opacity-70" /> : <ChevronRight className="h-3.5 w-3.5 opacity-70" />
+              )}
             </span>
-          )}
-        </span>
+          </span>
+        )}
+      </a>
+
+      {/* Sub-items List */}
+      {!collapsed && open && item.subItems && (
+        <div className="pl-7 pr-2 py-1 space-y-0.5 border-l border-border/50 ml-4 my-1">
+          {item.subItems.map(sub => {
+            const isSubActive = location.pathname === sub.href || (sub.href.includes('?') && location.pathname === sub.href.split('?')[0])
+            return (
+              <a
+                key={sub.href + sub.label}
+                href={sub.href}
+                className={cn(
+                  'block px-2.5 py-1.5 text-xs rounded-md transition-colors truncate',
+                  isSubActive
+                    ? 'bg-teal-500/15 text-teal-600 dark:text-teal-400 font-bold'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/60'
+                )}
+              >
+                {sub.label}
+              </a>
+            )
+          })}
+        </div>
       )}
-    </a>
+    </div>
   )
+
   if (!collapsed) return link
   return (
     <Tooltip>
@@ -132,7 +183,6 @@ export function AppSidebarShell() {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'))
   }
 
-  // 17 MENU ITEMS MATCHING TEACHIZY MOCKUP SIDEBAR 1:1
   const isTeacherOrAdmin = user?.role === 'teacher' || user?.role === 'admin'
 
   const navItems: NavItemDef[] = [
@@ -143,19 +193,52 @@ export function AppSidebarShell() {
       { href: '/calendrier', icon: <Calendar className="h-4 w-4" />, label: 'Calendrier', badge: 'Nouveau' },
       { href: '/statistiques', icon: <BarChart3 className="h-4 w-4" />, label: 'Statistiques' },
       { href: '/eleves', icon: <GraduationCap className="h-4 w-4" />, label: 'Apprenants' },
-      { href: '/manage-courses', icon: <BookOpen className="h-4 w-4" />, label: 'Formations' },
+      { 
+        href: '/manage-courses', 
+        icon: <BookOpen className="h-4 w-4" />, 
+        label: 'Formations',
+        subItems: [
+          { href: '/manage-courses', label: 'Gérer les formations' },
+          { href: '/manage-courses?tab=certificates', label: 'Certificat de réussite' },
+          { href: '/manage-courses?tab=settings', label: 'Paramètres' }
+        ]
+      },
       { href: '/classes-virtuelles', icon: <Video className="h-4 w-4" />, label: 'Classes virtuelles', badge: 'Nouveau' },
       { href: '/packs', icon: <Layers className="h-4 w-4" />, label: 'Packs' },
       { href: '/paiements', icon: <Wallet className="h-4 w-4" />, label: 'Ventes' },
       { href: '/codes-promo', icon: <Percent className="h-4 w-4" />, label: 'Codes promo' },
-      { href: '/outils-marketing', icon: <Megaphone className="h-4 w-4" />, label: 'Outils Marketing' },
+      { 
+        href: '/outils-marketing', 
+        icon: <Megaphone className="h-4 w-4" />, 
+        label: 'Outils Marketing',
+        subItems: [
+          { href: '/outils-marketing?tab=tracking', label: 'Suivi / Tracking' },
+          { href: '/outils-marketing?tab=autoresponders', label: 'Autorépondeurs' },
+          { href: '/outils-marketing?tab=automations', label: 'Automatisations (Zapier...)' },
+          { href: '/outils-marketing?tab=emails', label: 'Emails' }
+        ]
+      },
       { href: '/settings', icon: <Palette className="h-4 w-4" />, label: 'Personnalisation' },
       { href: '/affiliation', icon: <Share2 className="h-4 w-4" />, label: 'Affiliation' },
       { href: '/integrations', icon: <Code2 className="h-4 w-4" />, label: 'Intégrations externes' },
       { href: '/academy-hub', icon: <GraduationCap className="h-4 w-4 text-amber-500" />, label: 'Académie EduFlex 🎓' },
     ] : []),
     { href: '/tarifs', icon: <Gem className="h-4 w-4 text-emerald-500" />, label: 'Nos offres' },
-    { href: '/settings', icon: <Settings className="h-4 w-4" />, label: 'Paramètres' },
+    { 
+      href: '/settings', 
+      icon: <Settings className="h-4 w-4" />, 
+      label: 'Paramètres',
+      subItems: [
+        { href: '/settings?tab=general', label: 'Général' },
+        { href: '/enseignants', label: 'Équipe' },
+        { href: '/settings?tab=payments', label: 'Paiements' },
+        { href: '/settings?tab=company', label: 'Entreprise' },
+        { href: '/settings?tab=seo', label: 'Référencement SEO' },
+        { href: '/settings?tab=legal', label: 'Liens légaux et RGPD' },
+        { href: '/integrations', label: 'APIs développeur' },
+        { href: '/settings?tab=billing', label: 'Facturation' }
+      ]
+    },
     ...(user?.role === 'admin' ? [
       { href: '/academies', icon: <Building className="h-4 w-4" />, label: 'Académies B2B' },
       { href: '/admin-settings', icon: <ShieldAlert className="h-4 w-4" />, label: 'Console Admin' }
