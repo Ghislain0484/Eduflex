@@ -24,21 +24,31 @@ import {
   TooltipTrigger,
 } from '@blinkdotnew/ui'
 import {
-  LayoutDashboard,
+  Home,
+  Sparkles,
   Users,
-  GraduationCap,
+  Calendar,
   BarChart3,
+  GraduationCap,
+  BookOpen,
+  Video,
+  Layers,
+  Wallet,
+  Percent,
+  Megaphone,
+  Palette,
+  Share2,
+  Code2,
+  Gem,
+  Settings,
+  Building,
+  ShieldAlert,
   CreditCard,
+  User,
   LogOut,
   PanelLeft,
-  BookOpen,
   Sun,
   Moon,
-  Building,
-  Settings,
-  User,
-  ShieldAlert,
-  Sparkles,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -54,8 +64,8 @@ interface NavItemDef {
   href: string
   icon: ReactNode
   label: string
+  badge?: string
 }
-
 
 function NavItem({ item, collapsed }: { item: NavItemDef; collapsed: boolean }) {
   const location = useLocation()
@@ -67,12 +77,21 @@ function NavItem({ item, collapsed }: { item: NavItemDef; collapsed: boolean }) 
         'flex items-center gap-2.5 rounded-md text-sm transition-colors cursor-pointer',
         collapsed ? 'justify-center w-8 h-8 mx-auto' : 'px-3 py-2 w-full',
         isActive
-          ? 'bg-primary/10 text-primary font-medium'
+          ? 'bg-primary/10 text-primary font-semibold'
           : 'text-muted-foreground hover:bg-accent hover:text-foreground'
       )}
     >
       <span className="shrink-0">{item.icon}</span>
-      {!collapsed && <span className="truncate">{item.label}</span>}
+      {!collapsed && (
+        <span className="truncate flex-1 flex items-center justify-between">
+          <span>{item.label}</span>
+          {item.badge && (
+            <span className="text-[9px] font-extrabold bg-red-500/10 text-red-500 border border-red-500/20 px-1.5 py-0.5 rounded-full uppercase tracking-tighter ml-1">
+              {item.badge}
+            </span>
+          )}
+        </span>
+      )}
     </a>
   )
   if (!collapsed) return link
@@ -113,29 +132,35 @@ export function AppSidebarShell() {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'))
   }
 
+  // 17 MENU ITEMS MATCHING TEACHIZY MOCKUP SIDEBAR 1:1
+  const isTeacherOrAdmin = user?.role === 'teacher' || user?.role === 'admin'
+
   const navItems: NavItemDef[] = [
-    { href: '/dashboard', icon: <LayoutDashboard className="h-4 w-4" />, label: 'Accueil' },
-    ...((user?.role === 'teacher' || user?.role === 'admin') ? [
+    { href: '/dashboard', icon: <Home className="h-4 w-4" />, label: 'Accueil' },
+    ...(isTeacherOrAdmin ? [
       { href: '/assistants-ia', icon: <Sparkles className="h-4 w-4" />, label: 'Assistants IA' },
-      { href: '/manage-courses', icon: <BookOpen className="h-4 w-4" />, label: 'Gérer les formations' },
-      { href: '/academy-hub', icon: <GraduationCap className="h-4 w-4" />, label: 'Académie EduFlex 🎓' }
+      { href: '/communaute', icon: <Users className="h-4 w-4" />, label: 'Communauté' },
+      { href: '/calendrier', icon: <Calendar className="h-4 w-4" />, label: 'Calendrier', badge: 'Nouveau' },
+      { href: '/statistiques', icon: <BarChart3 className="h-4 w-4" />, label: 'Statistiques' },
+      { href: '/eleves', icon: <GraduationCap className="h-4 w-4" />, label: 'Apprenants' },
+      { href: '/manage-courses', icon: <BookOpen className="h-4 w-4" />, label: 'Formations' },
+      { href: '/classes-virtuelles', icon: <Video className="h-4 w-4" />, label: 'Classes virtuelles', badge: 'Nouveau' },
+      { href: '/packs', icon: <Layers className="h-4 w-4" />, label: 'Packs' },
+      { href: '/paiements', icon: <Wallet className="h-4 w-4" />, label: 'Ventes' },
+      { href: '/codes-promo', icon: <Percent className="h-4 w-4" />, label: 'Codes promo' },
+      { href: '/outils-marketing', icon: <Megaphone className="h-4 w-4" />, label: 'Outils Marketing' },
+      { href: '/settings', icon: <Palette className="h-4 w-4" />, label: 'Personnalisation' },
+      { href: '/affiliation', icon: <Share2 className="h-4 w-4" />, label: 'Affiliation' },
+      { href: '/integrations', icon: <Code2 className="h-4 w-4" />, label: 'Intégrations externes' },
+      { href: '/academy-hub', icon: <GraduationCap className="h-4 w-4 text-amber-500" />, label: 'Académie EduFlex 🎓' },
     ] : []),
+    { href: '/tarifs', icon: <Gem className="h-4 w-4 text-emerald-500" />, label: 'Nos offres' },
+    { href: '/settings', icon: <Settings className="h-4 w-4" />, label: 'Paramètres' },
     ...(user?.role === 'admin' ? [
       { href: '/academies', icon: <Building className="h-4 w-4" />, label: 'Académies B2B' },
       { href: '/admin-settings', icon: <ShieldAlert className="h-4 w-4" />, label: 'Console Admin' }
     ] : []),
-    { 
-      href: '/settings', 
-      icon: user?.academyName ? <Settings className="h-4 w-4" /> : <User className="h-4 w-4" />, 
-      label: user?.academyName ? 'Paramètres Académie' : 'Mon Profil' 
-    },
-    { href: '/eleves', icon: <Users className="h-4 w-4" />, label: 'Élèves' },
-    { href: '/enseignants', icon: <GraduationCap className="h-4 w-4" />, label: 'Enseignants' },
-    { href: '/statistiques', icon: <BarChart3 className="h-4 w-4" />, label: 'Statistiques' },
-    { href: '/paiements', icon: <CreditCard className="h-4 w-4" />, label: 'Paiements' },
   ]
-
-
 
   const toggle = useCallback(() => {
     setCollapsed(v => {
@@ -199,146 +224,74 @@ export function AppSidebarShell() {
                 className="h-7 w-7 p-0 shrink-0 text-muted-foreground hover:text-foreground"
                 onClick={toggle}
               >
-                <PanelLeft
-                  className={cn(
-                    'h-4 w-4 transition-transform duration-200',
-                    collapsed && 'rotate-180'
-                  )}
-                />
+                <PanelLeft className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right">
-              {collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              {collapsed ? 'Développer la barre' : 'Réduire la barre'}
             </TooltipContent>
           </Tooltip>
         </div>
 
-        {/* ── Nav (only this section scrolls) ───────────── */}
-        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2 py-2 space-y-0.5">
-          {!collapsed && (
-            <p className="px-3 pt-1 pb-1 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-              Navigation
-            </p>
-          )}
+        {/* ── Nav Items ─────────────────────────────────── */}
+        <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {navItems.map(item => (
-            <NavItem key={item.href} item={item} collapsed={collapsed} />
+            <NavItem key={item.href + item.label} item={item} collapsed={collapsed} />
           ))}
         </div>
 
-        {/* ── Footer (always pinned to bottom) ──────────── */}
-        <div
-          className={cn(
-            'shrink-0 border-t border-border',
-            collapsed ? 'flex flex-col items-center gap-1 p-2' : 'p-3 space-y-1'
-          )}
-        >
-          {/* User row */}
-          {(() => {
-            const displayedRoleLabel = user?.academyName 
-              ? (user.approved ? 'Gérant Académie' : 'Académie (En attente)')
-              : (ROLE_MAP[user?.role || 'student'] || 'Apprenant');
-
-            if (collapsed) {
-              return (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button className="flex items-center justify-center h-8 w-8 rounded-md hover:bg-accent transition-colors cursor-pointer">
-                      <Avatar className="h-6 w-6 shrink-0">
-                        <AvatarFallback className="text-[10px] bg-muted">
-                          {(user?.displayName || 'U')[0].toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">
-                    {user?.displayName || 'Utilisateur'} ({displayedRoleLabel}) · {user?.email || ''}
-                  </TooltipContent>
-                </Tooltip>
-              )
-            }
-
-            return (
-              <button className="flex items-center gap-2 rounded-md hover:bg-accent transition-colors cursor-pointer w-full px-2 py-1.5">
-                <Avatar className="h-6 w-6 shrink-0">
-                  <AvatarFallback className="text-[10px] bg-muted">
-                    {(user?.displayName || 'U')[0].toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0 text-left">
-                  <p className="text-xs font-medium leading-tight truncate">
-                    {user?.displayName || 'Utilisateur'}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground leading-tight truncate">
-                    {displayedRoleLabel} · {user?.email || 'Non connecté'}
-                  </p>
-                </div>
-              </button>
-            )
-          })()}
-
-          {/* Sign out or Sign in */}
-          {!user ? (
-            collapsed ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 text-primary hover:text-primary/80"
-                    onClick={() => navigate({ to: '/login' })}
-                  >
-                    <LogOut className="h-4 w-4 shrink-0 rotate-180 text-primary" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right">Se connecter</TooltipContent>
-              </Tooltip>
-            ) : (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="w-full justify-start px-2 gap-2 text-primary border-primary/20 hover:bg-primary/5"
-                onClick={() => navigate({ to: '/login' })}
-              >
-                <LogOut className="h-4 w-4 shrink-0 rotate-180" />
-                Se connecter
-              </Button>
-            )
-          ) : collapsed ? (
+        {/* ── User Footer ───────────────────────────────── */}
+        <div className="shrink-0 border-t border-border p-2">
+          {collapsed ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-                  onClick={async () => {
-                    await logout()
-                    navigate({ to: '/' })
+                  className="w-8 h-8 p-0 mx-auto flex items-center justify-center text-muted-foreground hover:text-destructive"
+                  onClick={() => {
+                    logout()
+                    navigate({ to: '/login' })
                   }}
                 >
-                  <LogOut className="h-4 w-4 shrink-0" />
+                  <LogOut className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="right">Se déconnecter</TooltipContent>
+              <TooltipContent side="right">Déconnexion</TooltipContent>
             </Tooltip>
           ) : (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start px-2 gap-2 text-muted-foreground hover:text-foreground"
-              onClick={async () => {
-                await logout()
-                navigate({ to: '/' })
-              }}
-            >
-              <LogOut className="h-4 w-4 shrink-0" />
-              Se déconnecter
-            </Button>
+            <div className="flex items-center gap-2.5 px-2 py-1.5">
+              <Avatar className="h-7 w-7 shrink-0">
+                <AvatarFallback className="text-xs font-semibold">
+                  {user?.displayName ? user.displayName.slice(0, 2).toUpperCase() : 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-foreground truncate">
+                  {user?.displayName || user?.email}
+                </p>
+                <p className="text-[10px] text-muted-foreground truncate">
+                  {ROLE_MAP[user?.role || 'student']}
+                </p>
+              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0 shrink-0 text-muted-foreground hover:text-destructive"
+                    onClick={() => {
+                      logout()
+                      navigate({ to: '/login' })
+                    }}
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">Déconnexion</TooltipContent>
+              </Tooltip>
+            </div>
           )}
-
         </div>
       </div>
     </TooltipProvider>

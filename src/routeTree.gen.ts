@@ -18,12 +18,20 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppStatistiquesRouteImport } from './routes/_app/statistiques'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppPaiementsRouteImport } from './routes/_app/paiements'
+import { Route as AppPacksRouteImport } from './routes/_app/packs'
+import { Route as AppOutilsMarketingRouteImport } from './routes/_app/outils-marketing'
 import { Route as AppManageCoursesRouteImport } from './routes/_app/manage-courses'
+import { Route as AppIntegrationsRouteImport } from './routes/_app/integrations'
 import { Route as AppEnseignantsRouteImport } from './routes/_app/enseignants'
 import { Route as AppElevesRouteImport } from './routes/_app/eleves'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppCoursesRouteImport } from './routes/_app/courses'
+import { Route as AppCommunauteRouteImport } from './routes/_app/communaute'
+import { Route as AppCodesPromoRouteImport } from './routes/_app/codes-promo'
+import { Route as AppClassesVirtuellesRouteImport } from './routes/_app/classes-virtuelles'
+import { Route as AppCalendrierRouteImport } from './routes/_app/calendrier'
 import { Route as AppAssistantsIaRouteImport } from './routes/_app/assistants-ia'
+import { Route as AppAffiliationRouteImport } from './routes/_app/affiliation'
 import { Route as AppAdminSettingsRouteImport } from './routes/_app/admin-settings'
 import { Route as AppAcademyHubRouteImport } from './routes/_app/academy-hub'
 import { Route as AppAcademiesRouteImport } from './routes/_app/academies'
@@ -74,9 +82,24 @@ const AppPaiementsRoute = AppPaiementsRouteImport.update({
   path: '/paiements',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPacksRoute = AppPacksRouteImport.update({
+  id: '/packs',
+  path: '/packs',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOutilsMarketingRoute = AppOutilsMarketingRouteImport.update({
+  id: '/outils-marketing',
+  path: '/outils-marketing',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppManageCoursesRoute = AppManageCoursesRouteImport.update({
   id: '/manage-courses',
   path: '/manage-courses',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppIntegrationsRoute = AppIntegrationsRouteImport.update({
+  id: '/integrations',
+  path: '/integrations',
   getParentRoute: () => AppRoute,
 } as any)
 const AppEnseignantsRoute = AppEnseignantsRouteImport.update({
@@ -99,9 +122,34 @@ const AppCoursesRoute = AppCoursesRouteImport.update({
   path: '/courses',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCommunauteRoute = AppCommunauteRouteImport.update({
+  id: '/communaute',
+  path: '/communaute',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCodesPromoRoute = AppCodesPromoRouteImport.update({
+  id: '/codes-promo',
+  path: '/codes-promo',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppClassesVirtuellesRoute = AppClassesVirtuellesRouteImport.update({
+  id: '/classes-virtuelles',
+  path: '/classes-virtuelles',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCalendrierRoute = AppCalendrierRouteImport.update({
+  id: '/calendrier',
+  path: '/calendrier',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAssistantsIaRoute = AppAssistantsIaRouteImport.update({
   id: '/assistants-ia',
   path: '/assistants-ia',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAffiliationRoute = AppAffiliationRouteImport.update({
+  id: '/affiliation',
+  path: '/affiliation',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAdminSettingsRoute = AppAdminSettingsRouteImport.update({
@@ -139,12 +187,20 @@ export interface FileRoutesByFullPath {
   '/academies': typeof AppAcademiesRoute
   '/academy-hub': typeof AppAcademyHubRoute
   '/admin-settings': typeof AppAdminSettingsRoute
+  '/affiliation': typeof AppAffiliationRoute
   '/assistants-ia': typeof AppAssistantsIaRoute
+  '/calendrier': typeof AppCalendrierRoute
+  '/classes-virtuelles': typeof AppClassesVirtuellesRoute
+  '/codes-promo': typeof AppCodesPromoRoute
+  '/communaute': typeof AppCommunauteRoute
   '/courses': typeof AppCoursesRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
   '/eleves': typeof AppElevesRoute
   '/enseignants': typeof AppEnseignantsRoute
+  '/integrations': typeof AppIntegrationsRoute
   '/manage-courses': typeof AppManageCoursesRoute
+  '/outils-marketing': typeof AppOutilsMarketingRoute
+  '/packs': typeof AppPacksRoute
   '/paiements': typeof AppPaiementsRoute
   '/settings': typeof AppSettingsRoute
   '/statistiques': typeof AppStatistiquesRoute
@@ -160,12 +216,20 @@ export interface FileRoutesByTo {
   '/academies': typeof AppAcademiesRoute
   '/academy-hub': typeof AppAcademyHubRoute
   '/admin-settings': typeof AppAdminSettingsRoute
+  '/affiliation': typeof AppAffiliationRoute
   '/assistants-ia': typeof AppAssistantsIaRoute
+  '/calendrier': typeof AppCalendrierRoute
+  '/classes-virtuelles': typeof AppClassesVirtuellesRoute
+  '/codes-promo': typeof AppCodesPromoRoute
+  '/communaute': typeof AppCommunauteRoute
   '/courses': typeof AppCoursesRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
   '/eleves': typeof AppElevesRoute
   '/enseignants': typeof AppEnseignantsRoute
+  '/integrations': typeof AppIntegrationsRoute
   '/manage-courses': typeof AppManageCoursesRoute
+  '/outils-marketing': typeof AppOutilsMarketingRoute
+  '/packs': typeof AppPacksRoute
   '/paiements': typeof AppPaiementsRoute
   '/settings': typeof AppSettingsRoute
   '/statistiques': typeof AppStatistiquesRoute
@@ -183,12 +247,20 @@ export interface FileRoutesById {
   '/_app/academies': typeof AppAcademiesRoute
   '/_app/academy-hub': typeof AppAcademyHubRoute
   '/_app/admin-settings': typeof AppAdminSettingsRoute
+  '/_app/affiliation': typeof AppAffiliationRoute
   '/_app/assistants-ia': typeof AppAssistantsIaRoute
+  '/_app/calendrier': typeof AppCalendrierRoute
+  '/_app/classes-virtuelles': typeof AppClassesVirtuellesRoute
+  '/_app/codes-promo': typeof AppCodesPromoRoute
+  '/_app/communaute': typeof AppCommunauteRoute
   '/_app/courses': typeof AppCoursesRouteWithChildren
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/eleves': typeof AppElevesRoute
   '/_app/enseignants': typeof AppEnseignantsRoute
+  '/_app/integrations': typeof AppIntegrationsRoute
   '/_app/manage-courses': typeof AppManageCoursesRoute
+  '/_app/outils-marketing': typeof AppOutilsMarketingRoute
+  '/_app/packs': typeof AppPacksRoute
   '/_app/paiements': typeof AppPaiementsRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/statistiques': typeof AppStatistiquesRoute
@@ -206,12 +278,20 @@ export interface FileRouteTypes {
     | '/academies'
     | '/academy-hub'
     | '/admin-settings'
+    | '/affiliation'
     | '/assistants-ia'
+    | '/calendrier'
+    | '/classes-virtuelles'
+    | '/codes-promo'
+    | '/communaute'
     | '/courses'
     | '/dashboard'
     | '/eleves'
     | '/enseignants'
+    | '/integrations'
     | '/manage-courses'
+    | '/outils-marketing'
+    | '/packs'
     | '/paiements'
     | '/settings'
     | '/statistiques'
@@ -227,12 +307,20 @@ export interface FileRouteTypes {
     | '/academies'
     | '/academy-hub'
     | '/admin-settings'
+    | '/affiliation'
     | '/assistants-ia'
+    | '/calendrier'
+    | '/classes-virtuelles'
+    | '/codes-promo'
+    | '/communaute'
     | '/courses'
     | '/dashboard'
     | '/eleves'
     | '/enseignants'
+    | '/integrations'
     | '/manage-courses'
+    | '/outils-marketing'
+    | '/packs'
     | '/paiements'
     | '/settings'
     | '/statistiques'
@@ -249,12 +337,20 @@ export interface FileRouteTypes {
     | '/_app/academies'
     | '/_app/academy-hub'
     | '/_app/admin-settings'
+    | '/_app/affiliation'
     | '/_app/assistants-ia'
+    | '/_app/calendrier'
+    | '/_app/classes-virtuelles'
+    | '/_app/codes-promo'
+    | '/_app/communaute'
     | '/_app/courses'
     | '/_app/dashboard'
     | '/_app/eleves'
     | '/_app/enseignants'
+    | '/_app/integrations'
     | '/_app/manage-courses'
+    | '/_app/outils-marketing'
+    | '/_app/packs'
     | '/_app/paiements'
     | '/_app/settings'
     | '/_app/statistiques'
@@ -336,11 +432,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPaiementsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/packs': {
+      id: '/_app/packs'
+      path: '/packs'
+      fullPath: '/packs'
+      preLoaderRoute: typeof AppPacksRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/outils-marketing': {
+      id: '/_app/outils-marketing'
+      path: '/outils-marketing'
+      fullPath: '/outils-marketing'
+      preLoaderRoute: typeof AppOutilsMarketingRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/manage-courses': {
       id: '/_app/manage-courses'
       path: '/manage-courses'
       fullPath: '/manage-courses'
       preLoaderRoute: typeof AppManageCoursesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/integrations': {
+      id: '/_app/integrations'
+      path: '/integrations'
+      fullPath: '/integrations'
+      preLoaderRoute: typeof AppIntegrationsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/enseignants': {
@@ -371,11 +488,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCoursesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/communaute': {
+      id: '/_app/communaute'
+      path: '/communaute'
+      fullPath: '/communaute'
+      preLoaderRoute: typeof AppCommunauteRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/codes-promo': {
+      id: '/_app/codes-promo'
+      path: '/codes-promo'
+      fullPath: '/codes-promo'
+      preLoaderRoute: typeof AppCodesPromoRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/classes-virtuelles': {
+      id: '/_app/classes-virtuelles'
+      path: '/classes-virtuelles'
+      fullPath: '/classes-virtuelles'
+      preLoaderRoute: typeof AppClassesVirtuellesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/calendrier': {
+      id: '/_app/calendrier'
+      path: '/calendrier'
+      fullPath: '/calendrier'
+      preLoaderRoute: typeof AppCalendrierRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/assistants-ia': {
       id: '/_app/assistants-ia'
       path: '/assistants-ia'
       fullPath: '/assistants-ia'
       preLoaderRoute: typeof AppAssistantsIaRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/affiliation': {
+      id: '/_app/affiliation'
+      path: '/affiliation'
+      fullPath: '/affiliation'
+      preLoaderRoute: typeof AppAffiliationRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/admin-settings': {
@@ -432,12 +584,20 @@ interface AppRouteChildren {
   AppAcademiesRoute: typeof AppAcademiesRoute
   AppAcademyHubRoute: typeof AppAcademyHubRoute
   AppAdminSettingsRoute: typeof AppAdminSettingsRoute
+  AppAffiliationRoute: typeof AppAffiliationRoute
   AppAssistantsIaRoute: typeof AppAssistantsIaRoute
+  AppCalendrierRoute: typeof AppCalendrierRoute
+  AppClassesVirtuellesRoute: typeof AppClassesVirtuellesRoute
+  AppCodesPromoRoute: typeof AppCodesPromoRoute
+  AppCommunauteRoute: typeof AppCommunauteRoute
   AppCoursesRoute: typeof AppCoursesRouteWithChildren
   AppDashboardRoute: typeof AppDashboardRoute
   AppElevesRoute: typeof AppElevesRoute
   AppEnseignantsRoute: typeof AppEnseignantsRoute
+  AppIntegrationsRoute: typeof AppIntegrationsRoute
   AppManageCoursesRoute: typeof AppManageCoursesRoute
+  AppOutilsMarketingRoute: typeof AppOutilsMarketingRoute
+  AppPacksRoute: typeof AppPacksRoute
   AppPaiementsRoute: typeof AppPaiementsRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppStatistiquesRoute: typeof AppStatistiquesRoute
@@ -448,12 +608,20 @@ const AppRouteChildren: AppRouteChildren = {
   AppAcademiesRoute: AppAcademiesRoute,
   AppAcademyHubRoute: AppAcademyHubRoute,
   AppAdminSettingsRoute: AppAdminSettingsRoute,
+  AppAffiliationRoute: AppAffiliationRoute,
   AppAssistantsIaRoute: AppAssistantsIaRoute,
+  AppCalendrierRoute: AppCalendrierRoute,
+  AppClassesVirtuellesRoute: AppClassesVirtuellesRoute,
+  AppCodesPromoRoute: AppCodesPromoRoute,
+  AppCommunauteRoute: AppCommunauteRoute,
   AppCoursesRoute: AppCoursesRouteWithChildren,
   AppDashboardRoute: AppDashboardRoute,
   AppElevesRoute: AppElevesRoute,
   AppEnseignantsRoute: AppEnseignantsRoute,
+  AppIntegrationsRoute: AppIntegrationsRoute,
   AppManageCoursesRoute: AppManageCoursesRoute,
+  AppOutilsMarketingRoute: AppOutilsMarketingRoute,
+  AppPacksRoute: AppPacksRoute,
   AppPaiementsRoute: AppPaiementsRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppStatistiquesRoute: AppStatistiquesRoute,
