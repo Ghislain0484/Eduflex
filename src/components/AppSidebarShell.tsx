@@ -115,7 +115,8 @@ export function AppSidebarShell() {
   const navItems: NavItemDef[] = [
     { href: '/dashboard', icon: <LayoutDashboard className="h-4 w-4" />, label: 'Tableau de bord' },
     ...((user?.role === 'teacher' || user?.role === 'admin') ? [
-      { href: '/manage-courses', icon: <BookOpen className="h-4 w-4" />, label: 'Gérer les formations' }
+      { href: '/manage-courses', icon: <BookOpen className="h-4 w-4" />, label: 'Gérer les formations' },
+      { href: '/academy-hub', icon: <GraduationCap className="h-4 w-4" />, label: 'Académie EduFlex 🎓' }
     ] : []),
     ...(user?.role === 'admin' ? [
       { href: '/academies', icon: <Building className="h-4 w-4" />, label: 'Académies B2B' },
