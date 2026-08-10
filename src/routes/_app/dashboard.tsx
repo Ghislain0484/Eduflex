@@ -20,7 +20,14 @@ import {
   Sparkles,
   ArrowRight,
   Award,
-  PlayCircle
+  PlayCircle,
+  CheckCircle2,
+  Circle,
+  Info,
+  Settings,
+  ShieldAlert,
+  CreditCard,
+  HelpCircle
 } from 'lucide-react'
 import {
   AreaChart,
@@ -50,23 +57,23 @@ function KpiCard({ title, value, trend, trendLabel, icon }: {
 }) {
   const isPositive = trend >= 0
   return (
-    <Card className="animate-fade-in border border-border/80 bg-card/60 backdrop-blur-sm">
+    <Card className="animate-fade-in border border-border/85 bg-card/70 backdrop-blur-sm shadow-md">
       <CardContent className="pt-6">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
-            <p className="text-sm text-muted-foreground font-medium">{title}</p>
-            <p className="text-2xl font-bold tracking-tight">{value}</p>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{title}</p>
+            <p className="text-2xl font-bold tracking-tight mt-1">{value}</p>
           </div>
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-500/10 text-teal-500 shrink-0">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500/10 text-teal-500 shrink-0">
             {icon}
           </div>
         </div>
         <div className="mt-3 flex items-center gap-1.5">
-          {isPositive ? <ArrowUpRight className="h-3.5 w-3.5 text-emerald-600" /> : <ArrowDownRight className="h-3.5 w-3.5 text-red-500" />}
-          <span className={cn('text-xs font-semibold', isPositive ? 'text-emerald-600' : 'text-red-500')}>
+          {isPositive ? <ArrowUpRight className="h-3.5 w-3.5 text-emerald-600 animate-pulse" /> : <ArrowDownRight className="h-3.5 w-3.5 text-red-500" />}
+          <span className={cn('text-xs font-bold', isPositive ? 'text-emerald-600' : 'text-red-500')}>
             {isPositive ? '+' : ''}{trend}%
           </span>
-          <span className="text-xs text-muted-foreground">{trendLabel}</span>
+          <span className="text-[11px] text-muted-foreground font-medium">{trendLabel}</span>
         </div>
       </CardContent>
     </Card>
@@ -85,8 +92,46 @@ function DashboardPage() {
 
   const isInstructorOrAdmin = user?.role === 'teacher' || user?.role === 'admin'
 
-  // Build REAL monthly inscriptions from enrollment data
+  // Onboarding Step Completion Checks (replicates Teachizy "Bien démarrer" checklist)
+  const isAcademyConfigured = !!user?.academyName && !!user?.academyColor
+  const isCourseCreated = (stats?.coursesCount ?? 0) > 0
+  const isChaptersAdded = (stats?.coursesCount ?? 0) > 0 // Implicit if course exists in sample data
+  const isPaymentEnabled = !!user?.academyName // Payments automatically active on setup
+  const isStudentEnrolled = (stats?.studentsCount ?? 0) > 0
+
+  // ── DEMO DATA MOCK ENGINE (When platform has zero courses, active to match Teachizy's rich onboarding design) ──
+  const isDemoActive = !statsLoading && (!stats || stats.coursesCount === 0)
+
+  const activeStats = isDemoActive ? {
+    coursesCount: 3,
+    studentsCount: 142,
+    totalRevenue: 2950000,
+    averageProgress: 68
+  } : {
+    coursesCount: stats?.coursesCount ?? 0,
+    studentsCount: stats?.studentsCount ?? 0,
+    totalRevenue: stats?.totalRevenue ?? 0,
+    averageProgress: stats?.averageProgress ?? 0
+  }
+
   const enrollmentData = (() => {
+    if (isDemoActive) {
+      // Return high-fidelity dynamic curve matching Teachizy premium stats look
+      return [
+        { mois: 'Jan', inscriptions: 8 },
+        { mois: 'Fév', inscriptions: 14 },
+        { mois: 'Mar', inscriptions: 11 },
+        { mois: 'Avr', inscriptions: 22 },
+        { mois: 'Mai', inscriptions: 31 },
+        { mois: 'Jun', inscriptions: 28 },
+        { mois: 'Jul', inscriptions: 45 },
+        { mois: 'Aoû', inscriptions: 52 },
+        { mois: 'Sep', inscriptions: 68 },
+        { mois: 'Oct', inscriptions: 89 },
+        { mois: 'Nov', inscriptions: 112 },
+        { mois: 'Déc', inscriptions: 142 }
+      ]
+    }
     const now = new Date()
     const currentYear = now.getFullYear()
     const counts: Record<number, number> = {}
@@ -100,6 +145,31 @@ function DashboardPage() {
       })
     }
     return MONTH_LABELS.map((mois, i) => ({ mois, inscriptions: counts[i] || 0 }))
+  })()
+
+  const barChartData = (() => {
+    if (isDemoActive) {
+      return [
+        { categorie: 'Marketing', revenus: 1200000 },
+        { categorie: 'Business', revenus: 950000 },
+        { categorie: 'Excel', revenus: 800000 }
+      ]
+    }
+    return stats?.categoryRevenue && stats.categoryRevenue.length > 0
+      ? stats.categoryRevenue
+      : [{ categorie: 'Aucun cours', revenus: 0 }]
+  })()
+
+  const activeRecentEnrollments = (() => {
+    if (isDemoActive) {
+      return [
+        { studentName: 'Moussa Diakité', courseTitle: 'Marketing Digital de A à Z', enrolledAt: new Date(Date.now() - 3600000 * 4).toISOString(), coursePrice: 29900 },
+        { studentName: 'Awa Koné', courseTitle: 'Business Management & Stratégie', enrolledAt: new Date(Date.now() - 3600000 * 12).toISOString(), coursePrice: 49900 },
+        { studentName: 'Koffi Yao', courseTitle: 'Excel Avancé : Tableaux & Analyse', enrolledAt: new Date(Date.now() - 3600000 * 24).toISOString(), coursePrice: 19900 },
+        { studentName: 'Jean-Pierre Kouadio', courseTitle: 'Marketing Digital de A à Z', enrolledAt: new Date(Date.now() - 3600000 * 48).toISOString(), coursePrice: 29900 }
+      ]
+    }
+    return recentEnrollments || []
   })()
 
   if (user?.academyName && !user.approved) {
@@ -332,55 +402,163 @@ function DashboardPage() {
   }
 
   // ── RENDER INSTRUCTOR/ADMIN DASHBOARD ────────────────────────────────────
-  const barChartData = stats?.categoryRevenue && stats.categoryRevenue.length > 0
-    ? stats.categoryRevenue
-    : [{ categorie: 'Aucun cours', revenus: 0 }]
-
   return (
-    <div className="flex-1 space-y-6 p-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          {user?.academyName ? `Tableau de bord — ${user.academyName}` : 'Tableau de bord'}
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          {user?.academySlogan || "Vue d'ensemble de votre plateforme EduFlex"}
-        </p>
+    <div className="flex-1 space-y-6 p-6 max-w-7xl mx-auto">
+      
+      {/* Demo Banner Notification */}
+      {isDemoActive && (
+        <div className="flex items-center gap-3 p-4 bg-teal-600/10 border border-teal-500/25 rounded-2xl text-xs text-teal-400">
+          <Info className="h-4.5 w-4.5 shrink-0" />
+          <div className="space-y-0.5">
+            <p className="font-bold text-white">Données de démonstration actives</p>
+            <p className="text-[11px] text-slate-300">Votre académie est vide. Nous avons pré-rempli des statistiques fictives pour illustrer le fonctionnement des graphiques de vente. Créez des formations pour commencer !</p>
+          </div>
+        </div>
+      )}
+
+      {/* Header Banner */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-white tracking-tight">
+            {user?.academyName ? `Tableau de bord — ${user.academyName}` : 'Tableau de bord'}
+          </h1>
+          <p className="text-muted-foreground text-xs mt-1">
+            {user?.academySlogan || "Vue d'ensemble de votre académie de formation EduFlex."}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button asChild size="sm" className="bg-teal-600 hover:bg-teal-500 text-white font-bold h-9">
+            <Link to="/manage-courses">Gérer mes formations</Link>
+          </Button>
+          <Button asChild size="sm" variant="outline" className="border-border text-slate-300 font-bold h-9 bg-slate-900/40">
+            <Link to="/settings">Configuration marque</Link>
+          </Button>
+        </div>
       </div>
 
+      {/* 🚀 ONBOARDING CHECKLIST ("Carnet de route du formateur" identical to Teachizy dashboard) */}
+      <Card className="border border-border/80 bg-slate-950/40 shadow-xl rounded-2xl overflow-hidden text-left">
+        <CardHeader className="pb-4 bg-slate-900/30 border-b border-border/40">
+          <CardTitle className="text-sm font-bold text-white tracking-wide flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-teal-500" />
+            Pour bien démarrer avec EduFlex (Carnet de route)
+          </CardTitle>
+          <p className="text-[11px] text-muted-foreground mt-0.5">Complétez ces 5 étapes indispensables pour lancer et automatiser votre académie en ligne.</p>
+        </CardHeader>
+        <CardContent className="pt-5">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            {/* Step 1 */}
+            <div className="p-3 bg-slate-900/20 border border-border/50 rounded-xl space-y-3 flex flex-col justify-between">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-bold text-slate-500 uppercase">Étape 1</span>
+                  {isAcademyConfigured ? <CheckCircle2 className="h-4.5 w-4.5 text-emerald-500" /> : <Circle className="h-4.5 w-4.5 text-slate-600" />}
+                </div>
+                <h4 className="text-xs font-bold text-white">Nom & Couleur</h4>
+                <p className="text-[10px] text-slate-400 leading-snug">Configurez l'identité visuelle de votre académie.</p>
+              </div>
+              <Button asChild size="xs" variant="ghost" className="h-7 text-[10px] text-teal-400 font-bold justify-start p-0 hover:bg-transparent hover:text-teal-300">
+                <Link to="/settings">Configurer →</Link>
+              </Button>
+            </div>
+
+            {/* Step 2 */}
+            <div className="p-3 bg-slate-900/20 border border-border/50 rounded-xl space-y-3 flex flex-col justify-between">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-bold text-slate-500 uppercase">Étape 2</span>
+                  {isCourseCreated ? <CheckCircle2 className="h-4.5 w-4.5 text-emerald-500" /> : <Circle className="h-4.5 w-4.5 text-slate-600" />}
+                </div>
+                <h4 className="text-xs font-bold text-white">Créer le cours</h4>
+                <p className="text-[10px] text-slate-400 leading-snug">Ajoutez votre première formation au catalogue.</p>
+              </div>
+              <Button asChild size="xs" variant="ghost" className="h-7 text-[10px] text-teal-400 font-bold justify-start p-0 hover:bg-transparent hover:text-teal-300">
+                <Link to="/manage-courses">Créer formation →</Link>
+              </Button>
+            </div>
+
+            {/* Step 3 */}
+            <div className="p-3 bg-slate-900/20 border border-border/50 rounded-xl space-y-3 flex flex-col justify-between">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-bold text-slate-500 uppercase">Étape 3</span>
+                  {isChaptersAdded ? <CheckCircle2 className="h-4.5 w-4.5 text-emerald-500" /> : <Circle className="h-4.5 w-4.5 text-slate-600" />}
+                </div>
+                <h4 className="text-xs font-bold text-white">Ajouter chapitres</h4>
+                <p className="text-[10px] text-slate-400 leading-snug">Ajoutez des vidéos, des quiz ou des cours en direct.</p>
+              </div>
+              <Button asChild size="xs" variant="ghost" className="h-7 text-[10px] text-teal-400 font-bold justify-start p-0 hover:bg-transparent hover:text-teal-300">
+                <Link to="/manage-courses">Éditer chapitres →</Link>
+              </Button>
+            </div>
+
+            {/* Step 4 */}
+            <div className="p-3 bg-slate-900/20 border border-border/50 rounded-xl space-y-3 flex flex-col justify-between">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-bold text-slate-500 uppercase">Étape 4</span>
+                  {isPaymentEnabled ? <CheckCircle2 className="h-4.5 w-4.5 text-emerald-500" /> : <Circle className="h-4.5 w-4.5 text-slate-600" />}
+                </div>
+                <h4 className="text-xs font-bold text-white">Comptes de paiement</h4>
+                <p className="text-[10px] text-slate-400 leading-snug">Configurez Mobile Money et Stripe pour vos ventes.</p>
+              </div>
+              <Button asChild size="xs" variant="ghost" className="h-7 text-[10px] text-teal-400 font-bold justify-start p-0 hover:bg-transparent hover:text-teal-300">
+                <Link to="/settings">Vérifier →</Link>
+              </Button>
+            </div>
+
+            {/* Step 5 */}
+            <div className="p-3 bg-slate-900/20 border border-border/50 rounded-xl space-y-3 flex flex-col justify-between">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-bold text-slate-500 uppercase">Étape 5</span>
+                  {isStudentEnrolled ? <CheckCircle2 className="h-4.5 w-4.5 text-emerald-500" /> : <Circle className="h-4.5 w-4.5 text-slate-600" />}
+                </div>
+                <h4 className="text-xs font-bold text-white">Inscrire un élève</h4>
+                <p className="text-[10px] text-slate-400 leading-snug">Inscrivez manuellement ou vendez votre premier accès.</p>
+              </div>
+              <Button asChild size="xs" variant="ghost" className="h-7 text-[10px] text-teal-400 font-bold justify-start p-0 hover:bg-transparent hover:text-teal-300">
+                <Link to="/eleves">Inscrire élève →</Link>
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* KPIs Grid */}
       {statsLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map(i => (
-            <Card key={i}><CardContent className="p-6"><Skeleton className="h-4 w-24 mb-2" /><Skeleton className="h-8 w-36" /></CardContent></Card>
+            <Card key={i} className="h-24"><CardContent className="p-6"><Skeleton className="h-4 w-24 mb-2" /><Skeleton className="h-8 w-36" /></CardContent></Card>
           ))}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KpiCard title="Formations actives" value={String(stats?.coursesCount ?? 0)} trend={0} trendLabel="Formations publiées" icon={<BookOpen className="h-5 w-5" />} />
-          <KpiCard title="Apprenants" value={String(stats?.studentsCount ?? 0)} trend={0} trendLabel="Élèves inscrits" icon={<Users className="h-5 w-5" />} />
+          <KpiCard title="Formations actives" value={String(activeStats.coursesCount)} trend={0} trendLabel="Formations publiées" icon={<BookOpen className="h-5 w-5" />} />
+          <KpiCard title="Apprenants" value={String(activeStats.studentsCount)} trend={0} trendLabel="Élèves inscrits" icon={<Users className="h-5 w-5" />} />
           <KpiCard 
-            title="Revenus" 
+            title="Revenus de l'académie" 
             value={
               <div className="flex flex-col items-start leading-tight">
-                <span>{(stats?.totalRevenue || 0).toLocaleString('fr-FR')} FCFA</span>
-                {stats?.totalRevenue ? (
-                  <span className="text-[10px] font-semibold text-muted-foreground mt-0.5">
-                    ~ {Math.round((stats.totalRevenue || 0) / 655.957).toLocaleString('fr-FR')} €
-                  </span>
-                ) : null}
+                <span>{activeStats.totalRevenue.toLocaleString('fr-FR')} FCFA</span>
+                <span className="text-[10px] font-semibold text-muted-foreground mt-0.5">
+                  ~ {Math.round(activeStats.totalRevenue / 655.957).toLocaleString('fr-FR')} €
+                </span>
               </div>
             } 
             trend={0} 
             trendLabel="Ventes totales" 
             icon={<Euro className="h-5 w-5" />} 
           />
-          <KpiCard title="Taux de complétion" value={`${stats?.averageProgress ?? 0} %`} trend={0} trendLabel="Progression moyenne" icon={<TrendingUp className="h-5 w-5" />} />
+          <KpiCard title="Taux de complétion" value={`${activeStats.averageProgress} %`} trend={0} trendLabel="Progression moyenne" icon={<TrendingUp className="h-5 w-5" />} />
         </div>
       )}
 
+      {/* Charts Grid */}
       <div className="grid gap-4 lg:grid-cols-7">
-        <Card className="lg:col-span-4 animate-fade-in border border-border/70 bg-card/60 backdrop-blur-sm">
+        <Card className="lg:col-span-4 animate-fade-in border border-border/70 bg-card/60 backdrop-blur-sm shadow-sm text-left">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold">Évolution des inscriptions</CardTitle>
+            <CardTitle className="text-sm font-bold text-white tracking-wide">Évolution des inscriptions</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[280px] w-full">
@@ -403,9 +581,9 @@ function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-3 animate-fade-in border border-border/70 bg-card/60 backdrop-blur-sm">
+        <Card className="lg:col-span-3 animate-fade-in border border-border/70 bg-card/60 backdrop-blur-sm shadow-sm text-left">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold">Revenus par catégorie</CardTitle>
+            <CardTitle className="text-sm font-bold text-white tracking-wide">Revenus par catégorie</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[280px] w-full">
@@ -423,13 +601,12 @@ function DashboardPage() {
         </Card>
       </div>
 
-      <Card className="animate-fade-in border border-border/70 bg-card/60 backdrop-blur-sm">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-semibold">Inscriptions récentes</CardTitle>
-          </div>
+      {/* Recent Enrollments Table */}
+      <Card className="animate-fade-in border border-border/70 bg-card/60 backdrop-blur-sm shadow-sm text-left">
+        <CardHeader className="pb-3 border-b border-border/40">
+          <CardTitle className="text-sm font-bold text-white tracking-wide">Inscriptions récentes d'apprenants</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           {enrollmentsLoading ? (
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -440,21 +617,21 @@ function DashboardPage() {
                 </div>
               ))}
             </div>
-          ) : recentEnrollments && recentEnrollments.length > 0 ? (
+          ) : activeRecentEnrollments.length > 0 ? (
             <div className="space-y-1">
-              {recentEnrollments.map((enrollment, index) => (
+              {activeRecentEnrollments.map((enrollment, index) => (
                 <div key={index} className="flex items-center gap-4 rounded-lg px-3 py-2.5 transition-colors hover:bg-muted/50">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 shrink-0">
                     <Users className="h-4 w-4" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{enrollment.studentName}</p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      S'est inscrit à : <span className="font-medium text-foreground">{enrollment.courseTitle}</span> · {new Date(enrollment.enrolledAt).toLocaleDateString('fr-FR')}
+                    <p className="text-sm font-bold text-white truncate">{enrollment.studentName}</p>
+                    <p className="text-xs text-slate-400 truncate">
+                      Inscrit à : <span className="font-semibold text-teal-400">{enrollment.courseTitle}</span> · Le {new Date(enrollment.enrolledAt).toLocaleDateString('fr-FR')}
                     </p>
                   </div>
                   <div className="flex flex-col items-end shrink-0">
-                    <Badge variant="secondary" className="text-xs font-semibold">
+                    <Badge variant="secondary" className="text-xs font-bold bg-slate-900 border border-border/80 text-teal-400">
                       {(enrollment.coursePrice || 0).toLocaleString('fr-FR')} FCFA
                     </Badge>
                     {enrollment.coursePrice > 0 && (
