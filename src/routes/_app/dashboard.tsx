@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import {
   Card,
   CardHeader,
@@ -6,6 +6,8 @@ import {
   CardContent,
   Badge,
   Skeleton,
+  Button,
+  EmptyState,
 } from '@blinkdotnew/ui'
 import {
   BookOpen,
@@ -14,6 +16,11 @@ import {
   TrendingUp,
   ArrowUpRight,
   ArrowDownRight,
+  GraduationCap,
+  Sparkles,
+  ArrowRight,
+  Award,
+  PlayCircle
 } from 'lucide-react'
 import {
   AreaChart,
@@ -29,7 +36,8 @@ import {
 import { useDashboardStats, useRecentEnrollments, useAllEnrollments } from '@/hooks/useStats'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
-import { Sparkles } from 'lucide-react'
+import { useCourses } from '@/hooks/useCourses'
+import { useEnrollments } from '@/hooks/useEnrollments'
 
 export const Route = createFileRoute('/_app/dashboard')({
   component: DashboardPage,
@@ -42,14 +50,14 @@ function KpiCard({ title, value, trend, trendLabel, icon }: {
 }) {
   const isPositive = trend >= 0
   return (
-    <Card className="animate-fade-in">
+    <Card className="animate-fade-in border border-border/80 bg-card/60 backdrop-blur-sm">
       <CardContent className="pt-6">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground font-medium">{title}</p>
             <p className="text-2xl font-bold tracking-tight">{value}</p>
           </div>
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-500/10 text-teal-500 shrink-0">
             {icon}
           </div>
         </div>
@@ -70,6 +78,12 @@ function DashboardPage() {
   const { data: stats, isLoading: statsLoading } = useDashboardStats()
   const { data: recentEnrollments, isLoading: enrollmentsLoading } = useRecentEnrollments()
   const { data: allEnrollments } = useAllEnrollments()
+
+  // Student specific queries
+  const { data: studentEnrollments, isLoading: studentLoading } = useEnrollments()
+  const { data: allPublishedCourses } = useCourses()
+
+  const isInstructorOrAdmin = user?.role === 'teacher' || user?.role === 'admin'
 
   // Build REAL monthly inscriptions from enrollment data
   const enrollmentData = (() => {
@@ -92,7 +106,7 @@ function DashboardPage() {
     return (
       <div className="flex-1 flex items-center justify-center p-6 bg-background min-h-[85vh]">
         <div className="max-w-md w-full text-center space-y-6 animate-fade-in border border-border bg-card p-8 rounded-2xl shadow-xl">
-          <div className="mx-auto h-16 w-16 bg-primary/10 text-primary flex items-center justify-center rounded-2xl">
+          <div className="mx-auto h-16 w-16 bg-teal-500/10 text-teal-600 flex items-center justify-center rounded-2xl">
             <Sparkles className="h-8 w-8 animate-pulse" />
           </div>
           <div className="space-y-2">
@@ -114,13 +128,210 @@ function DashboardPage() {
             </CardContent>
           </Card>
           <div className="text-[11px] text-muted-foreground">
-            Besoin d'aide ? Contactez notre support technique à <a href="mailto:support@eduflex.com" className="text-primary hover:underline font-semibold">support@eduflex.com</a>
+            Besoin d'aide ? Contactez notre support technique à <a href="mailto:support@eduflex.com" className="text-teal-500 hover:underline font-semibold">support@eduflex.com</a>
           </div>
         </div>
       </div>
     )
   }
 
+  // ── RENDER STUDENT DASHBOARD (ESPACE APPRENANT) ────────────────────────────
+  if (!isInstructorOrAdmin) {
+    const enrolledCoursesCount = studentEnrollments?.length || 0
+    const completedCourses = studentEnrollments?.filter(e => e.progressPercent === 100) || []
+    const averageProgress = enrolledCoursesCount > 0 
+      ? Math.round((studentEnrollments?.reduce((sum, e) => sum + e.progressPercent, 0) || 0) / enrolledCoursesCount)
+      : 0
+
+    return (
+      <div className="flex-1 space-y-6 p-6 max-w-7xl mx-auto">
+        {/* Learner Welcome Header */}
+        <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-teal-950/20 border border-border/70 p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
+          <div className="space-y-1.5">
+            <h1 className="text-2xl font-black text-white flex items-center gap-2">
+              Bonjour, {user?.displayName || 'Apprenant'} 👋
+            </h1>
+            <p className="text-xs text-muted-foreground">
+              Ravi de vous revoir sur votre portail d'apprentissage. Suivez vos cours et téléchargez vos diplômes.
+            </p>
+          </div>
+          <Button asChild size="sm" className="bg-teal-600 hover:bg-teal-500 text-white font-bold h-9">
+            <Link to="/courses">Explorer le catalogue</Link>
+          </Button>
+        </div>
+
+        {/* Student KPIs */}
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Card className="border border-border/70 bg-card/40 backdrop-blur-sm">
+            <CardContent className="pt-6 flex items-center gap-4">
+              <div className="h-10 w-10 rounded-xl bg-teal-500/10 text-teal-500 flex items-center justify-center shrink-0">
+                <BookOpen className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase">Formations suivies</p>
+                <p className="text-xl font-bold text-white">{enrolledCoursesCount}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border border-border/70 bg-card/40 backdrop-blur-sm">
+            <CardContent className="pt-6 flex items-center gap-4">
+              <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
+                <Award className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase">Certificats obtenus</p>
+                <p className="text-xl font-bold text-white">{completedCourses.length}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border border-border/70 bg-card/40 backdrop-blur-sm">
+            <CardContent className="pt-6 flex items-center gap-4">
+              <div className="h-10 w-10 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center shrink-0">
+                <TrendingUp className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase">Progression globale</p>
+                <p className="text-xl font-bold text-white">{averageProgress}%</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Enrolled courses vs Certificates grid */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Main learning section (Left) */}
+          <div className="lg:col-span-2 space-y-4">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Mes Formations actives</h2>
+            
+            {studentLoading ? (
+              <div className="space-y-4">
+                {[1, 2].map(i => (
+                  <Card key={i} className="h-28 w-full border border-border/60 animate-pulse" />
+                ))}
+              </div>
+            ) : !studentEnrollments || studentEnrollments.length === 0 ? (
+              <Card className="border-dashed border-border/80 bg-slate-900/10 py-12">
+                <EmptyState
+                  icon={<BookOpen className="h-10 w-10 text-slate-500" />}
+                  title="Aucun cours en cours"
+                  description="Inscrivez-vous à des cours pour démarrer votre apprentissage en ligne."
+                >
+                  <Button asChild size="sm" className="bg-teal-600 hover:bg-teal-500 text-white font-bold mt-4">
+                    <Link to="/courses">Voir le catalogue</Link>
+                  </Button>
+                </EmptyState>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {studentEnrollments.map(enrollment => {
+                  const course = allPublishedCourses?.find(c => c.id === enrollment.courseId)
+                  if (!course) return null
+
+                  return (
+                    <Card key={enrollment.id} className="border border-border/70 bg-card hover:border-teal-500/30 transition-all shadow-sm">
+                      <CardContent className="p-5 flex flex-col sm:flex-row gap-5 items-start sm:items-center">
+                        {course.imageUrl ? (
+                          <img src={course.imageUrl} alt={course.title} className="w-full sm:w-28 h-20 object-cover rounded-xl border border-border/40 shrink-0" />
+                        ) : (
+                          <div className="w-full sm:w-28 h-20 rounded-xl bg-slate-800 flex items-center justify-center text-muted-foreground shrink-0 font-bold text-xs">
+                            No Cover
+                          </div>
+                        )}
+                        <div className="flex-1 space-y-3 w-full">
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between">
+                              <Badge className="bg-teal-600/10 text-teal-400 hover:bg-teal-600/10 text-[10px] uppercase font-bold border-none">
+                                {course.category || 'Général'}
+                              </Badge>
+                              {enrollment.progressPercent === 100 && (
+                                <Badge className="bg-emerald-600/10 text-emerald-400 border-none text-[9px] font-bold">
+                                  ✓ Terminé
+                                </Badge>
+                              )}
+                            </div>
+                            <h3 className="text-sm font-bold text-white leading-snug">{course.title}</h3>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <div className="flex justify-between items-center text-[10px]">
+                              <span className="text-slate-400">Progression</span>
+                              <span className="text-teal-400 font-bold">{enrollment.progressPercent}%</span>
+                            </div>
+                            <div className="w-full bg-slate-900 rounded-full h-1.5 border border-slate-800">
+                              <div 
+                                className="bg-teal-600 h-1.5 rounded-full transition-all duration-500" 
+                                style={{ width: `${enrollment.progressPercent}%` }} 
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <Button asChild size="sm" variant={enrollment.progressPercent === 100 ? 'outline' : 'default'} className={cn("w-full sm:w-auto shrink-0 font-bold text-xs h-9", enrollment.progressPercent === 100 ? 'border-border text-slate-300' : 'bg-teal-600 hover:bg-teal-500 text-white')}>
+                          <Link to="/study/$id" params={{ id: String(course.id) }} className="flex items-center gap-1">
+                            {enrollment.progressPercent === 100 ? (
+                              <>
+                                <PlayCircle className="h-3.5 w-3.5" /> Revoir le cours
+                              </>
+                            ) : (
+                              <>
+                                Continuer <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                              </>
+                            )}
+                          </Link>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Certificates block (Right) */}
+          <div className="space-y-4">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Mes Récompenses</h2>
+            <Card className="border border-border/70 bg-card/60 backdrop-blur-sm">
+              <CardHeader className="pb-3 border-b border-border/50">
+                <CardTitle className="text-xs font-bold text-slate-300 uppercase tracking-wide flex items-center gap-1.5">
+                  <Award className="h-4 w-4 text-amber-500" /> Diplômes & Certificats
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-4 space-y-3">
+                {completedCourses.length === 0 ? (
+                  <div className="py-6 text-center text-xs text-slate-500 italic space-y-1">
+                    <p>Aucun certificat pour le moment.</p>
+                    <p className="text-[10px] text-slate-600">Complétez un cours à 100% pour générer votre attestation.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {completedCourses.map(e => {
+                      const course = allPublishedCourses?.find(c => c.id === e.courseId)
+                      if (!course) return null
+                      return (
+                        <div key={e.id} className="p-3 bg-slate-950/40 border border-border/60 rounded-xl flex items-center justify-between gap-3">
+                          <div className="space-y-0.5 min-w-0">
+                            <p className="text-xs font-bold text-white truncate leading-tight">{course.title}</p>
+                            <p className="text-[9px] text-muted-foreground">Obtenu le {new Date(e.enrolledAt).toLocaleDateString('fr-FR')}</p>
+                          </div>
+                          <Button asChild size="xs" variant="outline" className="h-7 text-[10px] font-bold border-teal-500/30 text-teal-400 hover:bg-teal-500/10">
+                            <Link to="/study/$id" params={{ id: String(course.id) }}>
+                              Télécharger
+                            </Link>
+                          </Button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── RENDER INSTRUCTOR/ADMIN DASHBOARD ────────────────────────────────────
   const barChartData = stats?.categoryRevenue && stats.categoryRevenue.length > 0
     ? stats.categoryRevenue
     : [{ categorie: 'Aucun cours', revenus: 0 }]
@@ -167,7 +378,7 @@ function DashboardPage() {
       )}
 
       <div className="grid gap-4 lg:grid-cols-7">
-        <Card className="lg:col-span-4 animate-fade-in">
+        <Card className="lg:col-span-4 animate-fade-in border border-border/70 bg-card/60 backdrop-blur-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">Évolution des inscriptions</CardTitle>
           </CardHeader>
@@ -177,22 +388,22 @@ function DashboardPage() {
                 <AreaChart data={enrollmentData}>
                   <defs>
                     <linearGradient id="colorInscriptions" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(225 73% 50%)" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(225 73% 50%)" stopOpacity={0} />
+                      <stop offset="5%" stopColor="hsl(172 73% 50%)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(172 73% 50%)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="mois" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
+                  <XAxis dataKey="mois" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                   <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '13px' }} />
-                  <Area type="monotone" dataKey="inscriptions" stroke="hsl(225 73% 50%)" strokeWidth={2} fill="url(#colorInscriptions)" name="Inscriptions" />
+                  <Area type="monotone" dataKey="inscriptions" stroke="hsl(172 73% 50%)" strokeWidth={2} fill="url(#colorInscriptions)" name="Inscriptions" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-3 animate-fade-in">
+        <Card className="lg:col-span-3 animate-fade-in border border-border/70 bg-card/60 backdrop-blur-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">Revenus par catégorie</CardTitle>
           </CardHeader>
@@ -200,11 +411,11 @@ function DashboardPage() {
             <div className="h-[280px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={barChartData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="categorie" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '13px' }} formatter={(value: number) => [`${value.toLocaleString('fr-FR')} €`, 'Revenus']} />
-                  <Bar dataKey="revenus" fill="hsl(25 95% 53%)" radius={[6, 6, 0, 0]} name="Revenus" />
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
+                  <XAxis dataKey="categorie" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '13px' }} formatter={(value: number) => [`${value.toLocaleString('fr-FR')} FCFA`, 'Revenus']} />
+                  <Bar dataKey="revenus" fill="hsl(172 73% 45%)" radius={[6, 6, 0, 0]} name="Revenus" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -212,7 +423,7 @@ function DashboardPage() {
         </Card>
       </div>
 
-      <Card className="animate-fade-in">
+      <Card className="animate-fade-in border border-border/70 bg-card/60 backdrop-blur-sm">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-semibold">Inscriptions récentes</CardTitle>

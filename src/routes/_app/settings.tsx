@@ -7,6 +7,7 @@ import { User, Shield, Bell, Percent, DollarSign, Clock, CheckCircle, Users, Set
 import { supabase } from '@/lib/supabase'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { uploadToStorage } from '@/utils/storage'
+import { canCustomizeBranding, canUseCustomDomain } from '@/utils/planGuards'
 
 export const Route = createFileRoute('/_app/settings')({
   component: SettingsPage,
@@ -506,7 +507,7 @@ function ProfilTab({ user }: { user: any }) {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-xs font-medium">Logo de l'Académie (Format PNG ou JPEG)</label>
                 <div className="flex items-center gap-4">
@@ -525,6 +526,7 @@ function ProfilTab({ user }: { user: any }) {
                       accept="image/png, image/jpeg" 
                       id="logo-upload" 
                       className="hidden" 
+                      disabled={!canCustomizeBranding(user?.academyPlan)}
                       onChange={handleLogoUpload} 
                     />
                     <Button 
@@ -532,7 +534,14 @@ function ProfilTab({ user }: { user: any }) {
                       variant="outline" 
                       size="sm" 
                       className="h-8 text-xs font-semibold" 
-                      onClick={() => document.getElementById('logo-upload')?.click()}
+                      disabled={!canCustomizeBranding(user?.academyPlan)}
+                      onClick={() => {
+                        if (!canCustomizeBranding(user?.academyPlan)) {
+                          toast.error("Logo personnalisé réservé aux abonnements Pro et B2B (EduFlex+).")
+                          return
+                        }
+                        document.getElementById('logo-upload')?.click()
+                      }}
                     >
                       Sélectionner un fichier
                     </Button>
@@ -547,8 +556,9 @@ function ProfilTab({ user }: { user: any }) {
                   <input 
                     type="color" 
                     value={academyColor} 
+                    disabled={!canCustomizeBranding(user?.academyPlan)}
                     onChange={e => setAcademyColor(e.target.value)} 
-                    className="w-10 h-10 rounded-md border border-input cursor-pointer bg-transparent"
+                    className="w-10 h-10 rounded-md border border-input cursor-pointer bg-transparent disabled:opacity-50"
                   />
                   <div>
                     <span className="text-xs font-semibold text-foreground block">{academyColor}</span>
@@ -562,16 +572,22 @@ function ProfilTab({ user }: { user: any }) {
                 <label className="text-xs font-medium">Serveur Visioconférence Jitsi (Optionnel)</label>
                 <Input 
                   value={academyJitsiDomain} 
+                  disabled={!canCustomizeBranding(user?.academyPlan)}
                   onChange={e => setAcademyJitsiDomain(e.target.value)} 
-                  placeholder="Ex: meet.jit.si ou visio.monacademie.com" 
-                  className="h-9 text-xs" 
+                  placeholder={canCustomizeBranding(user?.academyPlan) ? "Ex: meet.jit.si ou visio.monacademie.com" : "🔒 Option réservée aux membres Pro et B2B"} 
+                  className="h-9 text-xs disabled:opacity-55" 
                 />
                 <p className="text-[9px] text-muted-foreground mt-0.5">Laissez vide ou meet.jit.si pour utiliser le serveur par défaut.</p>
               </div>
 
               {/* Live Theme Preview Box */}
               <div className="p-4 rounded-xl border border-border bg-slate-950/20 space-y-3 col-span-1 md:col-span-2">
-                <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold block">Prévisualisation Dynamique du Thème</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold block">Prévisualisation Dynamique du Thème</span>
+                  {!canCustomizeBranding(user?.academyPlan) && (
+                    <Badge variant="outline" className="border-amber-500/30 text-amber-500 bg-amber-500/5 text-[9px] font-bold">Plan Découverte Limité</Badge>
+                  )}
+                </div>
                 <div className="flex flex-wrap items-center gap-4">
                   <button style={{ backgroundColor: academyColor }} className="px-4 py-1.5 rounded-lg text-xs font-bold text-white shadow transition-transform active:scale-95">
                     Bouton Primaire
@@ -584,6 +600,11 @@ function ProfilTab({ user }: { user: any }) {
                     Session Active
                   </div>
                 </div>
+                {!canCustomizeBranding(user?.academyPlan) && (
+                  <p className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold mt-1">
+                    🔒 La personnalisation de la couleur, du logo et du serveur de visioconférence requiert l'offre Pro ou B2B.
+                  </p>
+                )}
               </div>
             </div>
 

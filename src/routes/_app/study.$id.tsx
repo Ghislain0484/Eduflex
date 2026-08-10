@@ -91,6 +91,7 @@ function StudyRoomPage() {
 
   // Success confetti animation states
   const [showSuccessParticles, setShowSuccessParticles] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; color: string; size: number }>>([])
 
   const triggerParticles = () => {
@@ -517,7 +518,7 @@ function StudyRoomPage() {
   return (
     <div className={`flex flex-col lg:flex-row h-dvh overflow-hidden transition-colors duration-200 ${isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-background'}`}>
       {/* ── Sidebar (Chapter List) ──────────────────────────── */}
-      <aside className="w-full lg:w-80 border-b lg:border-b-0 lg:border-r border-border flex flex-col h-[40dvh] lg:h-full bg-card">
+      <aside className={`w-full lg:w-80 border-b lg:border-b-0 lg:border-r border-border flex flex-col h-[40dvh] lg:h-full bg-card transition-all duration-300 ${sidebarCollapsed ? 'lg:w-0 lg:opacity-0 lg:overflow-hidden lg:border-r-0 h-0 border-b-0 overflow-hidden' : ''}`}>
         <div className="p-4 border-b border-border space-y-3 shrink-0">
           <Link
             to="/_app/courses/$id"
@@ -617,7 +618,17 @@ function StudyRoomPage() {
             <div>
               {/* Cinema Mode Switch Bar */}
               <div className="flex items-center justify-between border-b border-border/50 pb-4 mb-6">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Espace d'Étude</span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                    className="text-[11px] font-bold h-8 px-3 rounded-lg border border-border/60 hover:bg-muted/40"
+                  >
+                    {sidebarCollapsed ? '📖 Afficher le Programme' : '🎬 Focus Plein Écran'}
+                  </Button>
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider hidden sm:inline">Espace d'Étude</span>
+                </div>
                 <Button
                   variant="outline"
                   size="sm"

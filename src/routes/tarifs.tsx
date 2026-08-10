@@ -17,6 +17,7 @@ export const Route = createFileRoute('/tarifs')({
 
 function TarifsPage() {
   const [currency, setCurrency] = useState<'FCFA' | 'EUR'>('FCFA')
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
 
   const toggleCurrency = () => {
     setCurrency(prev => (prev === 'FCFA' ? 'EUR' : 'FCFA'))
@@ -33,6 +34,23 @@ function TarifsPage() {
     { name: "Rapports d'assiduité avancés", free: "Non", pro: "Oui", b2b: "Oui" },
     { name: "Support technique", free: "Standard (Email)", pro: "Prioritaire (Email/Chat)", b2b: "Dédié 24/7 (Téléphone & WhatsApp)" },
   ]
+
+  // Pricing calculations (20% off on yearly)
+  const getProPrice = () => {
+    if (billingCycle === 'monthly') {
+      return currency === 'FCFA' ? '15 000 FCFA' : '25 €'
+    } else {
+      return currency === 'FCFA' ? '12 000 FCFA' : '20 €'
+    }
+  }
+
+  const getB2bPrice = () => {
+    if (billingCycle === 'monthly') {
+      return currency === 'FCFA' ? '65 000 FCFA' : '99 €'
+    } else {
+      return currency === 'FCFA' ? '52 000 FCFA' : '79 €'
+    }
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-teal-500/30 selection:text-teal-200">
@@ -73,12 +91,39 @@ function TarifsPage() {
             Hébergez vos formations, vendez vos cours et créez votre propre académie virtuelle avec des plans adaptés à vos objectifs.
           </p>
 
-          <div className="flex items-center justify-center gap-3 pt-6">
-            <span className={`text-xs font-semibold ${currency === 'FCFA' ? 'text-teal-400' : 'text-slate-400'}`}>FCFA (XOF/XAF)</span>
-            <button onClick={toggleCurrency} className="relative inline-flex h-6 w-11 items-center rounded-full bg-slate-800 transition-colors focus:outline-none">
-              <span className={`inline-block h-4 w-4 transform rounded-full bg-teal-500 transition-transform ${currency === 'EUR' ? 'translate-x-6' : 'translate-x-1'}`} />
-            </button>
-            <span className={`text-xs font-semibold ${currency === 'EUR' ? 'text-teal-400' : 'text-slate-400'}`}>Euros (€)</span>
+          <div className="flex flex-col items-center gap-4 pt-6">
+            {/* Currency switcher selector */}
+            <div className="flex items-center gap-3 bg-slate-905 bg-slate-900 border border-slate-800 p-1 rounded-full">
+              <button 
+                onClick={() => setCurrency('FCFA')}
+                className={`text-xs font-bold px-3 py-1 rounded-full transition-all ${currency === 'FCFA' ? 'bg-teal-600 text-white' : 'text-slate-400 hover:text-white'}`}
+              >
+                FCFA (XOF/XAF)
+              </button>
+              <button 
+                onClick={() => setCurrency('EUR')}
+                className={`text-xs font-bold px-3 py-1 rounded-full transition-all ${currency === 'EUR' ? 'bg-teal-600 text-white' : 'text-slate-400 hover:text-white'}`}
+              >
+                Euros (€)
+              </button>
+            </div>
+
+            {/* Monthly vs Annual Switcher */}
+            <div className="flex items-center gap-3">
+              <span className={`text-xs font-bold ${billingCycle === 'monthly' ? 'text-white' : 'text-slate-400'}`}>Facturation Mensuelle</span>
+              <button 
+                onClick={() => setBillingCycle(prev => prev === 'monthly' ? 'yearly' : 'monthly')} 
+                className="relative inline-flex h-6 w-11 items-center rounded-full bg-slate-800 transition-colors focus:outline-none"
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-teal-500 transition-transform ${billingCycle === 'yearly' ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+              <span className={`text-xs font-bold ${billingCycle === 'yearly' ? 'text-white' : 'text-slate-400'} flex items-center gap-1.5`}>
+                Facturation Annuelle
+                <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] uppercase font-black px-2 py-0.5 rounded-full">
+                  -20% d'économie
+                </span>
+              </span>
+            </div>
           </div>
         </div>
       </section>
@@ -116,13 +161,16 @@ function TarifsPage() {
               <div className="space-y-2">
                 <Badge variant="outline" className="border-teal-500/20 text-teal-400 bg-teal-500/5">Plan Pro</Badge>
                 <div className="text-3xl font-black text-white">
-                  {currency === 'FCFA' ? '15 000 FCFA' : '25 €'} <span className="text-xs font-normal text-slate-400">/ mois</span>
+                  {getProPrice()} <span className="text-xs font-normal text-slate-400">/ mois</span>
                 </div>
+                {billingCycle === 'yearly' && (
+                  <p className="text-[10px] text-emerald-400 font-semibold font-mono">Facturé {currency === 'FCFA' ? '144 000 FCFA' : '240 €'} par an</p>
+                )}
                 <p className="text-[11px] text-slate-400">Parfait pour les formateurs, coachs et consultants indépendants.</p>
               </div>
 
               <ul className="space-y-3 text-[11px] text-slate-300">
-                <li className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-teal-500 shrink-0" /> **Nombre de cours illimités**</li>
+                <li className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-teal-500 shrink-0" /> Nombre de cours illimités</li>
                 <li className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-teal-500 shrink-0" /> Sous-domaine personnalisé</li>
                 <li className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-teal-500 shrink-0" /> Logo & thème couleur modifiables</li>
                 <li className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-teal-500 shrink-0" /> Classes Jitsi live (50 part. max)</li>
@@ -145,13 +193,16 @@ function TarifsPage() {
               <div className="space-y-2">
                 <Badge className="bg-teal-500/15 text-teal-400 border-teal-500/30">Académie B2B (Marque Blanche)</Badge>
                 <div className="text-3xl font-black text-teal-400">
-                  {currency === 'FCFA' ? '65 000 FCFA' : '99 €'} <span className="text-xs font-normal text-slate-400">/ mois</span>
+                  {getB2bPrice()} <span className="text-xs font-normal text-slate-400">/ mois</span>
                 </div>
+                {billingCycle === 'yearly' && (
+                  <p className="text-[10px] text-emerald-400 font-semibold font-mono">Facturé {currency === 'FCFA' ? '624 000 FCFA' : '948 €'} par an</p>
+                )}
                 <p className="text-[11px] text-slate-400">Conçu pour les écoles d'enseignement supérieur, lycées, et grands cabinets.</p>
               </div>
 
               <ul className="space-y-3 text-[11px] text-slate-300">
-                <li className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-teal-500 shrink-0" /> **Marque blanche totale (100% neutre)**</li>
+                <li className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-teal-500 shrink-0" /> Marque blanche totale (100% neutre)</li>
                 <li className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-teal-500 shrink-0" /> Propre nom de domaine (ex: cours.ecole.com)</li>
                 <li className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-teal-500 shrink-0" /> Jitsi Meet Live illimité</li>
                 <li className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-teal-500 shrink-0" /> Intégration de modules interactifs SCORM</li>

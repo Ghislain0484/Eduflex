@@ -319,7 +319,7 @@ function DomainesTab() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, academy_name')
+        .select('id, academy_name, academy_plan')
         .not('academy_name', 'is', null)
       if (error) throw error
       return data || []
@@ -348,7 +348,16 @@ function DomainesTab() {
     if (!subdomain.trim() || !selectedAcademyId) return
     setAdding(true)
 
-    const selectedAcademy = academies?.find(a => a.id === selectedAcademyId)
+    const selectedAcademy = academies?.find(a => String(a.id) === String(selectedAcademyId))
+    const plan = selectedAcademy?.academy_plan || 'Free'
+    const isB2b = plan.toLowerCase() === 'b2b' || plan.toLowerCase() === 'académie' || plan.toLowerCase() === 'academie'
+    
+    if (!isB2b) {
+      toast.error(`L'académie "${selectedAcademy?.academy_name}" est sur l'offre "${plan}". Le routage de domaine propre est exclusivement réservé aux académies souscrites au plan B2B (EduFlex+).`)
+      setAdding(false)
+      return
+    }
+
     const newMapping: DomainMapping = {
       id: crypto.randomUUID(),
       subdomain: subdomain.trim().toLowerCase(),

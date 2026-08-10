@@ -20,6 +20,7 @@ import { useUserCourses, useManageCourses } from '@/hooks/useCourses'
 import { useChapters, useManageChapters } from '@/hooks/useChapters'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
+import { canCreateMoreCourses } from '@/utils/planGuards'
 import {
   Plus,
   BookOpen,
@@ -272,6 +273,11 @@ function ManageCoursesPage() {
   }
 
   const openCreateForm = () => {
+    const currentCount = courses?.length || 0
+    if (!canCreateMoreCourses(currentCount, user?.academyPlan)) {
+      toast.error("Offre Découverte limitée à 2 formations. Veuillez passer à l'abonnement Pro ou B2B pour créer des cours de manière illimitée !")
+      return
+    }
     setTitle('')
     setDescription('')
     setCategory('Marketing')
@@ -322,6 +328,11 @@ function ManageCoursesPage() {
     }
 
     if (view === 'create') {
+      const currentCount = courses?.length || 0
+      if (!canCreateMoreCourses(currentCount, user?.academyPlan)) {
+        toast.error("Limite de création de formations atteinte sur le Plan Découverte.")
+        return
+      }
       createCourse.mutate(payload, {
         onSuccess: () => {
           toast.success('Formation créée avec succès !')
@@ -1108,6 +1119,24 @@ function ChaptersManagerSection({ course, onBack }: { course: any; onBack: () =>
     }
   }
 
+  const handleSwapOrder = async (idx1: number, idx2: number) => {
+    if (!chapters || !chapters[idx1] || !chapters[idx2]) return
+    const ch1 = chapters[idx1]
+    const ch2 = chapters[idx2]
+    const originalSort1 = ch1.sortOrder || 0
+    const originalSort2 = ch2.sortOrder || 0
+
+    try {
+      await Promise.all([
+        updateChapter.mutateAsync({ id: ch1.id, sortOrder: originalSort2 }),
+        updateChapter.mutateAsync({ id: ch2.id, sortOrder: originalSort1 })
+      ])
+      toast.success("Ordre des chapitres mis à jour !")
+    } catch (err: any) {
+      toast.error("Erreur de réorganisation : " + err.message)
+    }
+  }
+
   return (
     <div className="flex-1 space-y-6 p-6 max-w-4xl mx-auto">
       <button
@@ -1416,8 +1445,30 @@ function ChaptersManagerSection({ course, onBack }: { course: any; onBack: () =>
               className="flex items-center justify-between p-4 bg-card rounded-lg border border-border/60 hover:border-primary/20 transition-all"
             >
               <div className="flex items-center gap-3">
-                <div className="h-6 w-6 rounded bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold">
-                  {index + 1}
+                <div className="flex items-center gap-1 shrink-0 bg-slate-900 border border-border/40 p-1.5 rounded-lg">
+                  <div className="h-6 w-6 rounded bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold">
+                    {index + 1}
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <button 
+                      disabled={index === 0}
+                      onClick={() => handleSwapOrder(index, index - 1)}
+                      className="h-3 w-4 flex items-center justify-center rounded text-[9px] hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:hover:bg-transparent"
+                      type="button"
+                      title="Monter le chapitre"
+                    >
+                      ▲
+                    </button>
+                    <button 
+                      disabled={index === chapters.length - 1}
+                      onClick={() => handleSwapOrder(index, index + 1)}
+                      className="h-3 w-4 flex items-center justify-center rounded text-[9px] hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:hover:bg-transparent"
+                      type="button"
+                      title="Descendre le chapitre"
+                    >
+                      ▼
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <h4 className="text-sm font-medium">{chapter.title}</h4>
