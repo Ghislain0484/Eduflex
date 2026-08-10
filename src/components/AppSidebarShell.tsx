@@ -38,6 +38,7 @@ import {
   Settings,
   User,
   ShieldAlert,
+  Sparkles,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -113,8 +114,9 @@ export function AppSidebarShell() {
   }
 
   const navItems: NavItemDef[] = [
-    { href: '/dashboard', icon: <LayoutDashboard className="h-4 w-4" />, label: 'Tableau de bord' },
+    { href: '/dashboard', icon: <LayoutDashboard className="h-4 w-4" />, label: 'Accueil' },
     ...((user?.role === 'teacher' || user?.role === 'admin') ? [
+      { href: '/assistants-ia', icon: <Sparkles className="h-4 w-4" />, label: 'Assistants IA' },
       { href: '/manage-courses', icon: <BookOpen className="h-4 w-4" />, label: 'Gérer les formations' },
       { href: '/academy-hub', icon: <GraduationCap className="h-4 w-4" />, label: 'Académie EduFlex 🎓' }
     ] : []),
