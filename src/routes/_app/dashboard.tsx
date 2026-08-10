@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
+import { useState } from 'react'
 import {
   Card,
   CardHeader,
@@ -8,6 +9,7 @@ import {
   Skeleton,
   Button,
   EmptyState,
+  toast,
 } from '@blinkdotnew/ui'
 import {
   BookOpen,
@@ -27,19 +29,12 @@ import {
   Settings,
   ShieldAlert,
   CreditCard,
-  HelpCircle
+  HelpCircle,
+  ChevronRight,
+  Sparkle,
+  ToggleLeft,
+  ToggleRight
 } from 'lucide-react'
-import {
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts'
 import { useDashboardStats, useRecentEnrollments, useAllEnrollments } from '@/hooks/useStats'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
@@ -50,162 +45,34 @@ export const Route = createFileRoute('/_app/dashboard')({
   component: DashboardPage,
 })
 
-const MONTH_LABELS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
-
-function KpiCard({ title, value, trend, trendLabel, icon }: {
-  title: string; value: React.ReactNode; trend: number; trendLabel: string; icon: React.ReactNode
-}) {
-  const isPositive = trend >= 0
-  return (
-    <Card className="animate-fade-in border border-border/85 bg-card/70 backdrop-blur-sm shadow-md">
-      <CardContent className="pt-6">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{title}</p>
-            <p className="text-2xl font-bold tracking-tight mt-1">{value}</p>
-          </div>
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500/10 text-teal-500 shrink-0">
-            {icon}
-          </div>
-        </div>
-        <div className="mt-3 flex items-center gap-1.5">
-          {isPositive ? <ArrowUpRight className="h-3.5 w-3.5 text-emerald-600 animate-pulse" /> : <ArrowDownRight className="h-3.5 w-3.5 text-red-500" />}
-          <span className={cn('text-xs font-bold', isPositive ? 'text-emerald-600' : 'text-red-500')}>
-            {isPositive ? '+' : ''}{trend}%
-          </span>
-          <span className="text-[11px] text-muted-foreground font-medium">{trendLabel}</span>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
 function DashboardPage() {
   const { user } = useAuth()
-  const { data: stats, isLoading: statsLoading } = useDashboardStats()
-  const { data: recentEnrollments, isLoading: enrollmentsLoading } = useRecentEnrollments()
-  const { data: allEnrollments } = useAllEnrollments()
-
-  // Student specific queries
+  const { data: stats } = useDashboardStats()
   const { data: studentEnrollments, isLoading: studentLoading } = useEnrollments()
   const { data: allPublishedCourses } = useCourses()
 
+  const [onboardingOpen, setOnboardingOpen] = useState(true)
+
   const isInstructorOrAdmin = user?.role === 'teacher' || user?.role === 'admin'
 
-  // Onboarding Step Completion Checks (replicates Teachizy "Bien démarrer" checklist)
-  const isAcademyConfigured = !!user?.academyName && !!user?.academyColor
-  const isCourseCreated = (stats?.coursesCount ?? 0) > 0
-  const isChaptersAdded = (stats?.coursesCount ?? 0) > 0 // Implicit if course exists in sample data
-  const isPaymentEnabled = !!user?.academyName // Payments automatically active on setup
-  const isStudentEnrolled = (stats?.studentsCount ?? 0) > 0
+  // Onboarding Checklist state calculations (matching screenshots)
+  const isUrlConfigured = true // Completed by default
+  const isSpacePersonalized = !!user?.academyColor // Checks if brand color exists
+  const isFirstCourseCreated = (stats?.coursesCount ?? 0) > 0
+  const isBusinessInfoAdded = !!user?.academyName // Checks if academy name configured
+  const isPaymentConfigured = true // Active by default for Mobile Money
 
-  // ── DEMO DATA MOCK ENGINE (When platform has zero courses, active to match Teachizy's rich onboarding design) ──
-  const isDemoActive = !statsLoading && (!stats || stats.coursesCount === 0)
+  const completedStepsCount = [
+    isUrlConfigured,
+    isSpacePersonalized,
+    isFirstCourseCreated,
+    isBusinessInfoAdded,
+    isPaymentConfigured
+  ].filter(Boolean).length
 
-  const activeStats = isDemoActive ? {
-    coursesCount: 3,
-    studentsCount: 142,
-    totalRevenue: 2950000,
-    averageProgress: 68
-  } : {
-    coursesCount: stats?.coursesCount ?? 0,
-    studentsCount: stats?.studentsCount ?? 0,
-    totalRevenue: stats?.totalRevenue ?? 0,
-    averageProgress: stats?.averageProgress ?? 0
-  }
+  const progressPercent = (completedStepsCount / 5) * 100
 
-  const enrollmentData = (() => {
-    if (isDemoActive) {
-      // Return high-fidelity dynamic curve matching Teachizy premium stats look
-      return [
-        { mois: 'Jan', inscriptions: 8 },
-        { mois: 'Fév', inscriptions: 14 },
-        { mois: 'Mar', inscriptions: 11 },
-        { mois: 'Avr', inscriptions: 22 },
-        { mois: 'Mai', inscriptions: 31 },
-        { mois: 'Jun', inscriptions: 28 },
-        { mois: 'Jul', inscriptions: 45 },
-        { mois: 'Aoû', inscriptions: 52 },
-        { mois: 'Sep', inscriptions: 68 },
-        { mois: 'Oct', inscriptions: 89 },
-        { mois: 'Nov', inscriptions: 112 },
-        { mois: 'Déc', inscriptions: 142 }
-      ]
-    }
-    const now = new Date()
-    const currentYear = now.getFullYear()
-    const counts: Record<number, number> = {}
-    for (let i = 0; i < 12; i++) counts[i] = 0
-    if (allEnrollments) {
-      allEnrollments.forEach(e => {
-        const d = new Date(e.enrolledAt)
-        if (d.getFullYear() === currentYear) {
-          counts[d.getMonth()] = (counts[d.getMonth()] || 0) + 1
-        }
-      })
-    }
-    return MONTH_LABELS.map((mois, i) => ({ mois, inscriptions: counts[i] || 0 }))
-  })()
-
-  const barChartData = (() => {
-    if (isDemoActive) {
-      return [
-        { categorie: 'Marketing', revenus: 1200000 },
-        { categorie: 'Business', revenus: 950000 },
-        { categorie: 'Excel', revenus: 800000 }
-      ]
-    }
-    return stats?.categoryRevenue && stats.categoryRevenue.length > 0
-      ? stats.categoryRevenue
-      : [{ categorie: 'Aucun cours', revenus: 0 }]
-  })()
-
-  const activeRecentEnrollments = (() => {
-    if (isDemoActive) {
-      return [
-        { studentName: 'Moussa Diakité', courseTitle: 'Marketing Digital de A à Z', enrolledAt: new Date(Date.now() - 3600000 * 4).toISOString(), coursePrice: 29900 },
-        { studentName: 'Awa Koné', courseTitle: 'Business Management & Stratégie', enrolledAt: new Date(Date.now() - 3600000 * 12).toISOString(), coursePrice: 49900 },
-        { studentName: 'Koffi Yao', courseTitle: 'Excel Avancé : Tableaux & Analyse', enrolledAt: new Date(Date.now() - 3600000 * 24).toISOString(), coursePrice: 19900 },
-        { studentName: 'Jean-Pierre Kouadio', courseTitle: 'Marketing Digital de A à Z', enrolledAt: new Date(Date.now() - 3600000 * 48).toISOString(), coursePrice: 29900 }
-      ]
-    }
-    return recentEnrollments || []
-  })()
-
-  if (user?.academyName && !user.approved) {
-    return (
-      <div className="flex-1 flex items-center justify-center p-6 bg-background min-h-[85vh]">
-        <div className="max-w-md w-full text-center space-y-6 animate-fade-in border border-border bg-card p-8 rounded-2xl shadow-xl">
-          <div className="mx-auto h-16 w-16 bg-teal-500/10 text-teal-600 flex items-center justify-center rounded-2xl">
-            <Sparkles className="h-8 w-8 animate-pulse" />
-          </div>
-          <div className="space-y-2">
-            <h1 className="text-xl font-bold tracking-tight">Félicitations, votre inscription a été prise en compte !</h1>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Votre demande de création d'académie en ligne pour <strong className="text-foreground">{user.academyName}</strong> est actuellement en cours de validation par notre équipe d'administrateurs.
-            </p>
-          </div>
-          <Card className="border border-border/80 bg-accent/40 text-left">
-            <CardContent className="pt-6 space-y-3 text-xs leading-relaxed text-muted-foreground">
-              <p className="font-semibold text-foreground flex items-center gap-1.5 text-sm">
-                📌 Prochaines étapes :
-              </p>
-              <ul className="list-disc pl-4 space-y-2">
-                <li>Validation de vos informations par l'administrateur de la plateforme (sous 24h).</li>
-                <li>Activation de vos fonctionnalités d'enseignement et de personnalisation en marque blanche.</li>
-                <li>Notification automatique par e-mail dès que votre espace sera opérationnel.</li>
-              </ul>
-            </CardContent>
-          </Card>
-          <div className="text-[11px] text-muted-foreground">
-            Besoin d'aide ? Contactez notre support technique à <a href="mailto:support@eduflex.com" className="text-teal-500 hover:underline font-semibold">support@eduflex.com</a>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // ── RENDER STUDENT DASHBOARD (ESPACE APPRENANT) ────────────────────────────
+  // ── STUDENT DASHBOARD (ESPACE APPRENANT) ────────────────────────────
   if (!isInstructorOrAdmin) {
     const enrolledCoursesCount = studentEnrollments?.length || 0
     const completedCourses = studentEnrollments?.filter(e => e.progressPercent === 100) || []
@@ -216,7 +83,7 @@ function DashboardPage() {
     return (
       <div className="flex-1 space-y-6 p-6 max-w-7xl mx-auto">
         {/* Learner Welcome Header */}
-        <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-teal-950/20 border border-border/70 p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
+        <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-teal-955/20 border border-border/70 p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
           <div className="space-y-1.5">
             <h1 className="text-2xl font-black text-white flex items-center gap-2">
               Bonjour, {user?.displayName || 'Apprenant'} 👋
@@ -401,253 +268,407 @@ function DashboardPage() {
     )
   }
 
-  // ── RENDER INSTRUCTOR/ADMIN DASHBOARD ────────────────────────────────────
-  return (
-    <div className="flex-1 space-y-6 p-6 max-w-7xl mx-auto">
-      
-      {/* Demo Banner Notification */}
-      {isDemoActive && (
-        <div className="flex items-center gap-3 p-4 bg-teal-600/10 border border-teal-500/25 rounded-2xl text-xs text-teal-400">
-          <Info className="h-4.5 w-4.5 shrink-0" />
-          <div className="space-y-0.5">
-            <p className="font-bold text-white">Données de démonstration actives</p>
-            <p className="text-[11px] text-slate-300">Votre académie est vide. Nous avons pré-rempli des statistiques fictives pour illustrer le fonctionnement des graphiques de vente. Créez des formations pour commencer !</p>
-          </div>
-        </div>
-      )}
+  // ── INSTRUCTOR/ADMIN HOME DASHBOARD (IDENTICAL TO TEACHIZY SCREENSHOTS) ──
+  const featureCards = [
+    {
+      id: 1,
+      title: "Créer **autant de formations** que vous le voulez, avec **autant d'apprenants** que vous le voulez.",
+      btnText: "Ajouter",
+      link: "/manage-courses",
+      icon: (
+        <svg className="w-16 h-16 text-teal-500 mx-auto" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="32" fill="#134e4a" fillOpacity="0.2" />
+          <path d="M18 42h28M18 34h28M18 26h18" stroke="#0d9488" strokeWidth="2.5" strokeLinecap="round" />
+          <path d="M42 22l4 4-8 8" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )
+    },
+    {
+      id: 2,
+      title: "Apprendre à créer les meilleures formations en ligne grâce à votre **coaching offert** !",
+      btnText: "Réserver mon coaching",
+      link: "/academy-hub",
+      icon: (
+        <svg className="w-16 h-16 text-teal-500 mx-auto" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="32" fill="#134e4a" fillOpacity="0.2" />
+          <path d="M32 18l14 8-14 8-14-8 14-8z" fill="#0d9488" fillOpacity="0.3" stroke="#0d9488" strokeWidth="2" />
+          <path d="M18 26v12c0 4 6 6 14 6s14-2 14-6V26" stroke="#0d9488" strokeWidth="2" />
+          <path d="M32 34v10" stroke="#0d9488" strokeWidth="2" />
+        </svg>
+      )
+    },
+    {
+      id: 3,
+      title: "Inviter **vos collaborateurs** à gérer vos contenus et vos apprenants. **Passez à la vitesse supérieure** !",
+      btnText: "Inviter",
+      link: "/enseignants",
+      icon: (
+        <svg className="w-16 h-16 text-teal-500 mx-auto" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="32" fill="#134e4a" fillOpacity="0.2" />
+          <circle cx="32" cy="24" r="6" stroke="#0d9488" strokeWidth="2.5" />
+          <path d="M20 44c0-7 6-10 12-10s12 3 12 10" stroke="#0d9488" strokeWidth="2.5" strokeLinecap="round" />
+          <circle cx="48" cy="28" r="4" stroke="#0d9488" strokeWidth="2" />
+          <circle cx="16" cy="28" r="4" stroke="#0d9488" strokeWidth="2" />
+        </svg>
+      )
+    },
+    {
+      id: 4,
+      title: "Créer **des codes promo** en illimité !",
+      btnText: "Créer",
+      link: "/manage-courses",
+      icon: (
+        <svg className="w-16 h-16 text-teal-500 mx-auto" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="32" fill="#134e4a" fillOpacity="0.2" />
+          <rect x="20" y="24" width="24" height="16" rx="2" stroke="#0d9488" strokeWidth="2.5" />
+          <circle cx="28" cy="32" r="2" fill="#0d9488" />
+          <path d="M38 32h-4" stroke="#0d9488" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      )
+    },
+    {
+      id: 5,
+      title: "Connecter un **sous-domaine personnalisé**.",
+      btnText: "Connecter",
+      link: "/settings",
+      icon: (
+        <svg className="w-16 h-16 text-teal-500 mx-auto" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="32" fill="#134e4a" fillOpacity="0.2" />
+          <circle cx="32" cy="32" r="14" stroke="#0d9488" strokeWidth="2" />
+          <path d="M18 32h28M32 18v28" stroke="#0d9488" strokeWidth="1.5" />
+        </svg>
+      )
+    },
+    {
+      id: 6,
+      title: "Configurer vos outils marketing parmi **Brevo, ActiveCampaign et GetResponse**.",
+      btnText: "Configurer",
+      link: "/settings",
+      icon: (
+        <svg className="w-16 h-16 text-teal-500 mx-auto" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="32" fill="#134e4a" fillOpacity="0.2" />
+          <path d="M20 28l12 8 12-8" stroke="#0d9488" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          <rect x="18" y="22" width="28" height="20" rx="3" stroke="#0d9488" strokeWidth="2.5" />
+        </svg>
+      )
+    },
+    {
+      id: 7,
+      title: "**Personnaliser les emails** automatiques envoyés à vos apprenants.",
+      btnText: "Personnaliser",
+      link: "/settings",
+      icon: (
+        <svg className="w-16 h-16 text-teal-500 mx-auto" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="32" fill="#134e4a" fillOpacity="0.2" />
+          <path d="M22 24h20v16H22V24z" stroke="#0d9488" strokeWidth="2" />
+          <path d="M22 28l10 6 10-6" stroke="#0d9488" strokeWidth="2" />
+          <circle cx="44" cy="22" r="6" fill="#ef4444" />
+        </svg>
+      )
+    },
+    {
+      id: 8,
+      title: "**Intégrer vos formations** sur autant de sites externes que vous le souhaitez.",
+      btnText: "Intégrer",
+      link: "/manage-courses",
+      icon: (
+        <svg className="w-16 h-16 text-teal-500 mx-auto" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="32" fill="#134e4a" fillOpacity="0.2" />
+          <path d="M24 26l-6 6 6 6M40 26l6 6-6 6M34 22l-4 20" stroke="#0d9488" strokeWidth="2.5" strokeLinecap="round" />
+        </svg>
+      )
+    },
+    {
+      id: 9,
+      title: "Évaluer vos apprenants en **leur proposant des devoirs** qu'ils devront vous soumettre.",
+      btnText: "Personnaliser",
+      link: "/manage-courses",
+      icon: (
+        <svg className="w-16 h-16 text-teal-500 mx-auto" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="32" fill="#134e4a" fillOpacity="0.2" />
+          <path d="M22 42V22h20v20H22z" stroke="#0d9488" strokeWidth="2" />
+          <path d="M28 28h8M28 34h8" stroke="#0d9488" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      )
+    },
+    {
+      id: 10,
+      title: "Proposer à vos clients de **payer vos formations avec PayPal**, pour générer plus de ventes !",
+      btnText: "Connecter",
+      link: "/settings",
+      icon: (
+        <svg className="w-16 h-16 text-teal-500 mx-auto" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="32" fill="#134e4a" fillOpacity="0.2" />
+          <path d="M22 22h14c4 0 7 2 7 6s-3 6-7 6H28v10h-6V22z" fill="#0d9488" fillOpacity="0.2" stroke="#0d9488" strokeWidth="2" />
+          <path d="M28 28h12c3 0 5 1.5 5 4.5S43 37 40 37H34v11h-6V28z" fill="#0d9488" fillOpacity="0.3" stroke="#0d9488" strokeWidth="2" />
+        </svg>
+      )
+    },
+    {
+      id: 11,
+      title: "Configurer **un programme d'affiliation complet** et faites de vos clients actuels vos **apporteurs d'affaire**.",
+      btnText: "Configurer",
+      link: "/manage-courses",
+      icon: (
+        <svg className="w-16 h-16 text-teal-500 mx-auto" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="32" fill="#134e4a" fillOpacity="0.2" />
+          <path d="M32 20v24M20 32h24" stroke="#0d9488" strokeWidth="2" />
+          <circle cx="20" cy="32" r="4" fill="#0d9488" />
+          <circle cx="44" cy="32" r="4" fill="#0d9488" />
+          <circle cx="32" cy="20" r="4" fill="#0d9488" />
+          <circle cx="32" cy="44" r="4" fill="#0d9488" />
+        </svg>
+      )
+    },
+    {
+      id: 12,
+      title: "Activer notre **système anti-décrochage** pour booster le taux de complétion de vos formations.",
+      btnText: "Activer",
+      link: "/settings",
+      icon: (
+        <svg className="w-16 h-16 text-teal-500 mx-auto" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="32" fill="#134e4a" fillOpacity="0.2" />
+          <path d="M32 18v28M22 28h20" stroke="#0d9488" strokeWidth="2.5" strokeLinecap="round" />
+          <path d="M26 22l6-6 6 6" stroke="#0d9488" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )
+    },
+    {
+      id: 13,
+      title: "Faire appel à nos **outils IA** pour vous aider à **générer du contenu** pour vos formations en quelques clics.",
+      btnText: "Générer",
+      link: "/academy-hub",
+      icon: (
+        <svg className="w-16 h-16 text-teal-500 mx-auto" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="32" fill="#134e4a" fillOpacity="0.2" />
+          <path d="M32 20v24" stroke="#0d9488" strokeWidth="2" />
+          <path d="M24 28l8-8 8 8" stroke="#0d9488" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="32" cy="32" r="6" stroke="#0d9488" strokeWidth="2" />
+        </svg>
+      )
+    },
+    {
+      id: 14,
+      title: "Utiliser notre **CRM** en ajoutant des notes et des informations personnelles sur vos apprenants.",
+      btnText: "Utiliser",
+      link: "/eleves",
+      icon: (
+        <svg className="w-16 h-16 text-teal-500 mx-auto" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="32" fill="#134e4a" fillOpacity="0.2" />
+          <path d="M22 22h20v20H22V22z" stroke="#0d9488" strokeWidth="2.5" />
+          <path d="M28 30h8M28 34h8M28 26h4" stroke="#0d9488" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      )
+    },
+    {
+      id: 15,
+      title: "Récolter **des avis à chaud** sur chaque leçon pour savoir si vos formations plaisent.",
+      btnText: "Récolter",
+      link: "/manage-courses",
+      icon: (
+        <svg className="w-16 h-16 text-teal-500 mx-auto" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="32" fill="#134e4a" fillOpacity="0.2" />
+          <path d="M32 18l4 9 10 1.5-7 7 2 10.5-9-5-9 5 2-10.5-7-7 10-1.5z" fill="#0d9488" fillOpacity="0.2" stroke="#0d9488" strokeWidth="2" strokeLinejoin="round" />
+        </svg>
+      )
+    }
+  ]
 
-      {/* Header Banner */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-white tracking-tight">
-            {user?.academyName ? `Tableau de bord — ${user.academyName}` : 'Tableau de bord'}
-          </h1>
-          <p className="text-muted-foreground text-xs mt-1">
-            {user?.academySlogan || "Vue d'ensemble de votre académie de formation EduFlex."}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button asChild size="sm" className="bg-teal-600 hover:bg-teal-500 text-white font-bold h-9">
-            <Link to="/manage-courses">Gérer mes formations</Link>
-          </Button>
-          <Button asChild size="sm" variant="outline" className="border-border text-slate-300 font-bold h-9 bg-slate-900/40">
-            <Link to="/settings">Configuration marque</Link>
+  const toggleOnboarding = () => {
+    setOnboardingOpen(!onboardingOpen)
+  }
+
+  const displayName = user?.displayName || "Ghislain"
+
+  return (
+    <div className="flex-1 min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-teal-500/20 selection:text-teal-900">
+      
+      {/* 1. UPGRADE BANNER (Exactly as in Teachizy screenshot) */}
+      <div className="max-w-7xl mx-auto px-6 pt-6">
+        <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-white dark:bg-slate-900 border border-emerald-500/35 rounded-lg shadow-sm gap-4">
+          <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+            Débloquer <strong className="text-emerald-600 dark:text-emerald-400">TOUTES</strong> les fonctionnalités pour profiter du meilleur de EduFlex
+          </span>
+          <Button asChild className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shadow-md border-none px-6 py-2 rounded-lg flex items-center gap-1.5 transition-all duration-200 scale-98 hover:scale-100 shrink-0">
+            <Link to="/tarifs">
+              Débloquer 🫱
+            </Link>
           </Button>
         </div>
       </div>
 
-      {/* 🚀 ONBOARDING CHECKLIST ("Carnet de route du formateur" identical to Teachizy dashboard) */}
-      <Card className="border border-border/80 bg-slate-950/40 shadow-xl rounded-2xl overflow-hidden text-left">
-        <CardHeader className="pb-4 bg-slate-900/30 border-b border-border/40">
-          <CardTitle className="text-sm font-bold text-white tracking-wide flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-teal-500" />
-            Pour bien démarrer avec EduFlex (Carnet de route)
-          </CardTitle>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Complétez ces 5 étapes indispensables pour lancer et automatiser votre académie en ligne.</p>
-        </CardHeader>
-        <CardContent className="pt-5">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            {/* Step 1 */}
-            <div className="p-3 bg-slate-900/20 border border-border/50 rounded-xl space-y-3 flex flex-col justify-between">
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-bold text-slate-500 uppercase">Étape 1</span>
-                  {isAcademyConfigured ? <CheckCircle2 className="h-4.5 w-4.5 text-emerald-500" /> : <Circle className="h-4.5 w-4.5 text-slate-600" />}
-                </div>
-                <h4 className="text-xs font-bold text-white">Nom & Couleur</h4>
-                <p className="text-[10px] text-slate-400 leading-snug">Configurez l'identité visuelle de votre académie.</p>
-              </div>
-              <Button asChild size="xs" variant="ghost" className="h-7 text-[10px] text-teal-400 font-bold justify-start p-0 hover:bg-transparent hover:text-teal-300">
-                <Link to="/settings">Configurer →</Link>
-              </Button>
-            </div>
-
-            {/* Step 2 */}
-            <div className="p-3 bg-slate-900/20 border border-border/50 rounded-xl space-y-3 flex flex-col justify-between">
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-bold text-slate-500 uppercase">Étape 2</span>
-                  {isCourseCreated ? <CheckCircle2 className="h-4.5 w-4.5 text-emerald-500" /> : <Circle className="h-4.5 w-4.5 text-slate-600" />}
-                </div>
-                <h4 className="text-xs font-bold text-white">Créer le cours</h4>
-                <p className="text-[10px] text-slate-400 leading-snug">Ajoutez votre première formation au catalogue.</p>
-              </div>
-              <Button asChild size="xs" variant="ghost" className="h-7 text-[10px] text-teal-400 font-bold justify-start p-0 hover:bg-transparent hover:text-teal-300">
-                <Link to="/manage-courses">Créer formation →</Link>
-              </Button>
-            </div>
-
-            {/* Step 3 */}
-            <div className="p-3 bg-slate-900/20 border border-border/50 rounded-xl space-y-3 flex flex-col justify-between">
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-bold text-slate-500 uppercase">Étape 3</span>
-                  {isChaptersAdded ? <CheckCircle2 className="h-4.5 w-4.5 text-emerald-500" /> : <Circle className="h-4.5 w-4.5 text-slate-600" />}
-                </div>
-                <h4 className="text-xs font-bold text-white">Ajouter chapitres</h4>
-                <p className="text-[10px] text-slate-400 leading-snug">Ajoutez des vidéos, des quiz ou des cours en direct.</p>
-              </div>
-              <Button asChild size="xs" variant="ghost" className="h-7 text-[10px] text-teal-400 font-bold justify-start p-0 hover:bg-transparent hover:text-teal-300">
-                <Link to="/manage-courses">Éditer chapitres →</Link>
-              </Button>
-            </div>
-
-            {/* Step 4 */}
-            <div className="p-3 bg-slate-900/20 border border-border/50 rounded-xl space-y-3 flex flex-col justify-between">
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-bold text-slate-500 uppercase">Étape 4</span>
-                  {isPaymentEnabled ? <CheckCircle2 className="h-4.5 w-4.5 text-emerald-500" /> : <Circle className="h-4.5 w-4.5 text-slate-600" />}
-                </div>
-                <h4 className="text-xs font-bold text-white">Comptes de paiement</h4>
-                <p className="text-[10px] text-slate-400 leading-snug">Configurez Mobile Money et Stripe pour vos ventes.</p>
-              </div>
-              <Button asChild size="xs" variant="ghost" className="h-7 text-[10px] text-teal-400 font-bold justify-start p-0 hover:bg-transparent hover:text-teal-300">
-                <Link to="/settings">Vérifier →</Link>
-              </Button>
-            </div>
-
-            {/* Step 5 */}
-            <div className="p-3 bg-slate-900/20 border border-border/50 rounded-xl space-y-3 flex flex-col justify-between">
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-bold text-slate-500 uppercase">Étape 5</span>
-                  {isStudentEnrolled ? <CheckCircle2 className="h-4.5 w-4.5 text-emerald-500" /> : <Circle className="h-4.5 w-4.5 text-slate-600" />}
-                </div>
-                <h4 className="text-xs font-bold text-white">Inscrire un élève</h4>
-                <p className="text-[10px] text-slate-400 leading-snug">Inscrivez manuellement ou vendez votre premier accès.</p>
-              </div>
-              <Button asChild size="xs" variant="ghost" className="h-7 text-[10px] text-teal-400 font-bold justify-start p-0 hover:bg-transparent hover:text-teal-300">
-                <Link to="/eleves">Inscrire élève →</Link>
-              </Button>
-            </div>
+      {/* 2. MAIN CENTRED HEADER */}
+      <section className="max-w-4xl mx-auto px-6 pt-12 pb-8 text-center space-y-4">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          Bienvenue <span className="underline decoration-teal-500 decoration-3 underline-offset-4">{displayName}</span>
+        </h1>
+        <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 font-medium">
+          Créons ensemble pas à pas votre espace personnalisé de formation !
+        </p>
+        <p className="text-xs text-slate-500 dark:text-slate-500 font-bold uppercase tracking-wider">
+          Configurez votre espace en 5 étapes simples
+        </p>
+        
+        {/* Onboarding progress bar indicator */}
+        <div className="max-w-md mx-auto space-y-1.5 pt-2">
+          <div className="w-full bg-slate-200 dark:bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-300 dark:border-slate-800">
+            <div 
+              className="bg-emerald-500 h-full transition-all duration-1000 ease-out rounded-full" 
+              style={{ width: `${progressPercent}%` }} 
+            />
           </div>
-        </CardContent>
-      </Card>
+          <span className="text-[10px] font-bold text-slate-500">{progressPercent}% complété</span>
+        </div>
+      </section>
 
-      {/* KPIs Grid */}
-      {statsLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map(i => (
-            <Card key={i} className="h-24"><CardContent className="p-6"><Skeleton className="h-4 w-24 mb-2" /><Skeleton className="h-8 w-36" /></CardContent></Card>
+      {/* 3. 5-STEP CHECKLIST BOX (Exactly as in Teachizy screenshot) */}
+      <section className="max-w-xl mx-auto px-6 pb-12">
+        <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 shadow-md rounded-xl overflow-hidden text-left transition-all duration-300">
+          <CardHeader className="py-4 px-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <CardTitle className="text-sm font-bold text-slate-800 dark:text-white">
+              Pour commencer
+            </CardTitle>
+            <button 
+              onClick={toggleOnboarding}
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors focus:outline-none"
+              title="Masquer / Afficher"
+            >
+              {onboardingOpen ? (
+                <ToggleRight className="h-6 w-6 text-teal-600 dark:text-teal-400" />
+              ) : (
+                <ToggleLeft className="h-6 w-6 text-slate-400" />
+              )}
+            </button>
+          </CardHeader>
+
+          {onboardingOpen && (
+            <CardContent className="p-0 divide-y divide-slate-100 dark:divide-slate-800">
+              {/* Step 1 */}
+              <Link 
+                to="/settings"
+                className="flex items-center gap-4 py-3.5 px-6 hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors group"
+              >
+                <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 group-hover:text-teal-500 transition-colors">
+                  1) Définissez l'URL de votre espace
+                </span>
+              </Link>
+
+              {/* Step 2 */}
+              <Link 
+                to="/settings"
+                className="flex items-center gap-4 py-3.5 px-6 hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors group"
+              >
+                {isSpacePersonalized ? (
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+                ) : (
+                  <Circle className="h-5 w-5 text-slate-300 dark:text-slate-700 shrink-0" />
+                )}
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 group-hover:text-teal-500 transition-colors">
+                  2) Personnalisez votre espace (Logo & Couleurs)
+                </span>
+              </Link>
+
+              {/* Step 3 */}
+              <Link 
+                to="/manage-courses"
+                className="flex items-center gap-4 py-3.5 px-6 hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors group"
+              >
+                {isFirstCourseCreated ? (
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+                ) : (
+                  <Circle className="h-5 w-5 text-slate-300 dark:text-slate-700 shrink-0" />
+                )}
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 group-hover:text-teal-500 transition-colors">
+                  3) Créez votre première formation
+                </span>
+              </Link>
+
+              {/* Step 4 */}
+              <Link 
+                to="/settings"
+                className="flex items-center gap-4 py-3.5 px-6 hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors group"
+              >
+                {isBusinessInfoAdded ? (
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+                ) : (
+                  <Circle className="h-5 w-5 text-slate-300 dark:text-slate-700 shrink-0" />
+                )}
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 group-hover:text-teal-500 transition-colors">
+                  4) Ajoutez vos informations d'entreprise
+                </span>
+              </Link>
+
+              {/* Step 5 */}
+              <Link 
+                to="/settings"
+                className="flex items-center gap-4 py-3.5 px-6 hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors group"
+              >
+                <Circle className="h-5 w-5 text-slate-300 dark:text-slate-700 shrink-0" />
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 group-hover:text-teal-500 transition-colors">
+                  5) Configurez votre système de paiement
+                </span>
+              </Link>
+            </CardContent>
+          )}
+        </Card>
+      </section>
+
+      {/* 4. MOCK DATA SUMMARY AND CHARTS LINK */}
+      <section className="max-w-7xl mx-auto px-6 pb-6">
+        <div className="bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-4 rounded-xl flex items-center justify-between text-xs max-w-4xl mx-auto">
+          <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+            <Info className="h-4.5 w-4.5 text-teal-600 shrink-0" />
+            <span>EduFlex intègre des rapports de vente en temps réel. Suivez vos revenus et inscriptions de vos élèves.</span>
+          </div>
+          <Button asChild size="sm" variant="ghost" className="h-8 text-teal-600 dark:text-teal-400 font-bold hover:bg-transparent">
+            <Link to="/statistiques" className="flex items-center gap-1">
+              Voir les Statistiques <ChevronRight className="h-3 w-3" />
+            </Link>
+          </Button>
+        </div>
+      </section>
+
+      {/* 5. "AVEC EDUFLEX, VOUS POUVEZ :" 15-CARD INTERACTIVE GRID (Exactly as in Teachizy screenshots) */}
+      <section className="max-w-7xl mx-auto px-6 pb-24 text-center space-y-8">
+        <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
+          Avec EduFlex, vous pouvez :
+        </h2>
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+          {featureCards.map(card => (
+            <Card 
+              key={card.id} 
+              className="border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/25 shadow hover:shadow-lg hover:border-teal-500/20 dark:hover:border-teal-500/20 transition-all rounded-2xl overflow-hidden flex flex-col justify-between text-center p-6 space-y-6"
+            >
+              {/* Central Custom SVG Illustration */}
+              <div className="h-20 flex items-center justify-center">
+                {card.icon}
+              </div>
+
+              {/* Bold-emphasized text */}
+              <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed px-2 flex-1">
+                {card.title.split('**').map((part, index) => 
+                  index % 2 === 1 ? <strong key={index} className="text-slate-900 dark:text-white font-bold">{part}</strong> : part
+                )}
+              </p>
+
+              {/* Action Button */}
+              <div>
+                <Button 
+                  asChild
+                  className="w-full bg-[#112d27] hover:bg-[#153830] text-teal-400 font-bold h-10 border border-teal-800/40 rounded-lg shadow-sm"
+                >
+                  <Link to={card.link as any}>
+                    {card.btnText}
+                  </Link>
+                </Button>
+              </div>
+            </Card>
           ))}
         </div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KpiCard title="Formations actives" value={String(activeStats.coursesCount)} trend={0} trendLabel="Formations publiées" icon={<BookOpen className="h-5 w-5" />} />
-          <KpiCard title="Apprenants" value={String(activeStats.studentsCount)} trend={0} trendLabel="Élèves inscrits" icon={<Users className="h-5 w-5" />} />
-          <KpiCard 
-            title="Revenus de l'académie" 
-            value={
-              <div className="flex flex-col items-start leading-tight">
-                <span>{activeStats.totalRevenue.toLocaleString('fr-FR')} FCFA</span>
-                <span className="text-[10px] font-semibold text-muted-foreground mt-0.5">
-                  ~ {Math.round(activeStats.totalRevenue / 655.957).toLocaleString('fr-FR')} €
-                </span>
-              </div>
-            } 
-            trend={0} 
-            trendLabel="Ventes totales" 
-            icon={<Euro className="h-5 w-5" />} 
-          />
-          <KpiCard title="Taux de complétion" value={`${activeStats.averageProgress} %`} trend={0} trendLabel="Progression moyenne" icon={<TrendingUp className="h-5 w-5" />} />
-        </div>
-      )}
+      </section>
 
-      {/* Charts Grid */}
-      <div className="grid gap-4 lg:grid-cols-7">
-        <Card className="lg:col-span-4 animate-fade-in border border-border/70 bg-card/60 backdrop-blur-sm shadow-sm text-left">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-white tracking-wide">Évolution des inscriptions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[280px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={enrollmentData}>
-                  <defs>
-                    <linearGradient id="colorInscriptions" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(172 73% 50%)" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(172 73% 50%)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
-                  <XAxis dataKey="mois" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '13px' }} />
-                  <Area type="monotone" dataKey="inscriptions" stroke="hsl(172 73% 50%)" strokeWidth={2} fill="url(#colorInscriptions)" name="Inscriptions" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="lg:col-span-3 animate-fade-in border border-border/70 bg-card/60 backdrop-blur-sm shadow-sm text-left">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-white tracking-wide">Revenus par catégorie</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[280px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={barChartData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
-                  <XAxis dataKey="categorie" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '13px' }} formatter={(value: number) => [`${value.toLocaleString('fr-FR')} FCFA`, 'Revenus']} />
-                  <Bar dataKey="revenus" fill="hsl(172 73% 45%)" radius={[6, 6, 0, 0]} name="Revenus" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Enrollments Table */}
-      <Card className="animate-fade-in border border-border/70 bg-card/60 backdrop-blur-sm shadow-sm text-left">
-        <CardHeader className="pb-3 border-b border-border/40">
-          <CardTitle className="text-sm font-bold text-white tracking-wide">Inscriptions récentes d'apprenants</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-4">
-          {enrollmentsLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <Skeleton className="h-10 w-10 rounded-lg" />
-                  <div className="flex-1 space-y-2"><Skeleton className="h-4 w-48" /><Skeleton className="h-3 w-32" /></div>
-                  <Skeleton className="h-5 w-16 rounded-full" />
-                </div>
-              ))}
-            </div>
-          ) : activeRecentEnrollments.length > 0 ? (
-            <div className="space-y-1">
-              {activeRecentEnrollments.map((enrollment, index) => (
-                <div key={index} className="flex items-center gap-4 rounded-lg px-3 py-2.5 transition-colors hover:bg-muted/50">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 shrink-0">
-                    <Users className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-white truncate">{enrollment.studentName}</p>
-                    <p className="text-xs text-slate-400 truncate">
-                      Inscrit à : <span className="font-semibold text-teal-400">{enrollment.courseTitle}</span> · Le {new Date(enrollment.enrolledAt).toLocaleDateString('fr-FR')}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end shrink-0">
-                    <Badge variant="secondary" className="text-xs font-bold bg-slate-900 border border-border/80 text-teal-400">
-                      {(enrollment.coursePrice || 0).toLocaleString('fr-FR')} FCFA
-                    </Badge>
-                    {enrollment.coursePrice > 0 && (
-                      <span className="text-[9px] text-muted-foreground mt-0.5">
-                        ~ {Math.round((enrollment.coursePrice || 0) / 655.957).toLocaleString('fr-FR')} €
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground py-4 text-center">Aucune inscription pour le moment</p>
-          )}
-        </CardContent>
-      </Card>
     </div>
   )
 }
