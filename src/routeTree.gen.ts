@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as EduflexPlusRouteImport } from './routes/eduflex-plus'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppVentesRouteImport } from './routes/_app/ventes'
 import { Route as AppStatistiquesRouteImport } from './routes/_app/statistiques'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppPaiementsRouteImport } from './routes/_app/paiements'
@@ -66,6 +67,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppVentesRoute = AppVentesRouteImport.update({
+  id: '/ventes',
+  path: '/ventes',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppStatistiquesRoute = AppStatistiquesRouteImport.update({
   id: '/statistiques',
@@ -204,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/paiements': typeof AppPaiementsRoute
   '/settings': typeof AppSettingsRoute
   '/statistiques': typeof AppStatistiquesRoute
+  '/ventes': typeof AppVentesRoute
   '/courses/$id': typeof AppCoursesIdRoute
   '/study/$id': typeof AppStudyIdRoute
 }
@@ -233,6 +240,7 @@ export interface FileRoutesByTo {
   '/paiements': typeof AppPaiementsRoute
   '/settings': typeof AppSettingsRoute
   '/statistiques': typeof AppStatistiquesRoute
+  '/ventes': typeof AppVentesRoute
   '/courses/$id': typeof AppCoursesIdRoute
   '/study/$id': typeof AppStudyIdRoute
 }
@@ -264,6 +272,7 @@ export interface FileRoutesById {
   '/_app/paiements': typeof AppPaiementsRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/statistiques': typeof AppStatistiquesRoute
+  '/_app/ventes': typeof AppVentesRoute
   '/_app/courses/$id': typeof AppCoursesIdRoute
   '/_app/study/$id': typeof AppStudyIdRoute
 }
@@ -295,6 +304,7 @@ export interface FileRouteTypes {
     | '/paiements'
     | '/settings'
     | '/statistiques'
+    | '/ventes'
     | '/courses/$id'
     | '/study/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -324,6 +334,7 @@ export interface FileRouteTypes {
     | '/paiements'
     | '/settings'
     | '/statistiques'
+    | '/ventes'
     | '/courses/$id'
     | '/study/$id'
   id:
@@ -354,6 +365,7 @@ export interface FileRouteTypes {
     | '/_app/paiements'
     | '/_app/settings'
     | '/_app/statistiques'
+    | '/_app/ventes'
     | '/_app/courses/$id'
     | '/_app/study/$id'
   fileRoutesById: FileRoutesById
@@ -410,6 +422,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/ventes': {
+      id: '/_app/ventes'
+      path: '/ventes'
+      fullPath: '/ventes'
+      preLoaderRoute: typeof AppVentesRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/statistiques': {
       id: '/_app/statistiques'
@@ -601,6 +620,7 @@ interface AppRouteChildren {
   AppPaiementsRoute: typeof AppPaiementsRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppStatistiquesRoute: typeof AppStatistiquesRoute
+  AppVentesRoute: typeof AppVentesRoute
   AppStudyIdRoute: typeof AppStudyIdRoute
 }
 
@@ -625,6 +645,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppPaiementsRoute: AppPaiementsRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppStatistiquesRoute: AppStatistiquesRoute,
+  AppVentesRoute: AppVentesRoute,
   AppStudyIdRoute: AppStudyIdRoute,
 }
 
