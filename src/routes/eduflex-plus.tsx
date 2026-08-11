@@ -27,7 +27,7 @@ function EduflexPlusPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-teal-500/30 selection:text-teal-200">
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-teal-500/30 selection:text-teal-200 text-left">
       {/* Navigation Header */}
       <header className="sticky top-0 z-50 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-lg">
         <nav className="max-w-7xl mx-auto flex items-center justify-between h-16 px-6">
@@ -61,7 +61,7 @@ function EduflexPlusPage() {
             Créez votre propre <span className="bg-gradient-to-r from-teal-400 via-emerald-400 to-sky-400 bg-clip-text text-transparent">académie de formation</span> en ligne
           </h1>
           <p className="text-base md:text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            EduFlex+ offre aux établissements, universités, entreprises et formateurs d'Afrique de l'Ouest et Centrale la possibilité d'héberger leurs formations sous leur propre marque avec paiement Mobile Money intégré.
+            EduFlex+ offre aux établissements, universités, entreprises et formateurs la possibilité d'héberger leurs formations sous leur propre marque avec paiement Mobile Money et cartes en FCFA & Euros.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <Button asChild size="lg" className="w-full sm:w-auto bg-teal-600 hover:bg-teal-500 text-white font-bold h-12 shadow-lg shadow-teal-500/25 border-none">
@@ -109,7 +109,7 @@ function EduflexPlusPage() {
               <div className="h-10 w-10 bg-teal-500/10 text-teal-400 flex items-center justify-center rounded-lg">
                 <Video className="h-5 w-5" />
               </div>
-              <h3 className="font-bold text-white text-lg">Classes Virtuelles Jitsi</h3>
+              <h3 className="font-bold text-white text-lg">Classes Virtuelles Live</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
                 Lancez des sessions interactives en direct d'un clic. Partage d'écran, chat en temps réel et tableau blanc collaboratif intégrés.
               </p>
@@ -206,7 +206,7 @@ function EduflexPlusPage() {
       <section id="tarifs" className="max-w-7xl mx-auto px-6 py-24 space-y-16">
         <div className="text-center space-y-6">
           <Badge variant="outline" className="border-teal-500/30 text-teal-400 bg-teal-500/5 px-3 py-1 font-semibold text-xs rounded-full">
-            Tarifs Transparent
+            Tarifs Transparents
           </Badge>
           <h2 className="text-3xl md:text-4xl font-extrabold text-white">Des abonnements simples, sans surprise</h2>
           <p className="text-sm text-slate-400 max-w-xl mx-auto">Choisissez le plan adapté à la taille de votre académie.</p>
@@ -227,7 +227,7 @@ function EduflexPlusPage() {
               <div className="space-y-2">
                 <Badge variant="outline" className="border-slate-700 text-slate-300">Plan Académie Pro</Badge>
                 <div className="text-3xl font-black text-white">
-                  {currency === 'FCFA' ? '30 000 FCFA' : '45 €'} <span className="text-xs font-normal text-slate-400">/ mois</span>
+                  {currency === 'FCFA' ? '19 000 FCFA' : '29 €'} <span className="text-xs font-normal text-slate-400">/ mois</span>
                 </div>
                 <p className="text-xs text-slate-400">Idéal pour les formateurs indépendants et petites académies.</p>
               </div>
@@ -236,12 +236,12 @@ function EduflexPlusPage() {
                 <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-teal-500 shrink-0" /> Formations et élèves illimités</li>
                 <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-teal-500 shrink-0" /> Nom de domaine en `.eduflex.com`</li>
                 <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-teal-500 shrink-0" /> Logo et couleurs personnalisés</li>
-                <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-teal-500 shrink-0" /> Jitsi Live (jusqu'à 50 participants)</li>
+                <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-teal-500 shrink-0" /> Visioconférences Live (EduFlex Meet)</li>
                 <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-teal-500 shrink-0" /> Paiements Mobile Money configurés</li>
               </ul>
 
               <Button asChild className="w-full bg-slate-800 hover:bg-slate-700 text-white h-11">
-                <Link to="/register">Démarrer le plan Pro</Link>
+                <Link to="/register" search={{ plan: 'Pro' }}>Démarrer le plan Pro</Link>
               </Button>
             </CardContent>
           </Card>
@@ -255,7 +255,7 @@ function EduflexPlusPage() {
               <div className="space-y-2">
                 <Badge className="bg-teal-500/10 text-teal-400 border-teal-500/20">Plan Académie B2B (EduFlex+)</Badge>
                 <div className="text-3xl font-black text-teal-400">
-                  {currency === 'FCFA' ? '65 000 FCFA' : '99 €'} <span className="text-xs font-normal text-slate-400">/ mois</span>
+                  {currency === 'FCFA' ? '59 000 FCFA' : '89 €'} <span className="text-xs font-normal text-slate-400">/ mois</span>
                 </div>
                 <p className="text-xs text-slate-400">Pour les grandes écoles et cabinets de formation à forte visibilité.</p>
               </div>
@@ -263,14 +263,14 @@ function EduflexPlusPage() {
               <ul className="space-y-3 text-xs text-slate-300">
                 <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-teal-500 shrink-0" /> Tout ce qui est dans le plan Pro</li>
                 <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-teal-500 shrink-0" /> **Propre nom de domaine** (ex: `cours.votre-ecole.com`)</li>
-                <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-teal-500 shrink-0" /> Jitsi Live illimité avec support direct</li>
-                <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-teal-500 shrink-0" /> Intégration du standard de modules SCORM</li>
-                <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-teal-500 shrink-0" /> Panel d'administration multi-comptes</li>
-                <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-teal-500 shrink-0" /> Support premium prioritaire 24/7</li>
+                <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-teal-500 shrink-0" /> Marque blanche 100% neutre</li>
+                <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-teal-500 shrink-0" /> Panel d'administration multi-comptes formateurs (10 accès)</li>
+                <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-teal-500 shrink-0" /> Support VIP WhatsApp & Téléphone 24/7</li>
+                <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-teal-500 shrink-0" /> Frais de transaction ultra-bas: 1%</li>
               </ul>
 
               <Button asChild className="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold h-11 border-none shadow-lg shadow-teal-500/20">
-                <Link to="/register">Activer EduFlex+</Link>
+                <Link to="/register" search={{ plan: 'B2B' }}>Activer EduFlex+</Link>
               </Button>
             </CardContent>
           </Card>

@@ -555,16 +555,16 @@ function LandingPage() {
                   <p className="text-[10px] text-teal-500 font-bold mt-1">Gratuit à vie · Sans engagement</p>
                 </div>
                 <ul className="space-y-3 text-xs text-muted-foreground pt-4 border-t border-border/40">
-                  <li className="flex items-center gap-2">✓ Jusqu'à 3 formations</li>
+                  <li className="flex items-center gap-2">✓ 1 formation active</li>
                   <li className="flex items-center gap-2">✓ 50 apprenants enregistrés</li>
-                  <li className="flex items-center gap-2">✓ Quiz de validation basiques</li>
-                  <li className="flex items-center gap-2">✓ Certificats de réussite standards</li>
-                  <li className="flex items-center gap-2">✓ Frais de transaction : 10%</li>
+                  <li className="flex items-center gap-2">✓ Quiz et certificats basiques</li>
+                  <li className="flex items-center gap-2 text-teal-400 font-bold">✓ Frais de transaction : 5%</li>
+                  <li className="flex items-center gap-2 text-muted-foreground">✕ Pas de visioconférence Live</li>
                 </ul>
               </div>
               <div className="p-6 md:p-8 pt-0">
                 <Button asChild className="w-full bg-secondary hover:bg-secondary/90 text-foreground" size="lg">
-                  <Link to="/register">Commencer gratuitement</Link>
+                  <Link to="/register" search={{ intent: 'create' }}>Commencer gratuitement</Link>
                 </Button>
               </div>
             </Card>
@@ -591,14 +591,14 @@ function LandingPage() {
                   <li className="flex items-center gap-2 text-foreground font-medium">✓ Apprenants illimités</li>
                   <li className="flex items-center gap-2">✓ Quiz et examens avancés</li>
                   <li className="flex items-center gap-2">✓ Certificats Canvas HD automatisés</li>
-                  <li className="flex items-center gap-2">✓ Visioconférences en Direct (1h/live)</li>
+                  <li className="flex items-center gap-2">✓ Visioconférences Live (EduFlex Meet)</li>
                   <li className="flex items-center gap-2">✓ Support prioritaire 24h/7j</li>
-                  <li className="flex items-center gap-2 text-teal-400 font-bold">✓ Frais de transaction : 5%</li>
+                  <li className="flex items-center gap-2 text-teal-400 font-bold">✓ Frais de transaction : 3%</li>
                 </ul>
               </div>
               <div className="p-6 md:p-8 pt-0">
                 <Button asChild className="w-full bg-teal-600 hover:bg-teal-500 text-white" size="lg">
-                  <Link to="/register">Lancer mon Académie Pro</Link>
+                  <Link to="/register" search={{ plan: 'Pro' }}>Lancer mon Académie Pro</Link>
                 </Button>
               </div>
             </Card>
@@ -619,16 +619,16 @@ function LandingPage() {
                 </div>
                 <ul className="space-y-3 text-xs text-muted-foreground pt-4 border-t border-border/40">
                   <li className="flex items-center gap-2 text-foreground font-semibold">✓ Personnalisation White-Label (Marque)</li>
-                  <li className="flex items-center gap-2 text-foreground font-semibold">✓ Visioconférences Jitsi illimitées</li>
+                  <li className="flex items-center gap-2 text-foreground font-semibold">✓ Nom de domaine propre (cours.ecole.com)</li>
                   <li className="flex items-center gap-2">✓ Multi-comptes formateurs (jusqu'à 10)</li>
                   <li className="flex items-center gap-2">✓ Rapports d'assiduité ministériels</li>
-                  <li className="flex items-center gap-2">✓ Hébergement dédié réseaux bas-débit</li>
-                  <li className="flex items-center gap-2 text-teal-500 font-bold">✓ Frais de transaction : 2%</li>
+                  <li className="flex items-center gap-2 font-bold text-amber-500">✓ Support VIP WhatsApp & Tél 24/7</li>
+                  <li className="flex items-center gap-2 text-teal-500 font-bold">✓ Frais de transaction : 1%</li>
                 </ul>
               </div>
               <div className="p-6 md:p-8 pt-0">
                 <Button asChild className="w-full bg-secondary hover:bg-secondary/90 text-foreground" size="lg">
-                  <Link to="/register">Contacter le service Académie</Link>
+                  <Link to="/register" search={{ plan: 'B2B' }}>Activer l'Académie B2B</Link>
                 </Button>
               </div>
             </Card>
