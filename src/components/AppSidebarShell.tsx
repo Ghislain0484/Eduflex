@@ -205,7 +205,7 @@ export function AppSidebarShell() {
       },
       { href: '/classes-virtuelles', icon: <Video className="h-4 w-4" />, label: 'Classes virtuelles', badge: 'Nouveau' },
       { href: '/packs', icon: <Layers className="h-4 w-4" />, label: 'Packs' },
-      { href: '/paiements', icon: <Wallet className="h-4 w-4" />, label: 'Ventes' },
+      { href: '/ventes', icon: <Wallet className="h-4 w-4" />, label: 'Ventes' },
       { href: '/codes-promo', icon: <Percent className="h-4 w-4" />, label: 'Codes promo' },
       { 
         href: '/outils-marketing', 
@@ -218,7 +218,7 @@ export function AppSidebarShell() {
           { href: '/outils-marketing?tab=emails', label: 'Emails' }
         ]
       },
-      { href: '/settings', icon: <Palette className="h-4 w-4" />, label: 'Personnalisation' },
+      { href: '/personnalisation', icon: <Palette className="h-4 w-4" />, label: 'Personnalisation' },
       { href: '/affiliation', icon: <Share2 className="h-4 w-4" />, label: 'Affiliation' },
       { href: '/integrations', icon: <Code2 className="h-4 w-4" />, label: 'Intégrations externes' },
       { href: '/academy-hub', icon: <GraduationCap className="h-4 w-4 text-amber-500" />, label: 'Académie EduFlex 🎓' },

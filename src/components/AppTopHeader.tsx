@@ -67,7 +67,7 @@ export function AppTopHeader() {
                 asChild
                 variant="ghost"
                 size="sm"
-                className="h-8.5 w-8.5 p-0 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800/60"
+                className="h-8.5 w-8.5 p-0 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/60"
               >
                 <Link to="/courses" target="_blank">
                   <Eye className="h-4 w-4" />
@@ -85,7 +85,7 @@ export function AppTopHeader() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setNotifOpen(!notifOpen)}
-                  className="h-8.5 w-8.5 p-0 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 relative"
+                  className="h-8.5 w-8.5 p-0 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/60 relative"
                 >
                   <Bell className="h-4 w-4" />
                   <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-teal-500" />
@@ -96,17 +96,17 @@ export function AppTopHeader() {
 
             {/* Notifications Popup */}
             {notifOpen && (
-              <div className="absolute right-0 mt-2 w-72 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-4 text-left space-y-3 z-50 animate-in fade-in zoom-in-95 duration-150">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                  <span className="text-xs font-bold text-white">Notifications</span>
-                  <button onClick={() => setNotifOpen(false)} className="text-slate-400 hover:text-white">
+              <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl p-4 text-left space-y-3 z-50 animate-in fade-in zoom-in-95 duration-150">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white">Notifications</span>
+                  <button onClick={() => setNotifOpen(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white">
                     <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
                 <div className="space-y-2 text-xs">
-                  <div className="p-2.5 bg-slate-950/60 rounded-lg border border-slate-800 space-y-0.5">
-                    <p className="font-bold text-teal-400">Bienvenue sur EduFlex !</p>
-                    <p className="text-[10px] text-slate-400">Votre académie en ligne est prête à accueillir vos premiers apprenants.</p>
+                  <div className="p-2.5 bg-slate-50 dark:bg-slate-950/60 rounded-lg border border-slate-200 dark:border-slate-800 space-y-0.5">
+                    <p className="font-bold text-teal-600 dark:text-teal-400">Bienvenue sur EduFlex !</p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">Votre académie en ligne est prête à accueillir vos premiers apprenants.</p>
                   </div>
                 </div>
               </div>
@@ -120,7 +120,7 @@ export function AppTopHeader() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setHelpOpen(true)}
-                className="h-8.5 w-8.5 p-0 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800/60"
+                className="h-8.5 w-8.5 p-0 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/60"
               >
                 <HelpCircle className="h-4 w-4" />
               </Button>
@@ -135,10 +135,10 @@ export function AppTopHeader() {
                 asChild
                 variant="ghost"
                 size="sm"
-                className="h-8.5 w-8.5 p-0 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800/60"
+                className="h-8.5 w-8.5 p-0 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/60"
               >
                 <Link to="/courses">
-                  <GraduationCap className="h-4.5 w-4.5 text-teal-400" />
+                  <GraduationCap className="h-4.5 w-4.5 text-teal-500 dark:text-teal-400" />
                 </Link>
               </Button>
             </TooltipTrigger>
@@ -147,18 +147,18 @@ export function AppTopHeader() {
 
           <div className="h-4 w-px bg-border/60 mx-1" />
 
-          {/* 5. USER PROFILE DROPDOWN (Matching Teachizy Screenshot 1:1) */}
+          {/* 5. USER PROFILE DROPDOWN */}
           <div className="relative">
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-2 py-1 px-2 rounded-lg hover:bg-slate-800/60 transition-colors text-left focus:outline-none"
+              className="flex items-center gap-2 py-1 px-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors text-left focus:outline-none"
             >
               <Avatar className="h-7 w-7 border border-teal-500/30">
-                <AvatarFallback className="text-[11px] font-bold bg-teal-500/10 text-teal-400">
+                <AvatarFallback className="text-[11px] font-bold bg-teal-500/10 text-teal-500 dark:text-teal-400">
                   {initials}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-xs font-bold text-slate-200 hidden sm:inline-block max-w-[120px] truncate">
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 hidden sm:inline-block max-w-[120px] truncate">
                 {displayName}
               </span>
               <ChevronDown className="h-3.5 w-3.5 text-slate-400" />

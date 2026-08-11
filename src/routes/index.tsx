@@ -38,6 +38,7 @@ function LandingPage() {
   const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(null)
   const [priceCurrency, setPriceCurrency] = useState<'CFA' | 'EUR'>('CFA')
   const [platformName, setPlatformName] = useState('EduFlex')
+  const [servicesSubTab, setServicesSubTab] = useState<'solutions' | 'features' | 'sectors'>('solutions')
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -96,49 +97,87 @@ function LandingPage() {
 
           {/* Center: Navigation Links */}
           <div className="hidden md:flex items-center gap-8">
-            {/* Services Dropdown */}
-            <div className="relative group">
+            {/* Services Dropdown (2-Level Megamenu Matching User Screenshots) */}
+            <div className="relative group" onMouseLeave={() => setServicesSubTab('solutions')}>
               <button className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-300 hover:text-teal-400 transition-colors py-2">
-                Services <ChevronDown className="h-3.5 w-3.5 text-slate-450 group-hover:text-teal-400" />
+                Services <ChevronDown className="h-3.5 w-3.5 text-slate-400 group-hover:text-teal-400" />
               </button>
               
-              {/* Mega Dropdown Panel (Teachizy style Solutions / Fonctionnalités / Secteurs) */}
-              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-[600px] rounded-2xl border border-teal-900/60 bg-[#072424] p-6 shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 grid grid-cols-3 gap-6 text-left">
+              {/* Mega Dropdown Panel */}
+              <div className="absolute top-full left-0 mt-1 w-[540px] rounded-2xl border border-teal-900/60 bg-[#072424] p-0 shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden flex text-left">
                 
-                {/* Column 1: Solutions */}
-                <div className="space-y-3.5">
-                  <h4 className="text-[11px] font-bold text-teal-400 uppercase tracking-wider">Solutions</h4>
-                  <ul className="space-y-2.5 text-xs text-slate-300">
-                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Créer une formation</Link></li>
-                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Vendre en Francs CFA</Link></li>
-                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Digitaliser les écoles</Link></li>
-                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Suivi Mobile Money</Link></li>
-                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Classes en Direct</Link></li>
-                  </ul>
+                {/* Left Category Selector Panel (Matching Screenshots) */}
+                <div className="w-[180px] bg-[#051a1a] border-r border-teal-950/60 p-2 space-y-1 shrink-0">
+                  <button
+                    onMouseEnter={() => setServicesSubTab('solutions')}
+                    onClick={() => setServicesSubTab('solutions')}
+                    className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${servicesSubTab === 'solutions' ? 'bg-teal-700 text-white shadow-xs' : 'text-slate-300 hover:bg-teal-900/40 hover:text-teal-300'}`}
+                  >
+                    <span>Solutions</span>
+                    <span className="text-[10px]">▶</span>
+                  </button>
+
+                  <button
+                    onMouseEnter={() => setServicesSubTab('features')}
+                    onClick={() => setServicesSubTab('features')}
+                    className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${servicesSubTab === 'features' ? 'bg-teal-700 text-white shadow-xs' : 'text-slate-300 hover:bg-teal-900/40 hover:text-teal-300'}`}
+                  >
+                    <span>Fonctionnalités</span>
+                    <span className="text-[10px]">▶</span>
+                  </button>
+
+                  <button
+                    onMouseEnter={() => setServicesSubTab('sectors')}
+                    onClick={() => setServicesSubTab('sectors')}
+                    className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${servicesSubTab === 'sectors' ? 'bg-teal-700 text-white shadow-xs' : 'text-slate-300 hover:bg-teal-900/40 hover:text-teal-300'}`}
+                  >
+                    <span>Secteurs</span>
+                    <span className="text-[10px]">▶</span>
+                  </button>
                 </div>
 
-                {/* Column 2: Fonctionnalités */}
-                <div className="space-y-3.5">
-                  <h4 className="text-[11px] font-bold text-teal-400 uppercase tracking-wider">Fonctionnalités</h4>
-                  <ul className="space-y-2.5 text-xs text-slate-300">
-                    <li><Link to="/courses" className="hover:text-teal-400 block transition-colors">• LMS Localisé</Link></li>
-                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Créateur de Quiz</Link></li>
-                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Vidéos économes data</Link></li>
-                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Affiliation 15%</Link></li>
-                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Certificats HD</Link></li>
-                  </ul>
-                </div>
+                {/* Right Items Panel (Matching Screenshots) */}
+                <div className="flex-1 p-5 bg-[#072424]">
+                  {servicesSubTab === 'solutions' && (
+                    <div className="space-y-3">
+                      <h4 className="text-[11px] font-bold text-teal-400 uppercase tracking-wider">Solutions EduFlex</h4>
+                      <ul className="space-y-2 text-xs text-slate-200 font-medium">
+                        <li><Link to="/register" search={{ intent: 'create' }} className="hover:text-teal-400 block transition-colors">Créer une formation en ligne</Link></li>
+                        <li><Link to="/register" search={{ intent: 'sell' }} className="hover:text-teal-400 block transition-colors">Vendre des cours (Mobile Money & Carte)</Link></li>
+                        <li><Link to="/register" search={{ intent: 'digitalize' }} className="hover:text-teal-400 block transition-colors">Digitaliser une académie ou école</Link></li>
+                        <li><Link to="/register" search={{ intent: 'certificates' }} className="hover:text-teal-400 block transition-colors">Attestations & Certificats de réussite</Link></li>
+                        <li><Link to="/register" search={{ intent: 'automation' }} className="hover:text-teal-400 block transition-colors">Automatiser la gestion des apprenants</Link></li>
+                        <li><Link to="/register" search={{ intent: 'experience' }} className="hover:text-teal-400 block transition-colors">Optimiser l'expérience avec EduFlex Meet</Link></li>
+                      </ul>
+                    </div>
+                  )}
 
-                {/* Column 3: Secteurs */}
-                <div className="space-y-3.5">
-                  <h4 className="text-[11px] font-bold text-teal-400 uppercase tracking-wider">Secteurs</h4>
-                  <ul className="space-y-2.5 text-xs text-slate-300">
-                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Écoles & Universités</Link></li>
-                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Organismes de formation</Link></li>
-                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Formateurs indépendants</Link></li>
-                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Coachs & Experts</Link></li>
-                    <li><Link to="/register" className="hover:text-teal-400 block transition-colors">• Entreprises locales</Link></li>
-                  </ul>
+                  {servicesSubTab === 'features' && (
+                    <div className="space-y-3">
+                      <h4 className="text-[11px] font-bold text-teal-400 uppercase tracking-wider">Fonctionnalités Incluses</h4>
+                      <ul className="space-y-2 text-xs text-slate-200 font-medium">
+                        <li><Link to="/eduflex-plus" className="hover:text-teal-400 block transition-colors">Plateforme LMS Moderne & Responsive</Link></li>
+                        <li><Link to="/eduflex-plus" className="hover:text-teal-400 block transition-colors">Création de contenus & Quiz interactifs</Link></li>
+                        <li><Link to="/eduflex-plus" className="hover:text-teal-400 block transition-colors">Suivi, assiduité et analyse des élèves</Link></li>
+                        <li><Link to="/eduflex-plus" className="hover:text-teal-400 block transition-colors">Outils marketing & Support WhatsApp Direct</Link></li>
+                        <li><Link to="/eduflex-plus" className="hover:text-teal-400 block transition-colors">Personnalisation visuelle & Marque blanche</Link></li>
+                      </ul>
+                    </div>
+                  )}
+
+                  {servicesSubTab === 'sectors' && (
+                    <div className="space-y-3">
+                      <h4 className="text-[11px] font-bold text-teal-400 uppercase tracking-wider">Secteurs & Métiers</h4>
+                      <ul className="space-y-2 text-xs text-slate-200 font-medium">
+                        <li><Link to="/tarifs" className="hover:text-teal-400 block transition-colors">Formateurs & Formatrices indépendant(e)s</Link></li>
+                        <li><Link to="/tarifs" className="hover:text-teal-400 block transition-colors">Infopreneurs & Créateurs de contenu</Link></li>
+                        <li><Link to="/tarifs" className="hover:text-teal-400 block transition-colors">Organismes de formation & Centres</Link></li>
+                        <li><Link to="/tarifs" className="hover:text-teal-400 block transition-colors">Coachs, Mentors & Consultants</Link></li>
+                        <li><Link to="/tarifs" className="hover:text-teal-400 block transition-colors">Experts & Dirigeants d'entreprise</Link></li>
+                        <li><Link to="/tarifs" className="hover:text-teal-400 block transition-colors">Écoles & Établissements d'enseignement</Link></li>
+                      </ul>
+                    </div>
+                  )}
                 </div>
 
               </div>
