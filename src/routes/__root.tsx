@@ -55,6 +55,22 @@ function RootDocument({ children }: { children: ReactNode }) {
     <html lang="fr">
       <head>
         <HeadContent />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('theme');
+                  if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
         <script src="https://checkout.flutterwave.com/v3.js"></script>
         {/*
           WebSite + Organization entity (rendered on every page, once at the root).
