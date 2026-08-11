@@ -8,7 +8,7 @@
  */
 import { useState, useCallback, useEffect } from 'react'
 import type { ReactNode } from 'react'
-import { useLocation, useNavigate } from '@tanstack/react-router'
+import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { useAuth } from '@/hooks/useAuth'
 import {
   Avatar,
@@ -91,34 +91,57 @@ function NavItem({ item, collapsed }: { item: NavItemDef; collapsed: boolean }) 
 
   const link = (
     <div className="w-full">
-      <a
-        href={item.href}
-        onClick={item.subItems ? toggleSub : undefined}
-        className={cn(
-          'flex items-center gap-2.5 rounded-md text-sm transition-colors cursor-pointer',
-          collapsed ? 'justify-center w-8 h-8 mx-auto' : 'px-3 py-2 w-full',
-          isActive || open
-            ? 'bg-primary/10 text-primary font-semibold'
-            : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-        )}
-      >
-        <span className="shrink-0">{item.icon}</span>
-        {!collapsed && (
-          <span className="truncate flex-1 flex items-center justify-between">
-            <span>{item.label}</span>
-            <span className="flex items-center gap-1">
+      {item.subItems ? (
+        <button
+          type="button"
+          onClick={toggleSub}
+          className={cn(
+            'flex items-center gap-2.5 rounded-md text-sm transition-colors cursor-pointer w-full text-left',
+            collapsed ? 'justify-center w-8 h-8 mx-auto' : 'px-3 py-2 w-full',
+            isActive || open
+              ? 'bg-primary/10 text-primary font-semibold'
+              : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+          )}
+        >
+          <span className="shrink-0">{item.icon}</span>
+          {!collapsed && (
+            <span className="truncate flex-1 flex items-center justify-between">
+              <span>{item.label}</span>
+              <span className="flex items-center gap-1">
+                {item.badge && (
+                  <span className="text-[9px] font-extrabold bg-red-500/10 text-red-500 border border-red-500/20 px-1.5 py-0.5 rounded-full uppercase tracking-tighter">
+                    {item.badge}
+                  </span>
+                )}
+                {open ? <ChevronDown className="h-3.5 w-3.5 opacity-70" /> : <ChevronRight className="h-3.5 w-3.5 opacity-70" />}
+              </span>
+            </span>
+          )}
+        </button>
+      ) : (
+        <Link
+          to={item.href}
+          className={cn(
+            'flex items-center gap-2.5 rounded-md text-sm transition-colors cursor-pointer',
+            collapsed ? 'justify-center w-8 h-8 mx-auto' : 'px-3 py-2 w-full',
+            isActive
+              ? 'bg-primary/10 text-primary font-semibold'
+              : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+          )}
+        >
+          <span className="shrink-0">{item.icon}</span>
+          {!collapsed && (
+            <span className="truncate flex-1 flex items-center justify-between">
+              <span>{item.label}</span>
               {item.badge && (
                 <span className="text-[9px] font-extrabold bg-red-500/10 text-red-500 border border-red-500/20 px-1.5 py-0.5 rounded-full uppercase tracking-tighter">
                   {item.badge}
                 </span>
               )}
-              {item.subItems && (
-                open ? <ChevronDown className="h-3.5 w-3.5 opacity-70" /> : <ChevronRight className="h-3.5 w-3.5 opacity-70" />
-              )}
             </span>
-          </span>
-        )}
-      </a>
+          )}
+        </Link>
+      )}
 
       {/* Sub-items List */}
       {!collapsed && open && item.subItems && (
@@ -126,9 +149,9 @@ function NavItem({ item, collapsed }: { item: NavItemDef; collapsed: boolean }) 
           {item.subItems.map(sub => {
             const isSubActive = location.pathname === sub.href || (sub.href.includes('?') && location.pathname === sub.href.split('?')[0])
             return (
-              <a
+              <Link
                 key={sub.href + sub.label}
-                href={sub.href}
+                to={sub.href}
                 className={cn(
                   'block px-2.5 py-1.5 text-xs rounded-md transition-colors truncate',
                   isSubActive
@@ -137,7 +160,7 @@ function NavItem({ item, collapsed }: { item: NavItemDef; collapsed: boolean }) 
                 )}
               >
                 {sub.label}
-              </a>
+              </Link>
             )
           })}
         </div>
