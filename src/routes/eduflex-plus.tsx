@@ -227,7 +227,7 @@ function EduflexPlusPage() {
               <div className="space-y-2">
                 <Badge variant="outline" className="border-slate-700 text-slate-300">Plan Académie Pro</Badge>
                 <div className="text-3xl font-black text-white">
-                  {currency === 'FCFA' ? '19 000 FCFA' : '29 €'} <span className="text-xs font-normal text-slate-400">/ mois</span>
+                  {currency === 'FCFA' ? '32 000 FCFA' : '49 €'} <span className="text-xs font-normal text-slate-400">/ mois</span>
                 </div>
                 <p className="text-xs text-slate-400">Idéal pour les formateurs indépendants et petites académies.</p>
               </div>

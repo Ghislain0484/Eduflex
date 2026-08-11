@@ -136,7 +136,7 @@ function TarifsPage() {
                 <Badge className="bg-teal-500/20 text-teal-300 border-teal-500/40 text-[10px]">Recommandé</Badge>
                 <h3 className="text-xl font-black text-white">Pro</h3>
                 <p className="text-2xl font-black text-teal-400">
-                  {currency === 'EUR' ? '29 €' : '19 000 FCFA'} <span className="text-xs font-normal text-slate-400">/ mois</span>
+                  {currency === 'EUR' ? '49 €' : '32 000 FCFA'} <span className="text-xs font-normal text-slate-400">/ mois</span>
                 </p>
                 <p className="text-[11px] text-slate-400">Le tout inclus pour les formateurs, coachs et infopreneurs.</p>
               </div>
@@ -151,7 +151,7 @@ function TarifsPage() {
             </div>
 
             <Button 
-              onClick={() => handleSubscribe('Pro', 19000, 29)}
+              onClick={() => handleSubscribe('Pro', 32000, 49)}
               className="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs h-10 shadow-md border-none"
             >
               Lancer mon Académie Pro

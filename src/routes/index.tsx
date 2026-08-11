@@ -581,7 +581,7 @@ function LandingPage() {
                 </div>
                 <div className="pt-2">
                   <span className="text-3xl md:text-4xl font-extrabold text-teal-400">
-                    {priceCurrency === 'CFA' ? '19 000 CFA' : '29 €'}
+                    {priceCurrency === 'CFA' ? '32 000 CFA' : '49 €'}
                   </span>
                   <span className="text-xs text-muted-foreground font-semibold"> / mois</span>
                   <p className="text-[10px] text-teal-500 font-bold mt-1">2 mois offerts en paiement annuel</p>
