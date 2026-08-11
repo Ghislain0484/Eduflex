@@ -21,6 +21,7 @@ import { useChapters, useManageChapters } from '@/hooks/useChapters'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
 import { canCreateMoreCourses } from '@/utils/planGuards'
+import { YellowPlanGuardBox } from '@/components/YellowPlanGuardBox'
 import {
   Plus,
   BookOpen,
@@ -34,6 +35,7 @@ import {
   CheckCircle,
   Clock,
   DollarSign,
+  Award,
 } from 'lucide-react'
 
 export const Route = createFileRoute('/_app/manage-courses')({
@@ -61,7 +63,19 @@ function ManageCoursesPage() {
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null)
   
   // Tab controller for list view
-  const [activeTab, setActiveTab] = useState<'courses' | 'commissions'>('courses')
+  const [activeTab, setActiveTab] = useState<'courses' | 'commissions' | 'payouts' | 'certificates' | 'settings'>('courses')
+
+  const isFreePlan = !user?.subscriptionPlan || ['découverte', 'decouverte', 'free'].includes(user.subscriptionPlan.toLowerCase())
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const tabParam = params.get('tab')
+      if (['certificates', 'settings', 'commissions', 'payouts'].includes(tabParam || '')) {
+        setActiveTab(tabParam as any)
+      }
+    }
+  }, [])
 
   // Affiliate management states
   const [allReferrals, setAllReferrals] = useState<any[]>([])
@@ -405,7 +419,13 @@ function ManageCoursesPage() {
           <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
             <TabsList>
               <TabsTrigger value="courses" className="gap-2">
-                <BookOpen className="h-4 w-4" /> Mes Formations
+                <BookOpen className="h-4 w-4" /> Gérer les formations
+              </TabsTrigger>
+              <TabsTrigger value="certificates" className="gap-2">
+                <Award className="h-4 w-4" /> Certificat de réussite
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="gap-2">
+                <Settings className="h-4 w-4" /> Paramètres
               </TabsTrigger>
               <TabsTrigger value="commissions" className="gap-2">
                 <Percent className="h-4 w-4" /> Affiliation & Commissions
@@ -805,6 +825,95 @@ function ManageCoursesPage() {
                   </div>
                 )
               })()}
+            </TabsContent>
+
+            {/* Certificat de réussite Tab (Matching Screenshot 4) */}
+            <TabsContent value="certificates" className="space-y-6 mt-6">
+              <div className="grid gap-6 lg:grid-cols-12 items-start text-left">
+                <div className="lg:col-span-4 space-y-3">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">Choisissez le modèle du certificat de réussite</h3>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Le certificat de réussite est un document que vos apprenants peuvent générer eux-mêmes, uniquement lorsqu'ils ont terminé toutes les leçons d'une formation.
+                  </p>
+                  <p className="text-[11px] text-slate-400 italic">
+                    Ce document est nominatif et est par conséquent à valeur légale.
+                  </p>
+
+                  <div className="pt-6 space-y-2 border-t border-slate-200 dark:border-slate-800">
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Désactivez les certificats de réussite</span>
+                    <p className="text-[10px] text-slate-500 leading-relaxed">Vous ne souhaitez pas délivrer de certificats de réussite à vos apprenants ? Vous êtes au bon endroit !</p>
+                    <div className="flex items-center gap-2 pt-2">
+                      <input type="checkbox" id="disableCert" className="h-4 w-4 rounded accent-teal-600 cursor-pointer" />
+                      <label htmlFor="disableCert" className="text-xs font-semibold text-slate-600 dark:text-slate-300 cursor-pointer">Désactiver les certificats</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-8 space-y-4">
+                  {/* Certificate Canvas Preview (Matching Screenshot 4) */}
+                  <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-8 rounded-2xl shadow-lg relative text-left">
+                    <div className="flex justify-between items-start border-b border-slate-100 dark:border-slate-800/80 pb-4">
+                      <p className="text-xs font-semibold text-slate-500">Délivré par <strong className="text-slate-900 dark:text-white">{"{{nom de votre espace}}"}</strong> le <strong className="text-slate-900 dark:text-white">{"{{date du certificat}}"}</strong>.</p>
+                    </div>
+                    
+                    <div className="py-12 text-center space-y-4">
+                      <h2 className="text-2xl font-black tracking-widest text-slate-900 dark:text-white">CERTIFICAT DE RÉUSSITE</h2>
+                      <div className="space-y-1">
+                        <p className="text-lg font-bold text-teal-600 dark:text-teal-400">{"{{nom de l'apprenant}}"}</p>
+                        <p className="text-[11px] text-slate-400">{"{{date de naissance}}"}</p>
+                      </div>
+                      <p className="text-xs text-slate-500">À obtenu le certificat :</p>
+                      <p className="text-base font-bold text-slate-900 dark:text-white">{"{{nom de la formation}}"}</p>
+                    </div>
+
+                    <div className="flex justify-between items-end pt-4 border-t border-slate-100 dark:border-slate-800/80">
+                      <span className="text-[10px] text-slate-400">Formation effectuée sur <strong className="text-teal-500">eduflex</strong></span>
+                      <div className="w-20 h-14 border border-dashed border-slate-300 dark:border-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-400 uppercase">
+                        VOTRE LOGO
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* Yellow Upgrade Box for Découverte Plan (Matching Screenshot 4) */}
+                  {isFreePlan && (
+                    <YellowPlanGuardBox />
+                  )}
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Paramètres de Formation Tab (Matching Screenshot 5) */}
+            <TabsContent value="settings" className="space-y-6 mt-6 text-left">
+              {/* Section 1: Comments toggle */}
+              <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 p-6 rounded-2xl shadow-xs space-y-3">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div className="space-y-1">
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white">Désactivez les commentaires</h3>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      Désactivez les commentaires pour toutes vos formations. <br />
+                      <strong className="text-slate-700 dark:text-slate-300">Attention : vous pouvez également gérer les commentaires formation par formation.</strong>
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <input type="checkbox" id="disableAllComments" className="h-5 w-5 rounded accent-teal-600 cursor-pointer" />
+                    <label htmlFor="disableAllComments" className="text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer">Désactiver pour toutes les formations</label>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Section 2: Connection logs */}
+              <div className="space-y-3 pt-4">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">Logs et temps de connexion</h3>
+                <p className="text-xs text-slate-500 leading-relaxed max-w-4xl">
+                  Configurez la façon dont les logs de connexion (aussi appelés temps de connexion) doivent être gérés. <br />
+                  Teachizy enregistre <strong className="text-slate-900 dark:text-white">le temps passé sur chaque leçon et non le temps passé sur la plateforme</strong> en général. Par exemple, le temps passé par un apprenant sur son tableau de bord n'est pas pris en compte dans ses logs de connexion.
+                </p>
+
+                {/* Yellow Upgrade Box for Découverte Plan (Matching Screenshot 5) */}
+                {isFreePlan && (
+                  <YellowPlanGuardBox />
+                )}
+              </div>
             </TabsContent>
           </Tabs>
         </>

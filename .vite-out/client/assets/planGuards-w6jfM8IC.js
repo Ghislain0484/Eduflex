@@ -1,0 +1,1 @@
+function e(e,t){if(!t)return e<2;let n=t.toLowerCase();return n===`free`||n===`découverte`||n===`decouverte`?e<2:!0}function t(e){if(!e)return!1;let t=e.toLowerCase();return t===`pro`||t===`b2b`}export{t as n,e as t};

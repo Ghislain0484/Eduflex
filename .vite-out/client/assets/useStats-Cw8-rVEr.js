@@ -1,0 +1,14 @@
+import{n as e,t}from"./supabase-BRQZHvRp.js";function n(e){return{id:e.id,email:e.email,displayName:e.display_name,role:e.role||`student`,createdAt:e.created_at}}function r(){return e({queryKey:[`dashboard`,`stats`],queryFn:async()=>{let{count:e,error:n}=await t.from(`profiles`).select(`*`,{count:`exact`,head:!0}).eq(`role`,`student`);if(n)throw n;let{count:r,error:i}=await t.from(`courses`).select(`*`,{count:`exact`,head:!0}).eq(`status`,`publie`);if(i)throw i;let{data:a,error:o}=await t.from(`enrollments`).select(`course_id, progress_percent`);if(o)throw o;let{data:s,error:c}=await t.from(`courses`).select(`id, price, category`);if(c)throw c;let l=0,u=new Map;if(a&&s){let e=new Map(s.map(e=>[e.id,{price:e.price||0,category:e.category||`Général`}]));a.forEach(t=>{let n=e.get(t.course_id);if(n){l+=n.price;let e=u.get(n.category)||0;u.set(n.category,e+n.price)}})}let d=Array.from(u.entries()).map(([e,t])=>({categorie:e,revenus:t})),f=0;if(a&&a.length>0){let e=a.reduce((e,t)=>e+(t.progress_percent||0),0);f=Math.round(e/a.length)}return{studentsCount:e||0,coursesCount:r||0,totalRevenue:l,averageProgress:f,categoryRevenue:d}}})}function i(){return e({queryKey:[`profiles`,`teachers`],queryFn:async()=>{let{data:e,error:r}=await t.from(`profiles`).select(`*`).eq(`role`,`teacher`).order(`created_at`,{ascending:!1});if(r)throw r;return(e||[]).map(n)}})}function a(){return e({queryKey:[`enrollments`,`all`],queryFn:async()=>{let{data:e,error:n}=await t.from(`enrollments`).select(`
+          id,
+          enrolled_at,
+          course_id,
+          user_id,
+          courses (
+            title,
+            price
+          ),
+          profiles (
+            display_name,
+            email
+          )
+        `).order(`enrolled_at`,{ascending:!1});if(n)throw n;return(e||[]).map(e=>({id:e.id,enrolledAt:e.enrolled_at,courseTitle:e.courses?.title||`Formation supprimée`,coursePrice:e.courses?.price||0,studentName:e.profiles?.display_name||e.profiles?.email?.split(`@`)[0]||`Apprenant`,studentEmail:e.profiles?.email||``,method:e.courses?.price>0?`Mobile Money / CB`:`Gratuit`,status:`Payé`}))}})}function o(){return e({queryKey:[`profiles`,`academies`],queryFn:async()=>{let{data:e,error:n}=await t.from(`profiles`).select(`*`).not(`academy_name`,`is`,null).order(`created_at`,{ascending:!1});if(n)throw n;return(e||[]).map(e=>({id:e.id,email:e.email,displayName:e.display_name,role:e.role,academyName:e.academy_name,academySlogan:e.academy_slogan,academyColor:e.academy_color,approved:e.approved,academyPlan:e.academy_plan||`Découverte`,academyLogo:e.academy_logo||null,createdAt:e.created_at}))}})}export{i,a as n,r,o as t};

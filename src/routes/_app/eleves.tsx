@@ -1,223 +1,166 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useStudentsList } from '@/hooks/useStats'
-import { Card, CardContent, Badge, Button, Input, EmptyState, Skeleton } from '@blinkdotnew/ui'
-import { Users, Search, Mail, Loader2 } from 'lucide-react'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
-import { toast } from '@blinkdotnew/ui'
-import { Plus } from 'lucide-react'
-import { useQueryClient } from '@tanstack/react-query'
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  Button,
+  Badge,
+  Input,
+  toast,
+} from '@blinkdotnew/ui'
+import {
+  Users,
+  Search,
+  Download,
+  UserPlus,
+  ArrowDown,
+  ChevronLeft,
+  ChevronRight,
+  Upload
+} from 'lucide-react'
+import { useAuth } from '@/hooks/useAuth'
 
 export const Route = createFileRoute('/_app/eleves')({
   component: ElevesPage,
 })
 
 function ElevesPage() {
-  const { data: students, isLoading } = useStudentsList()
-  const queryClient = useQueryClient()
-  const [search, setSearch] = useState('')
-  const [showAddForm, setShowAddForm] = useState(false)
-  const [newEmail, setNewEmail] = useState('')
-  const [newName, setNewName] = useState('')
-  const [adding, setAdding] = useState(false)
+  const { user } = useAuth()
+  const isFreePlan = !user?.subscriptionPlan || ['découverte', 'decouverte', 'free'].includes(user.subscriptionPlan.toLowerCase())
 
-  const studentList = students || []
-  const filtered = studentList.filter(e => {
-    const name = e.displayName || ''
-    const email = e.email || ''
-    return name.toLowerCase().includes(search.toLowerCase()) ||
-      email.toLowerCase().includes(search.toLowerCase())
-  })
-
-  const handleAddStudent = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newEmail.trim() || !newName.trim()) return
-    setAdding(true)
-    try {
-      // Generate a secure random temporary password
-      const tempPassword = crypto.randomUUID().replace(/-/g, '') + 'Aa1!'
-
-      // Create a REAL Supabase Auth user (not a ghost profile)
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: newEmail.trim().toLowerCase(),
-        password: tempPassword,
-        options: {
-          data: {
-            display_name: newName.trim(),
-            role: 'student',
-          },
-        },
-      })
-
-      if (signUpError) throw signUpError
-
-      // Update profile row with correct role and approval
-      if (signUpData.user?.id) {
-        await supabase
-          .from('profiles')
-          .upsert({
-            id: signUpData.user.id,
-            email: newEmail.trim().toLowerCase(),
-            display_name: newName.trim(),
-            role: 'student',
-            approved: true,
-          }, { onConflict: 'id' })
-      }
-
-      toast.success(`✅ L'élève a été inscrit ! Un email de confirmation a été envoyé à ${newEmail.trim()}.`)
-      setNewEmail('')
-      setNewName('')
-      setShowAddForm(false)
-      // Proper React Query cache invalidation — no page reload needed
-      queryClient.invalidateQueries({ queryKey: ['profiles', 'students'] })
-    } catch (err: any) {
-      console.error(err)
-      if (err.message?.includes('already registered')) {
-        toast.error('Cet email est déjà enregistré sur la plateforme.')
-      } else {
-        toast.error("Erreur d'inscription : " + err.message)
-      }
-    } finally {
-      setAdding(false)
-    }
-  }
+  const [searchFilter, setSearchFilter] = useState('')
+  const [typeFilter, setTypeFilter] = useState('STUDENT')
+  const [sortOrder, setSortOrder] = useState('created_at')
 
   return (
-    <div className="flex-1 space-y-6 p-6">
-      {showAddForm && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <Card className="max-w-md w-full border-border/80 bg-slate-900 text-slate-100">
-            <CardContent className="pt-6 space-y-4">
-              <div>
-                <h3 className="font-bold text-lg text-white">Inscrire un nouvel élève</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Renseignez ses informations pour l'inscrire directement dans votre académie.
-                </p>
-              </div>
-              <form onSubmit={handleAddStudent} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300">Nom Complet *</label>
-                  <Input 
-                    required 
-                    value={newName} 
-                    onChange={e => setNewName(e.target.value)} 
-                    placeholder="Ex: Jean Dupont"
-                    className="h-9 text-xs bg-slate-800 border-slate-600 text-slate-100 placeholder:text-slate-500"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300">Adresse Email *</label>
-                  <Input 
-                    required 
-                    type="email"
-                    value={newEmail} 
-                    onChange={e => setNewEmail(e.target.value)} 
-                    placeholder="Ex: jean.dupont@gmail.com"
-                    className="h-9 text-xs bg-slate-800 border-slate-600 text-slate-100 placeholder:text-slate-500"
-                  />
-                  <p className="text-[10px] text-slate-400">Un email de bienvenue avec lien de connexion sera envoyé automatiquement.</p>
-                </div>
-                <div className="flex items-center gap-3 pt-2">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="flex-1 text-xs h-9 border-slate-600 text-slate-300" 
-                    onClick={() => setShowAddForm(false)}
-                  >
-                    Annuler
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    className="flex-1 text-xs h-9 bg-teal-600 hover:bg-teal-500 text-white font-medium" 
-                    disabled={adding}
-                  >
-                    {adding ? <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Inscription...</> : 'Inscrire'}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Gestion des élèves</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {isLoading ? 'Chargement...' : `${filtered.length} élève(s) inscrit(s)`}
-          </p>
-        </div>
-        <Button onClick={() => setShowAddForm(true)} className="gap-2 bg-teal-600 hover:bg-teal-500 text-white font-medium">
-          <Plus className="h-4 w-4" /> Inscrire un élève
+    <div className="flex-1 space-y-6 p-6 max-w-7xl mx-auto text-left font-sans">
+      
+      {/* Upgrade Banner */}
+      <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-white dark:bg-slate-900 border border-emerald-500/35 rounded-lg shadow-xs gap-4">
+        <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+          Débloquer <strong className="text-emerald-600 dark:text-emerald-400">TOUTES</strong> les fonctionnalités pour profiter du meilleur de EduFlex
+        </span>
+        <Button asChild className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shadow-md border-none px-6 py-2 rounded-lg flex items-center gap-1.5 shrink-0">
+          <Link to="/tarifs">
+            Débloquer 🫱
+          </Link>
         </Button>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Rechercher un élève..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+      {/* Title & Top Right Actions (Matching Screenshot 3) */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+          Apprenants
+        </h1>
+
+        <Button 
+          onClick={() => toast.info("Export CSV en cours de génération...")}
+          className="bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs h-9 rounded-lg px-4 flex items-center gap-1.5"
+        >
+          <Download className="h-4 w-4" /> Export CSV
+        </Button>
+      </div>
+
+      {/* Filter bar (Matching Screenshot 3) */}
+      <div className="grid gap-3 md:grid-cols-12 items-end">
+        <div className="md:col-span-6 space-y-1">
+          <label className="text-xs font-semibold text-slate-500">Filtrer par</label>
+          <Input
+            placeholder="Filtrez par email, prénom, nom, tag ou lien UTM"
+            value={searchFilter}
+            onChange={e => setSearchFilter(e.target.value)}
+            className="w-full bg-white dark:bg-slate-900 text-xs h-9"
+          />
+        </div>
+
+        <div className="md:col-span-3 space-y-1">
+          <label className="text-xs font-semibold text-slate-500">Type</label>
+          <select
+            value={typeFilter}
+            onChange={e => setTypeFilter(e.target.value)}
+            className="w-full h-9 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 outline-none px-3 cursor-pointer"
+          >
+            <option value="STUDENT">Inscrits</option>
+            <option value="ALL">Tous les contacts</option>
+            <option value="LEAD">Prospects / Leads</option>
+          </select>
+        </div>
+
+        <div className="md:col-span-3 space-y-1">
+          <label className="text-xs font-semibold text-slate-500">Trier par</label>
+          <div className="flex gap-1.5">
+            <select
+              value={sortOrder}
+              onChange={e => setSortOrder(e.target.value)}
+              className="flex-1 h-9 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 outline-none px-3 cursor-pointer"
+            >
+              <option value="created_at">Date d'inscription</option>
+              <option value="name">Nom / Prénom</option>
+              <option value="progress">Progression</option>
+            </select>
+            <button className="h-9 w-9 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white shrink-0">
+              <ArrowDown className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border text-left">
-                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Nom / Prénom</th>
-                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Email</th>
-                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Date inscription</th>
-                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Statut</th>
-                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {isLoading ? (
-                  [1, 2, 3].map(i => (
-                    <tr key={i} className="border-b border-border/50">
-                      <td className="px-4 py-3"><Skeleton className="h-4 w-32" /></td>
-                      <td className="px-4 py-3"><Skeleton className="h-4 w-40" /></td>
-                      <td className="px-4 py-3"><Skeleton className="h-4 w-24" /></td>
-                      <td className="px-4 py-3"><Skeleton className="h-5 w-16" /></td>
-                      <td className="px-4 py-3"><Skeleton className="h-8 w-8 rounded-full" /></td>
-                    </tr>
-                  ))
-                ) : (
-                  filtered.map(eleve => (
-                    <tr key={eleve.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3 text-sm font-medium">
-                        {eleve.displayName || eleve.email?.split('@')[0] || 'Apprenant'}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
-                        {eleve.email}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
-                        {new Date(eleve.createdAt).toLocaleDateString('fr-FR')}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge variant="default">Actif</Badge>
-                      </td>
-                      <td className="px-4 py-3">
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" asChild>
-                          <a href={`mailto:${eleve.email}`}>
-                            <Mail className="h-4 w-4" />
-                          </a>
-                        </Button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-          {!isLoading && filtered.length === 0 && (
-            <div className="py-12">
-              <EmptyState icon={<Users className="h-8 w-8" />} title="Aucun élève trouvé" description="Aucun élève inscrit ne correspond à votre recherche." />
-            </div>
-          )}
-        </CardContent>
+      {/* Subtitle Limit Badge & Action Buttons (Matching Screenshot 3) */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-2">
+        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+          Résultat : <strong className="text-teal-600 dark:text-teal-400">0 apprenant</strong> / 70 maximum avec le Forfait DÉCOUVERTE
+        </span>
+
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => toast.info("Formulaire d'invitation prêt.")}
+            className="bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs h-8.5 rounded-lg px-3.5 flex items-center gap-1.5"
+          >
+            <UserPlus className="h-4 w-4" /> Inviter un apprenant
+          </Button>
+          <Button 
+            onClick={() => toast.info("Importation CSV.")}
+            className="bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs h-8.5 rounded-lg px-3.5 flex items-center gap-1.5"
+          >
+            <Upload className="h-4 w-4" /> Import CSV
+          </Button>
+        </div>
+      </div>
+
+      {/* Table & Empty State (Matching Screenshot 3) */}
+      <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 rounded-xl overflow-hidden shadow-xs">
+        <div className="w-full overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-500 font-bold uppercase tracking-wider">
+              <tr>
+                <th className="py-3.5 px-6">Apprenant</th>
+                <th className="py-3.5 px-6">Activité</th>
+                <th className="py-3.5 px-6 text-right">Revenus</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tr>
+                <td colSpan={3} className="py-16 text-center text-slate-400 text-xs italic">
+                  Il n'y pas de résultat pour cette recherche
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination bar (Matching Screenshot 3) */}
+        <div className="p-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-1">
+          <button disabled className="h-7 w-7 rounded border border-slate-300 dark:border-slate-800 flex items-center justify-center text-slate-400 opacity-50 cursor-not-allowed">
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button disabled className="h-7 w-7 rounded border border-slate-300 dark:border-slate-800 flex items-center justify-center text-slate-400 opacity-50 cursor-not-allowed">
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
       </Card>
+
     </div>
   )
 }

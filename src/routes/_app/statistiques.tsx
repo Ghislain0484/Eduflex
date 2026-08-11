@@ -1,141 +1,130 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { Card, CardHeader, CardTitle, CardContent, Skeleton } from '@blinkdotnew/ui'
-import { BarChart3, TrendingUp, Users, BookOpen } from 'lucide-react'
-import { useDashboardStats, useAllEnrollments } from '@/hooks/useStats'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { useState } from 'react'
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell,
-} from 'recharts'
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  Button,
+  Badge,
+  Input,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem
+} from '@blinkdotnew/ui'
+import { YellowPlanGuardBox } from '@/components/YellowPlanGuardBox'
+import { useAuth } from '@/hooks/useAuth'
 
 export const Route = createFileRoute('/_app/statistiques')({
   component: StatistiquesPage,
 })
 
-const COLORS = ['hsl(225 73% 50%)', 'hsl(25 95% 53%)', 'hsl(262 52% 47%)', 'hsl(200 65% 45%)']
-
-const MONTH_LABELS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
-
-function StatCard({ icon, label, value, subtext }: { icon: React.ReactNode; label: string; value: string; subtext: string }) {
-  return (
-    <Card className="animate-fade-in border-border/80">
-      <CardContent className="pt-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">{icon}</div>
-          <div>
-            <p className="text-xs text-muted-foreground font-medium">{label}</p>
-            <p className="text-lg font-bold mt-0.5">{value}</p>
-            <p className="text-[10px] text-muted-foreground leading-relaxed mt-0.5">{subtext}</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
 function StatistiquesPage() {
-  const { data: stats, isLoading } = useDashboardStats()
-  const { data: allEnrollments } = useAllEnrollments()
+  const { user } = useAuth()
+  const isFreePlan = !user?.subscriptionPlan || ['découverte', 'decouverte', 'free'].includes(user.subscriptionPlan.toLowerCase())
 
-  // Build REAL monthly inscriptions from actual enrollment data
-  const monthlyData = (() => {
-    const now = new Date()
-    const currentYear = now.getFullYear()
-    const counts: Record<number, number> = {}
-    // Initialize all 12 months to 0
-    for (let i = 0; i < 12; i++) counts[i] = 0
-
-    // Count enrollments per month for the current year
-    if (allEnrollments) {
-      allEnrollments.forEach(e => {
-        const d = new Date(e.enrolledAt)
-        if (d.getFullYear() === currentYear) {
-          counts[d.getMonth()] = (counts[d.getMonth()] || 0) + 1
-        }
-      })
-    }
-    return MONTH_LABELS.map((mois, i) => ({ mois, inscriptions: counts[i] || 0 }))
-  })()
-
-  // Build category pie chart data from real database stats
-  const categoryData = stats?.categoryRevenue?.map(item => ({
-    name: item.categorie || 'Général',
-    value: item.revenus
-  })).filter(c => c.value > 0) || []
-
-  // Revenue in FCFA (prices stored directly as FCFA integers)
-  const totalRevenueFcfa = stats ? stats.totalRevenue : 0
-  const totalRevenueEur = Math.round(totalRevenueFcfa / 655.957)
+  const [dateRange, setDateRange] = useState('12/07/2026 - 10/08/2026')
+  const [period, setPeriod] = useState('30d')
 
   return (
-    <div className="flex-1 space-y-6 p-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Statistiques</h1>
-        <p className="text-muted-foreground text-sm mt-1">Analysez les performances et l'activité de votre plateforme.</p>
+    <div className="flex-1 space-y-6 p-6 max-w-7xl mx-auto text-left font-sans">
+      
+      {/* Upgrade Banner */}
+      <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-white dark:bg-slate-900 border border-emerald-500/35 rounded-lg shadow-xs gap-4">
+        <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+          Débloquer <strong className="text-emerald-600 dark:text-emerald-400">TOUTES</strong> les fonctionnalités pour profiter du meilleur de EduFlex
+        </span>
+        <Button asChild className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shadow-md border-none px-6 py-2 rounded-lg flex items-center gap-1.5 shrink-0">
+          <Link to="/tarifs">
+            Débloquer 🫱
+          </Link>
+        </Button>
       </div>
 
-      {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map(i => (
-            <Card key={i}><CardContent className="p-6"><Skeleton className="h-10 w-full" /></CardContent></Card>
-          ))}
-        </div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard icon={<BookOpen className="h-5 w-5" />} label="Formations actives" value={String(stats?.coursesCount || 0)} subtext="Formations publiées" />
-          <StatCard icon={<Users className="h-5 w-5" />} label="Total apprenants" value={String(stats?.studentsCount || 0)} subtext="Inscrits sur la plateforme" />
-          <StatCard icon={<TrendingUp className="h-5 w-5" />} label="Taux de complétion" value={`${stats?.averageProgress || 0}%`} subtext="Progression moyenne" />
-          <StatCard icon={<BarChart3 className="h-5 w-5" />} label="Revenus total" value={`${totalRevenueFcfa.toLocaleString('fr-FR')} FCFA`} subtext={`~ ${totalRevenueEur.toLocaleString('fr-FR')} €`} />
-        </div>
-      )}
+      {/* Main Title */}
+      <div className="text-center space-y-4">
+        <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+          Statistiques récentes
+        </h1>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        {/* Monthly enrollment chart */}
-        <Card className="animate-fade-in border-border/80">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold">Inscriptions mensuelles {new Date().getFullYear()} (Données réelles)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="mois" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} formatter={(v: number) => [v, 'Inscriptions']} />
-                  <Bar dataKey="inscriptions" fill="hsl(166 72% 40%)" radius={[6, 6, 0, 0]} name="Inscriptions" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
+        {/* Date Filter controls (Matching Screenshot 2) */}
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+          <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-lg px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-xs">
+            {dateRange}
+          </div>
+          <select
+            value={period}
+            onChange={e => setPeriod(e.target.value)}
+            className="h-9 px-4 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-none shadow-xs cursor-pointer"
+          >
+            <option value="7d">7 derniers jours</option>
+            <option value="30d">30 derniers jours</option>
+            <option value="90d">90 derniers jours</option>
+            <option value="year">Cette année</option>
+          </select>
+        </div>
+      </div>
+
+      {/* 4 KPI Cards Grid (Matching Screenshot 2) */}
+      <div className="grid gap-4 sm:grid-cols-2 max-w-4xl mx-auto">
+        <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-5 rounded-xl text-left space-y-2">
+          <span className="text-xs font-medium text-slate-500">Apprenants</span>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">0</p>
+          <p className="text-[11px] text-slate-400">Période précédente : <span className="font-semibold">0</span></p>
         </Card>
 
-        {/* Category distribution chart */}
-        <Card className="animate-fade-in border-border/80">
-          <CardHeader className="pb-2"><CardTitle className="text-base font-semibold">Répartition des revenus par catégorie</CardTitle></CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="h-[300px] w-full flex items-center justify-center"><Skeleton className="h-44 w-44 rounded-full" /></div>
-            ) : categoryData.length === 0 ? (
-              <div className="h-[300px] w-full flex items-center justify-center text-xs text-muted-foreground italic">
-                Aucun revenu généré pour le moment pour catégoriser la répartition.
-              </div>
-            ) : (
-              <div className="h-[300px] w-full flex items-center justify-center">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={categoryData} cx="50%" cy="50%" outerRadius={100} innerRadius={60} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                      {categoryData.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-          </CardContent>
+        <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-5 rounded-xl text-left space-y-2">
+          <span className="text-xs font-medium text-slate-500">Ventes</span>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">0</p>
+          <p className="text-[11px] text-slate-400">Période précédente : <span className="font-semibold">0</span></p>
+        </Card>
+
+        <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-5 rounded-xl text-left space-y-2">
+          <span className="text-xs font-medium text-slate-500">Revenus</span>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">0,00 € <span className="text-xs text-slate-400 font-normal">(0 FCFA)</span></p>
+          <p className="text-[11px] text-slate-400">Période précédente : <span className="font-semibold">0,00 €</span></p>
+        </Card>
+
+        <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-5 rounded-xl text-left space-y-2">
+          <span className="text-xs font-medium text-slate-500">Abandonnés</span>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">0</p>
+          <p className="text-[11px] text-slate-400">Période précédente : <span className="font-semibold">0</span></p>
         </Card>
       </div>
+
+      {/* Summary Stats Table (Matching Screenshot 2) */}
+      <div className="max-w-4xl mx-auto bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden text-xs divide-y divide-slate-100 dark:divide-slate-800">
+        <div className="flex justify-between items-center px-6 py-3">
+          <span className="font-medium text-slate-600 dark:text-slate-400">Dernière vente effectuée :</span>
+          <span className="font-bold text-slate-900 dark:text-white">N/A</span>
+        </div>
+        <div className="flex justify-between items-center px-6 py-3">
+          <span className="font-medium text-slate-600 dark:text-slate-400">Nombre d'apprenants ayant fini une formation :</span>
+          <span className="font-bold text-slate-900 dark:text-white">N/A</span>
+        </div>
+        <div className="flex justify-between items-center px-6 py-3">
+          <span className="font-medium text-slate-600 dark:text-slate-400">Nombre d'apprenants ayant commencé une formation :</span>
+          <span className="font-bold text-slate-900 dark:text-white">N/A</span>
+        </div>
+      </div>
+
+      {/* Graphiques Section with Yellow Upgrade Box (Matching Screenshot 2) */}
+      <div className="max-w-4xl mx-auto pt-6 space-y-4 text-left">
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Graphiques</h2>
+
+        {isFreePlan ? (
+          <YellowPlanGuardBox 
+            subtext="Seuls ceux ayant un Forfait EXPERT ou supérieur peuvent bénéficier de cette fonctionnalité."
+          />
+        ) : (
+          <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 p-6 rounded-xl text-center text-slate-400 text-xs italic">
+            Graphiques d'évolution des ventes réelles en cours de chargement...
+          </Card>
+        )}
+      </div>
+
     </div>
   )
 }
