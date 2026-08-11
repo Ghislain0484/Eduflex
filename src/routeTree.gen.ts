@@ -18,6 +18,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppVentesRouteImport } from './routes/_app/ventes'
 import { Route as AppStatistiquesRouteImport } from './routes/_app/statistiques'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
+import { Route as AppPersonnalisationRouteImport } from './routes/_app/personnalisation'
 import { Route as AppPaiementsRouteImport } from './routes/_app/paiements'
 import { Route as AppPacksRouteImport } from './routes/_app/packs'
 import { Route as AppOutilsMarketingRouteImport } from './routes/_app/outils-marketing'
@@ -81,6 +82,11 @@ const AppStatistiquesRoute = AppStatistiquesRouteImport.update({
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPersonnalisationRoute = AppPersonnalisationRouteImport.update({
+  id: '/personnalisation',
+  path: '/personnalisation',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPaiementsRoute = AppPaiementsRouteImport.update({
@@ -208,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/outils-marketing': typeof AppOutilsMarketingRoute
   '/packs': typeof AppPacksRoute
   '/paiements': typeof AppPaiementsRoute
+  '/personnalisation': typeof AppPersonnalisationRoute
   '/settings': typeof AppSettingsRoute
   '/statistiques': typeof AppStatistiquesRoute
   '/ventes': typeof AppVentesRoute
@@ -238,6 +245,7 @@ export interface FileRoutesByTo {
   '/outils-marketing': typeof AppOutilsMarketingRoute
   '/packs': typeof AppPacksRoute
   '/paiements': typeof AppPaiementsRoute
+  '/personnalisation': typeof AppPersonnalisationRoute
   '/settings': typeof AppSettingsRoute
   '/statistiques': typeof AppStatistiquesRoute
   '/ventes': typeof AppVentesRoute
@@ -270,6 +278,7 @@ export interface FileRoutesById {
   '/_app/outils-marketing': typeof AppOutilsMarketingRoute
   '/_app/packs': typeof AppPacksRoute
   '/_app/paiements': typeof AppPaiementsRoute
+  '/_app/personnalisation': typeof AppPersonnalisationRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/statistiques': typeof AppStatistiquesRoute
   '/_app/ventes': typeof AppVentesRoute
@@ -302,6 +311,7 @@ export interface FileRouteTypes {
     | '/outils-marketing'
     | '/packs'
     | '/paiements'
+    | '/personnalisation'
     | '/settings'
     | '/statistiques'
     | '/ventes'
@@ -332,6 +342,7 @@ export interface FileRouteTypes {
     | '/outils-marketing'
     | '/packs'
     | '/paiements'
+    | '/personnalisation'
     | '/settings'
     | '/statistiques'
     | '/ventes'
@@ -363,6 +374,7 @@ export interface FileRouteTypes {
     | '/_app/outils-marketing'
     | '/_app/packs'
     | '/_app/paiements'
+    | '/_app/personnalisation'
     | '/_app/settings'
     | '/_app/statistiques'
     | '/_app/ventes'
@@ -442,6 +454,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/personnalisation': {
+      id: '/_app/personnalisation'
+      path: '/personnalisation'
+      fullPath: '/personnalisation'
+      preLoaderRoute: typeof AppPersonnalisationRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/paiements': {
@@ -618,6 +637,7 @@ interface AppRouteChildren {
   AppOutilsMarketingRoute: typeof AppOutilsMarketingRoute
   AppPacksRoute: typeof AppPacksRoute
   AppPaiementsRoute: typeof AppPaiementsRoute
+  AppPersonnalisationRoute: typeof AppPersonnalisationRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppStatistiquesRoute: typeof AppStatistiquesRoute
   AppVentesRoute: typeof AppVentesRoute
@@ -643,6 +663,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppOutilsMarketingRoute: AppOutilsMarketingRoute,
   AppPacksRoute: AppPacksRoute,
   AppPaiementsRoute: AppPaiementsRoute,
+  AppPersonnalisationRoute: AppPersonnalisationRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppStatistiquesRoute: AppStatistiquesRoute,
   AppVentesRoute: AppVentesRoute,
