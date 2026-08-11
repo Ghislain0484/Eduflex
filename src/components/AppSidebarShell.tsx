@@ -163,18 +163,18 @@ export function AppSidebarShell() {
   })
 
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    if (typeof window === 'undefined') return 'light'
-    if (document.documentElement.classList.contains('dark')) return 'dark'
+    if (typeof window === 'undefined') return 'dark'
     const stored = localStorage.getItem('theme')
     if (stored === 'dark' || stored === 'light') return stored
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    return document.documentElement.classList.contains('dark') ? 'dark' : 'light'
   })
 
   useEffect(() => {
     const root = window.document.documentElement
-    if (theme === 'dark') {
+    const isDark = root.classList.contains('dark')
+    if (theme === 'dark' && !isDark) {
       root.classList.add('dark')
-    } else {
+    } else if (theme === 'light' && isDark) {
       root.classList.remove('dark')
     }
     localStorage.setItem('theme', theme)
@@ -183,10 +183,11 @@ export function AppSidebarShell() {
   const toggleTheme = () => {
     const nextTheme = theme === 'light' ? 'dark' : 'light'
     setTheme(nextTheme)
+    const root = document.documentElement
     if (nextTheme === 'dark') {
-      document.documentElement.classList.add('dark')
+      root.classList.add('dark')
     } else {
-      document.documentElement.classList.remove('dark')
+      root.classList.remove('dark')
     }
     localStorage.setItem('theme', nextTheme)
   }

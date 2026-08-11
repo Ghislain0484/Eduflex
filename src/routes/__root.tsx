@@ -93,7 +93,7 @@ function RootDocument({ children }: { children: ReactNode }) {
       </head>
       <body>
         <QueryClientProvider client={queryClient}>
-          <BlinkUIProvider theme="linear" darkMode="system">
+          <BlinkUIProvider theme="linear" darkMode="class">
             <Toaster />
             {/*
               Full-bleed by default — NO app chrome. Child routes render directly.

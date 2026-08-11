@@ -54,31 +54,36 @@ export function useBrandTheme(colorOverride?: string) {
       document.head.appendChild(styleElement)
     }
 
-    styleElement.innerHTML = `
-      :root {
-        --primary: ${brandColor} !important;
-        --ring: ${brandColor} !important;
-        --primary-rgb: ${rgbValue} !important;
-      }
-      .bg-primary {
-        background-color: ${brandColor} !important;
-      }
-      .text-primary {
-        color: ${brandColor} !important;
-      }
-      .border-primary {
-        border-color: ${brandColor} !important;
-      }
-      .hover\\:bg-primary\\/90:hover {
-        background-color: ${brandColor}ee !important;
-      }
-      .hover\\:bg-primary\\/10:hover {
-        background-color: rgba(${rgbValue}, 0.1) !important;
-      }
-      .focus-visible\\:ring-primary:focus-visible {
-        --tw-ring-color: ${brandColor} !important;
-      }
-    `
+    // Only update innerHTML if color actually changed to avoid recalculating styles on every route transition
+    const existingColor = styleElement.getAttribute('data-color')
+    if (existingColor !== brandColor) {
+      styleElement.setAttribute('data-color', brandColor)
+      styleElement.innerHTML = `
+        :root {
+          --primary: ${brandColor};
+          --ring: ${brandColor};
+          --primary-rgb: ${rgbValue};
+        }
+        .bg-primary {
+          background-color: ${brandColor};
+        }
+        .text-primary {
+          color: ${brandColor};
+        }
+        .border-primary {
+          border-color: ${brandColor};
+        }
+        .hover\\:bg-primary\\/90:hover {
+          background-color: ${brandColor}ee;
+        }
+        .hover\\:bg-primary\\/10:hover {
+          background-color: rgba(${rgbValue}, 0.1);
+        }
+        .focus-visible\\:ring-primary:focus-visible {
+          --tw-ring-color: ${brandColor};
+        }
+      `
+    }
   }, [colorOverride])
 }
 export default useBrandTheme
