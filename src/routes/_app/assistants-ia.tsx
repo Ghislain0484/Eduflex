@@ -28,8 +28,13 @@ import {
   ArrowRight,
   Lightbulb,
   Workflow,
-  Target
+  Target,
+  X,
+  Zap,
+  Check
 } from 'lucide-react'
+import { useFlutterwave } from '@/hooks/useFlutterwave'
+import { useAuth } from '@/hooks/useAuth'
 
 export const Route = createFileRoute('/_app/assistants-ia')({
   component: AssistantsIaPage,
@@ -48,7 +53,9 @@ interface Assistant {
 }
 
 function AssistantsIaPage() {
-  const [credits, setCredits] = useState(15) // Give them 15 free mock credits
+  const { user } = useAuth()
+  const { makePayment } = useFlutterwave()
+  const [credits, setCredits] = useState(15) // 15 free initial credits
   const [activeTab, setActiveTab] = useState('general')
   
   // Interactive generation dialog state
@@ -57,6 +64,9 @@ function AssistantsIaPage() {
   const [audience, setAudience] = useState('debutant')
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedResult, setGeneratedResult] = useState('')
+
+  // Buy Credits Modal state (Matching User Screenshot)
+  const [buyCreditsModalOpen, setBuyCreditsModalOpen] = useState(false)
 
   const assistants: Assistant[] = [
     {
@@ -237,6 +247,7 @@ Découvrez notre méthode progressive conçue spécialement pour les introvertis
   const handleStartGeneration = (assistant: Assistant) => {
     if (credits <= 0) {
       toast.error("Vous n'avez plus de crédits IA. Veuillez en recharger.")
+      setBuyCreditsModalOpen(true)
       return
     }
     setSelectedAssistant(assistant)
@@ -258,9 +269,22 @@ Découvrez notre méthode progressive conçue spécialement pour les introvertis
     }, 2800)
   }
 
-  const handleBuyCredits = () => {
-    setCredits(prev => prev + 50)
-    toast.success("50 crédits IA ajoutés à votre compte !")
+  const handleBuyPack = async (packCredits: number, priceEur: number) => {
+    const priceFcfa = Math.round(priceEur * 655.957)
+    try {
+      await makePayment({
+        amount: priceFcfa,
+        currency: 'XOF',
+        courseTitle: `Pack IA EduFlex ${packCredits} Crédits`,
+        userEmail: user?.email || 'formateur@eduflex.com',
+        userName: user?.displayName || 'Formateur',
+      })
+      setCredits(prev => prev + packCredits)
+      setBuyCreditsModalOpen(false)
+      toast.success(`${packCredits} Crédits IA ajoutés à votre compte !`)
+    } catch (err: any) {
+      toast.error(err.message || "Achat annulé.")
+    }
   }
 
   return (
@@ -284,14 +308,14 @@ Découvrez notre méthode progressive conçue spécialement pour les introvertis
       <section className="max-w-7xl mx-auto px-6 pt-10 pb-6 flex flex-col md:flex-row gap-6 justify-between items-start">
         <div className="space-y-3 max-w-2xl text-left">
           <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-            Bonjour Ghislain !
+            Bonjour {user?.displayName?.split(' ')[0] || 'Ghislain'} !
           </h1>
           <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
             Voici vos assistants IA pour créer et diffuser plus vite, plus simplement et avec plus d'impact vos formations en ligne ! Retrouvez les assistants d'aide à la création (structure, contenus) directement dans le menu de création de vos formations.
           </p>
         </div>
 
-        {/* Remaining Credits Card (Right side) */}
+        {/* Remaining Credits Card */}
         <Card className="w-full md:w-72 border border-teal-500/20 bg-teal-950/10 dark:bg-teal-950/20 shadow-md rounded-xl overflow-hidden shrink-0 text-left">
           <CardContent className="p-5 space-y-4">
             <div className="space-y-1">
@@ -299,7 +323,7 @@ Découvrez notre méthode progressive conçue spécialement pour les introvertis
               <span className="text-4xl font-black text-teal-600 dark:text-teal-400 font-mono block">{credits}</span>
             </div>
             <Button 
-              onClick={handleBuyCredits}
+              onClick={() => setBuyCreditsModalOpen(true)}
               className="w-full bg-white dark:bg-slate-900 hover:bg-slate-100 text-teal-700 dark:text-teal-400 border border-teal-500/30 text-xs font-bold py-1.5 h-8.5 rounded-lg transition-all"
             >
               Acheter des crédits
@@ -307,6 +331,167 @@ Découvrez notre méthode progressive conçue spécialement pour les introvertis
           </CardContent>
         </Card>
       </section>
+
+      {/* MODAL: ASSISTANTS IA PRICING PACKS (Matching User Screenshot) */}
+      {buyCreditsModalOpen && (
+        <div className="fixed inset-0 z-50 bg-[#061d1d]/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+          <div className="w-full max-w-5xl bg-[#061d1d] border border-teal-900/60 rounded-3xl p-6 sm:p-10 text-center space-y-8 relative animate-in fade-in zoom-in-95 my-8">
+            
+            <button 
+              onClick={() => setBuyCreditsModalOpen(false)}
+              className="absolute top-6 right-6 text-slate-400 hover:text-white bg-teal-950/60 p-2 rounded-full border border-teal-900/60"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="space-y-3 max-w-2xl mx-auto">
+              <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight leading-tight">
+                Travaillez plus vite (et plus sereinement) grâce aux assistants IA EduFlex
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed">
+                Générez et améliorez des contenus de formation, des pages de vente et bien plus encore <strong>en quelques clics</strong>.
+              </p>
+              <p className="text-xs text-slate-400">
+                Nos outils IA vous accompagnent au quotidien pour <strong>gagner un temps précieux</strong> et créer des formations engageantes... et rentables.
+              </p>
+            </div>
+
+            {/* 3 Credit Packs Grid (Matching Screenshot) */}
+            <div className="grid gap-6 md:grid-cols-3 text-left pt-4">
+              
+              {/* Pack 1: 100 crédits */}
+              <div className="bg-white rounded-2xl p-6 shadow-xl text-slate-900 space-y-5 border border-slate-100 flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-base font-black text-slate-900">100 crédits</h3>
+                    <div className="mt-2 flex items-baseline gap-1">
+                      <span className="text-4xl font-black text-slate-900">12€</span>
+                      <span className="text-xs font-bold text-slate-500"> (~ 7 800 FCFA)</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Un seul paiement. Tarifs TTC.</p>
+                  </div>
+
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Idéal pour découvrir nos assistants IA et faire vos premiers tests en toute simplicité.
+                  </p>
+
+                  <div className="border-t border-slate-100 pt-4 space-y-2.5">
+                    <span className="text-[11px] font-bold text-slate-900 uppercase tracking-wider block">Accédez à tous les outils :</span>
+                    <ul className="space-y-2 text-xs text-slate-700 font-medium">
+                      <li className="flex items-start gap-1.5">• <span>Page de vente (rédaction complète)</span></li>
+                      <li className="flex items-start gap-1.5">• <span>Structure pédagogique</span></li>
+                      <li className="flex items-start gap-1.5">• <span>Contenus pédagogiques (générer des leçons multi-média)</span></li>
+                      <li className="flex items-start gap-1.5">• <span>Titres & accroches</span></li>
+                      <li className="flex items-start gap-1.5">• <span>Descriptions optimisées</span></li>
+                    </ul>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-amber-600 pt-2">
+                    <Zap className="h-4 w-4 fill-amber-500 text-amber-500" />
+                    <span>Résultats en moins de 5 minutes</span>
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={() => handleBuyPack(100, 12)}
+                  variant="outline"
+                  className="w-full mt-4 border-2 border-teal-600 text-teal-700 hover:bg-teal-50 font-bold text-xs h-10 rounded-xl"
+                >
+                  Acheter 100 crédits
+                </Button>
+              </div>
+
+              {/* Pack 2: 200 crédits + 50 offerts [Le + populaire] */}
+              <div className="bg-white rounded-2xl p-6 shadow-2xl text-slate-900 space-y-5 border-2 border-teal-400 relative flex flex-col justify-between">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-500 text-slate-950 font-black text-[10px] uppercase px-3 py-1 rounded-full tracking-wider shadow-md">
+                  Le + populaire
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-base font-black text-slate-900">200 crédits <span className="text-teal-600 text-xs font-bold">+ 50 offerts</span></h3>
+                    <div className="mt-2 flex items-baseline gap-1">
+                      <span className="text-4xl font-black text-slate-900">24€</span>
+                      <span className="text-xs font-bold text-slate-500"> (~ 15 700 FCFA)</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Un seul paiement. Tarifs TTC.</p>
+                  </div>
+
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Le choix parfait pour reprendre et améliorer les contenus (vente & pédagogie) de vos formations en ligne.
+                  </p>
+
+                  <div className="border-t border-slate-100 pt-4 space-y-2.5">
+                    <span className="text-[11px] font-bold text-slate-900 uppercase tracking-wider block">Accédez à tous les outils :</span>
+                    <ul className="space-y-2 text-xs text-slate-700 font-medium">
+                      <li className="flex items-start gap-1.5">• <span>Page de vente (rédaction complète)</span></li>
+                      <li className="flex items-start gap-1.5">• <span>Structure pédagogique</span></li>
+                      <li className="flex items-start gap-1.5">• <span>Contenus pédagogiques (générer des leçons multi-média)</span></li>
+                      <li className="flex items-start gap-1.5">• <span>Titres & accroches</span></li>
+                      <li className="flex items-start gap-1.5">• <span>Descriptions optimisées</span></li>
+                    </ul>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-amber-600 pt-2">
+                    <Zap className="h-4 w-4 fill-amber-500 text-amber-500" />
+                    <span>Résultats en moins de 5 minutes</span>
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={() => handleBuyPack(250, 24)}
+                  className="w-full mt-4 bg-teal-500 hover:bg-teal-400 text-white font-bold text-xs h-10 rounded-xl shadow-lg border-none"
+                >
+                  Acheter 200 crédits
+                </Button>
+              </div>
+
+              {/* Pack 3: 500 crédits + 100 offerts */}
+              <div className="bg-white rounded-2xl p-6 shadow-xl text-slate-900 space-y-5 border border-slate-100 flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-base font-black text-slate-900">500 crédits <span className="text-teal-600 text-xs font-bold">+ 100 offerts</span></h3>
+                    <div className="mt-2 flex items-baseline gap-1">
+                      <span className="text-4xl font-black text-slate-900">60€</span>
+                      <span className="text-xs font-bold text-slate-500"> (~ 39 300 FCFA)</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Un seul paiement. Tarifs TTC.</p>
+                  </div>
+
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Pour les formateurs ambitieux qui veulent s'appuyer sur nos assistants IA pour développer leur activité, créer de nouvelles formations et itérer en toute liberté.
+                  </p>
+
+                  <div className="border-t border-slate-100 pt-4 space-y-2.5">
+                    <span className="text-[11px] font-bold text-slate-900 uppercase tracking-wider block">Accédez à tous les outils :</span>
+                    <ul className="space-y-2 text-xs text-slate-700 font-medium">
+                      <li className="flex items-start gap-1.5">• <span>Page de vente (rédaction complète)</span></li>
+                      <li className="flex items-start gap-1.5">• <span>Structure pédagogique</span></li>
+                      <li className="flex items-start gap-1.5">• <span>Contenus pédagogiques (générer des leçons multi-média)</span></li>
+                      <li className="flex items-start gap-1.5">• <span>Titres & accroches</span></li>
+                      <li className="flex items-start gap-1.5">• <span>Descriptions optimisées</span></li>
+                    </ul>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-amber-600 pt-2">
+                    <Zap className="h-4 w-4 fill-amber-500 text-amber-500" />
+                    <span>Résultats en moins de 5 minutes</span>
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={() => handleBuyPack(600, 60)}
+                  variant="outline"
+                  className="w-full mt-4 border-2 border-teal-600 text-teal-700 hover:bg-teal-50 font-bold text-xs h-10 rounded-xl"
+                >
+                  Acheter 500 crédits
+                </Button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Interactive generative modal dialog panel */}
       {selectedAssistant && (
