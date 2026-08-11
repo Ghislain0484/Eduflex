@@ -126,7 +126,10 @@ export function SharedAppLayout({
 
   useBrandTheme(activeColor || undefined)
 
-  if (!isAuthenticated) {
+  // Check if session or auth is present to prevent layout flickering
+  const hasAuth = isAuthenticated || (typeof window !== 'undefined' && Object.keys(localStorage).some(k => k.includes('sb-') && k.includes('-auth-token')))
+
+  if (!hasAuth) {
     return (
       <SharedLayoutContext.Provider value={value}>
         <div className="flex min-h-dvh w-full flex-col bg-background text-foreground">

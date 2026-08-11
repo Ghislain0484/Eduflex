@@ -125,7 +125,7 @@ export function useAuth() {
   return { 
     user: user || null, 
     isLoading, 
-    isAuthenticated: !!user, 
+    isAuthenticated: !!session || !!user, 
     login, 
     logout 
   }
