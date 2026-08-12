@@ -132,9 +132,14 @@ Répondez simplement à ce mail, je suis là pour vous aider !
 
   return (
     <div className="flex-1 space-y-6 p-6 max-w-7xl mx-auto text-slate-100 font-sans selection:bg-teal-500/30 selection:text-teal-200">
-      {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl border border-teal-500/20 bg-slate-900 p-6 md:p-8 space-y-4 shadow-lg shadow-teal-950/10">
-        <div className="absolute top-0 right-0 h-40 w-40 bg-[radial-gradient(circle_at_top_right,rgba(13,148,136,0.15),transparent_70%)]" />
+      {/* Header Banner avec Filigrane Master */}
+      <div className="relative overflow-hidden rounded-2xl border border-teal-500/30 bg-slate-900 p-6 md:p-8 space-y-4 shadow-lg shadow-teal-950/10">
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-20 filter contrast-125 mix-blend-luminosity pointer-events-none"
+          style={{ backgroundImage: `url('/images/eduflex-hero-master.jpg')` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/80 via-slate-900/90 to-slate-900 pointer-events-none" />
+
         <div className="space-y-2 relative z-10 max-w-3xl">
           <Badge className="bg-teal-500/10 text-teal-400 border-none text-[10px] uppercase font-bold py-1 px-3">
             🎓 ACADÉMIE DES FORMATEURS
@@ -142,7 +147,7 @@ Répondez simplement à ce mail, je suis là pour vous aider !
           <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
             Espace Pédagogie & Succès
           </h1>
-          <p className="text-xs md:text-sm text-slate-400 leading-relaxed">
+          <p className="text-xs md:text-sm text-slate-300 leading-relaxed">
             Profitez de nos cours exclusifs et outils pratiques pour optimiser vos parcours d'apprentissage, rédiger vos pages de vente et booster l'engagement de vos étudiants.
           </p>
         </div>

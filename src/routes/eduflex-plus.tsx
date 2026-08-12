@@ -50,9 +50,13 @@ function EduflexPlusPage() {
         </nav>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden pt-24 pb-20">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(13,148,136,0.08),transparent_50%)]" />
+      {/* Hero Section avec Filigrane Master */}
+      <section className="relative overflow-hidden pt-24 pb-20 bg-[#041212]">
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-20 filter contrast-125 mix-blend-luminosity pointer-events-none"
+          style={{ backgroundImage: `url('/images/eduflex-hero-master.jpg')` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#061d1d]/85 via-[#051717]/95 to-[#041212] pointer-events-none" />
         <div className="max-w-5xl mx-auto px-6 text-center space-y-8 relative z-10">
           <Badge variant="outline" className="border-teal-500/30 text-teal-400 bg-teal-500/5 px-3 py-1 font-semibold text-xs rounded-full">
             ✨ Solution LMS Blanche pour Académies & Écoles

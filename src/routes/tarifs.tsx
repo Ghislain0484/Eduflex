@@ -71,16 +71,23 @@ function TarifsPage() {
       {/* Main Container */}
       <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
         
-        {/* Top Title Banner */}
-        <div className="text-center space-y-3 max-w-3xl mx-auto">
-          <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-            Découvrez les tarifs transparents de EduFlex
-          </h1>
-          <p className="text-xs text-slate-400 font-medium">
-            Choisissez l'offre idéale pour propulser votre académie en ligne. Pas de coûts cachés, payez en devise locale ou en Euros.
-          </p>
+        {/* Top Title Banner avec Filigrane Master */}
+        <div className="text-center space-y-3 max-w-4xl mx-auto p-8 rounded-3xl bg-slate-900/60 border border-teal-500/30 relative overflow-hidden shadow-xl">
+          <div 
+            className="absolute inset-0 bg-cover bg-center opacity-15 filter contrast-125 mix-blend-luminosity pointer-events-none"
+            style={{ backgroundImage: `url('/images/eduflex-hero-master.jpg')` }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-950/90 to-slate-950 pointer-events-none" />
 
-          <div className="flex justify-center gap-2 pt-3">
+          <div className="relative z-10 space-y-3">
+            <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+              Découvrez les tarifs transparents de EduFlex
+            </h1>
+            <p className="text-xs text-slate-300 font-medium">
+              Choisissez l'offre idéale pour propulser votre académie en ligne. Pas de coûts cachés, payez en devise locale ou en Euros.
+            </p>
+
+            <div className="flex justify-center gap-2 pt-3">
             <button
               onClick={() => setCurrency('FCFA')}
               className={`px-4 py-1.5 text-xs font-extrabold rounded-full transition-all ${currency === 'FCFA' ? 'bg-teal-600 text-white shadow-md' : 'bg-slate-900 text-slate-400 hover:text-white'}`}
@@ -95,6 +102,7 @@ function TarifsPage() {
             </button>
           </div>
         </div>
+      </div>
 
         {/* 3 Harmonized Pricing Columns Grid */}
         <div className="grid gap-6 md:grid-cols-3 max-w-6xl mx-auto">

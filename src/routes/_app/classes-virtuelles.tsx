@@ -185,18 +185,28 @@ export function ClassesVirtuellesPage() {
       {/* TAB 2: PARAMÈTRES / CONNECT EDUFLEX MEET */}
       {activeTab === 'settings' && (
         <div className="space-y-8">
-          <Card className="border border-teal-500/30 bg-gradient-to-b from-teal-500/10 via-slate-900/50 to-slate-900 p-8 sm:p-12 rounded-3xl text-center space-y-6 max-w-4xl mx-auto shadow-xl">
-            <div className="inline-flex items-center gap-2 text-xl sm:text-2xl font-black text-teal-400">
-              <Video className="h-7 w-7" /> EduFlex Meet
-            </div>
+          <Card className="border border-teal-500/40 bg-slate-900 p-8 sm:p-12 rounded-3xl text-center space-y-6 max-w-4xl mx-auto shadow-xl relative overflow-hidden">
+            
+            {/* Master Backdrop Watermark */}
+            <div 
+              className="absolute inset-0 bg-cover bg-center opacity-20 filter contrast-125 mix-blend-luminosity pointer-events-none"
+              style={{ backgroundImage: `url('/images/eduflex-hero-master.jpg')` }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-slate-900/80 via-slate-900/90 to-slate-900 pointer-events-none" />
 
-            <div className="space-y-2 max-w-2xl mx-auto">
-              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                Organisez des classes virtuelles depuis EduFlex
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                Connectez gratuitement votre compte EduFlex Meet pour organiser et gérer vos sessions de visioconférence avec vos apprenants, sans quitter votre espace formateur.
-              </p>
+            <div className="relative z-10 space-y-6">
+              <div className="inline-flex items-center gap-2 text-xl sm:text-2xl font-black text-teal-400">
+                <Video className="h-7 w-7" /> EduFlex Meet
+              </div>
+
+              <div className="space-y-2 max-w-2xl mx-auto">
+                <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                  Organisez des classes virtuelles depuis EduFlex
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                  Connectez gratuitement votre compte EduFlex Meet pour organiser et gérer vos sessions de visioconférence avec vos apprenants, sans quitter votre espace formateur.
+                </p>
+              </div>
             </div>
 
             <div className="flex flex-wrap justify-center gap-3 pt-2">

@@ -219,15 +219,23 @@ function LandingPage() {
         </nav>
       </header>
 
-      {/* SECTION 1: HERO (B2B SaaS Orienté Métier) */}
-      <section className="relative overflow-hidden pt-16 pb-24 border-b border-teal-950/40 bg-gradient-to-b from-[#061d1d] via-[#051717] to-[#041212]">
-        <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-12 gap-12 items-center">
+      {/* SECTION 1: HERO (B2B SaaS Orienté Métier avec Filigrane Master) */}
+      <section className="relative overflow-hidden pt-16 pb-24 border-b border-teal-950/40 bg-[#041212]">
+        
+        {/* Full-width Master Background Image Watermark */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-25 filter contrast-125 mix-blend-luminosity pointer-events-none"
+          style={{ backgroundImage: `url('/images/eduflex-hero-master.jpg')` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#061d1d]/85 via-[#051717]/95 to-[#041212] pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-12 gap-12 items-center relative z-10">
           
           {/* Left Column: B2B Copywriting */}
           <div className="lg:col-span-7 text-left space-y-6">
             
             {/* Top Badge */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-4 py-1.5 text-xs font-extrabold text-teal-300 shadow-sm">
+            <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-4 py-1.5 text-xs font-extrabold text-teal-300 shadow-sm backdrop-blur-md">
               <Building2 className="h-3.5 w-3.5 text-teal-400" />
               <span>SOLUTION EDTECH B2B & ENTERPRISE UPSKILLING</span>
             </div>
@@ -250,7 +258,7 @@ function LandingPage() {
                 </Link>
               </Button>
 
-              <Button asChild variant="outline" size="lg" className="border-teal-900/80 bg-teal-950/30 text-slate-200 hover:bg-teal-900/50 hover:text-white text-sm h-12 px-6 rounded-xl flex items-center justify-center gap-2">
+              <Button asChild variant="outline" size="lg" className="border-teal-900/80 bg-teal-950/40 backdrop-blur-md text-slate-200 hover:bg-teal-900/60 hover:text-white text-sm h-12 px-6 rounded-xl flex items-center justify-center gap-2">
                 <Link to="/courses">
                   <Globe className="h-4 w-4 text-teal-400" /> Découvrir l'Espace Apprenant
                 </Link>
@@ -275,29 +283,29 @@ function LandingPage() {
 
           </div>
 
-          {/* Right Column: High Impact Visual */}
+          {/* Right Column: Featured Master Image Card */}
           <div className="lg:col-span-5 relative">
-            <div className="relative rounded-3xl overflow-hidden border border-teal-500/30 shadow-2xl shadow-teal-950/80 bg-slate-900 group">
+            <div className="relative rounded-3xl overflow-hidden border border-teal-500/40 shadow-2xl shadow-teal-950/90 bg-slate-900 group">
               <img 
-                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1200&q=80" 
-                onError={(e) => { e.currentTarget.src = '/images/hero-b2b.png' }}
-                alt="Un cadre dirigeant africain satisfait utilisant la tablette EduFlex pour gérer la formation B2B de ses équipes dans un bureau moderne"
-                className="w-full h-[420px] sm:h-[480px] object-cover object-center transform transition-transform duration-500 group-hover:scale-105"
+                src="/images/eduflex-hero-master.jpg" 
+                onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1200&q=80' }}
+                alt="Un formateur expert présentant une visioconférence EduFlex Meet avec interfaces interactives et participants"
+                className="w-full h-[420px] sm:h-[490px] object-cover object-center transform transition-transform duration-500 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#051717] via-transparent to-transparent opacity-80" />
               
-              {/* Live KPI Overlay Card 1 (Bottom Left) */}
+              {/* Live KPI Overlay Card (Bottom Left) */}
               <div className="absolute bottom-6 left-6 right-6 bg-slate-900/90 backdrop-blur-md border border-teal-500/40 p-4 rounded-2xl shadow-xl flex items-center justify-between text-left">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold">
                     <TrendingUp className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-white">Progression Globale Équipe</p>
+                    <p className="text-xs font-bold text-white">Direct & Visioconférence EduFlex</p>
                     <p className="text-[11px] text-teal-300 font-semibold">+84% de compétences certifiées</p>
                   </div>
                 </div>
-                <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/40 text-[10px] font-bold">Actif</Badge>
+                <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/40 text-[10px] font-bold">En direct</Badge>
               </div>
             </div>
           </div>
