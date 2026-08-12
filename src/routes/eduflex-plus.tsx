@@ -241,7 +241,7 @@ function EduflexPlusPage() {
               </ul>
 
               <Button asChild className="w-full bg-slate-800 hover:bg-slate-700 text-white h-11">
-                <Link to="/register" search={{ plan: 'Pro' }}>Démarrer le plan Pro</Link>
+                <Link to="/register">Démarrer le plan Pro</Link>
               </Button>
             </CardContent>
           </Card>
@@ -270,7 +270,7 @@ function EduflexPlusPage() {
               </ul>
 
               <Button asChild className="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold h-11 border-none shadow-lg shadow-teal-500/20">
-                <Link to="/register" search={{ plan: 'B2B' }}>Activer EduFlex+</Link>
+                <Link to="/register">Activer EduFlex+</Link>
               </Button>
             </CardContent>
           </Card>

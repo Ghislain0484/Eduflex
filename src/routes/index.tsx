@@ -153,12 +153,12 @@ function LandingPage() {
                     <div className="space-y-3">
                       <h4 className="text-[11px] font-bold text-teal-400 uppercase tracking-wider">Solutions EduFlex B2B</h4>
                       <ul className="space-y-2 text-xs text-slate-200 font-medium">
-                        <li><Link to="/register" search={{ intent: 'create' }} className="hover:text-teal-400 block transition-colors">Digitalisation de Plan de Formation RH</Link></li>
-                        <li><Link to="/register" search={{ intent: 'sell' }} className="hover:text-teal-400 block transition-colors">Portail Académie d'Entreprise & Client</Link></li>
-                        <li><Link to="/register" search={{ intent: 'digitalize' }} className="hover:text-teal-400 block transition-colors">Onboarding & Recyclage des compétences</Link></li>
-                        <li><Link to="/register" search={{ intent: 'certificates' }} className="hover:text-teal-400 block transition-colors">Gestion des Habilitations & Certificats</Link></li>
-                        <li><Link to="/register" search={{ intent: 'automation' }} className="hover:text-teal-400 block transition-colors">Suivi & Reporting d'Assiduité RH</Link></li>
-                        <li><Link to="/register" search={{ intent: 'experience' }} className="hover:text-teal-400 block transition-colors">Classes Virtuelles EduFlex Meet</Link></li>
+                        <li><Link to="/register" className="hover:text-teal-400 block transition-colors">Digitalisation de Plan de Formation RH</Link></li>
+                        <li><Link to="/register" className="hover:text-teal-400 block transition-colors">Portail Académie d'Entreprise & Client</Link></li>
+                        <li><Link to="/register" className="hover:text-teal-400 block transition-colors">Onboarding & Recyclage des compétences</Link></li>
+                        <li><Link to="/register" className="hover:text-teal-400 block transition-colors">Gestion des Habilitations & Certificats</Link></li>
+                        <li><Link to="/register" className="hover:text-teal-400 block transition-colors">Suivi & Reporting d'Assiduité RH</Link></li>
+                        <li><Link to="/register" className="hover:text-teal-400 block transition-colors">Classes Virtuelles EduFlex Meet</Link></li>
                       </ul>
                     </div>
                   )}
@@ -213,7 +213,7 @@ function LandingPage() {
             </Button>
 
             <Button asChild className="bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs h-10 px-5 rounded-xl shadow-lg shadow-teal-950/50 border-none transition-transform hover:scale-[1.02]">
-              <Link to="/register" search={{ plan: 'B2B' }}>Démo Entreprise</Link>
+              <Link to="/register">Démo Entreprise</Link>
             </Button>
           </div>
         </nav>
@@ -245,7 +245,7 @@ function LandingPage() {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
               <Button asChild size="lg" className="bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-sm h-12 px-8 rounded-xl shadow-xl shadow-teal-500/20 border-none transition-transform hover:scale-[1.02] flex items-center justify-center gap-2">
-                <Link to="/register" search={{ plan: 'B2B' }}>
+                <Link to="/register">
                   Lancer une démo entreprise <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
@@ -529,7 +529,7 @@ function LandingPage() {
             </div>
             <div className="p-6 md:p-8 pt-0">
               <Button asChild variant="outline" className="w-full border-slate-800 text-slate-300 hover:bg-slate-900" size="lg">
-                <Link to="/register" search={{ intent: 'create' }}>Commencer gratuitement</Link>
+                <Link to="/register">Commencer gratuitement</Link>
               </Button>
             </div>
           </Card>
@@ -563,7 +563,7 @@ function LandingPage() {
             </div>
             <div className="p-6 md:p-8 pt-0">
               <Button asChild className="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold" size="lg">
-                <Link to="/register" search={{ plan: 'Pro' }}>Lancer mon Académie Pro</Link>
+                <Link to="/register">Lancer mon Académie Pro</Link>
               </Button>
             </div>
           </Card>
@@ -593,7 +593,7 @@ function LandingPage() {
             </div>
             <div className="p-6 md:p-8 pt-0">
               <Button asChild variant="outline" className="w-full border-teal-800 text-teal-300 hover:bg-teal-950" size="lg">
-                <Link to="/register" search={{ plan: 'B2B' }}>Activer l'Académie B2B</Link>
+                <Link to="/register">Activer l'Académie B2B</Link>
               </Button>
             </div>
           </Card>
