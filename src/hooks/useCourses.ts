@@ -178,19 +178,11 @@ export function useCourses() {
           return data.map(mapCourse)
         }
       } catch (err) {
-        console.warn('Backend courses query error with logo, trying fallback select...', err)
+        console.warn('Backend courses query error with profiles join, using clean fallback select...', err)
         try {
           const { data, error } = await supabase
             .from('courses')
-            .select(`
-              *,
-              profiles:user_id (
-                display_name,
-                academy_name,
-                academy_color,
-                academy_slogan
-              )
-            `)
+            .select('*')
             .eq('status', 'publie')
             .order('created_at', { ascending: false })
           if (error) throw error
@@ -237,19 +229,11 @@ export function useCourse(id: number | undefined) {
         if (error) throw error
         if (data) return mapCourse(data)
       } catch (err) {
-        console.warn('Backend course fetch error with logo, trying fallback select...', err)
+        console.warn('Backend course fetch error with profiles join, trying clean fallback select...', err)
         try {
           const { data, error } = await supabase
             .from('courses')
-            .select(`
-              *,
-              profiles:user_id (
-                display_name,
-                academy_name,
-                academy_color,
-                academy_slogan
-              )
-            `)
+            .select('*')
             .eq('id', id)
             .maybeSingle()
           if (error) throw error
