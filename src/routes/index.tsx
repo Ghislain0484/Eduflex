@@ -279,7 +279,8 @@ function LandingPage() {
           <div className="lg:col-span-5 relative">
             <div className="relative rounded-3xl overflow-hidden border border-teal-500/30 shadow-2xl shadow-teal-950/80 bg-slate-900 group">
               <img 
-                src="/images/hero-b2b.png" 
+                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1200&q=80" 
+                onError={(e) => { e.currentTarget.src = '/images/hero-b2b.png' }}
                 alt="Un cadre dirigeant africain satisfait utilisant la tablette EduFlex pour gérer la formation B2B de ses équipes dans un bureau moderne"
                 className="w-full h-[420px] sm:h-[480px] object-cover object-center transform transition-transform duration-500 group-hover:scale-105"
               />
@@ -395,7 +396,8 @@ function LandingPage() {
               {/* Visual Mockup Image for Feature 2 */}
               <div className="rounded-2xl overflow-hidden border border-teal-900/40 shadow-md h-36 relative">
                 <img 
-                  src="/images/feature-mobile.png" 
+                  src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80" 
+                  onError={(e) => { e.currentTarget.src = '/images/feature-mobile.png' }}
                   alt="Un ingénieur/technicien africain consultant un cours micro-learning sur son smartphone pendant une pause"
                   className="w-full h-full object-cover"
                 />
@@ -443,7 +445,8 @@ function LandingPage() {
               <div className="md:col-span-4 shrink-0">
                 <div className="relative rounded-2xl overflow-hidden border-2 border-teal-400 shadow-xl max-w-xs mx-auto">
                   <img 
-                    src="/images/testimonial-drh.png" 
+                    src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=800&q=80" 
+                    onError={(e) => { e.currentTarget.src = '/images/testimonial-drh.png' }}
                     alt="Portrait professionnel de Marie-Laure Ehouman, Directrice des Ressources Humaines"
                     className="w-full h-72 object-cover object-top"
                   />
