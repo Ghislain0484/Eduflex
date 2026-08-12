@@ -23,6 +23,7 @@ import {
   ArrowRight
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import heroMasterImg from '@/assets/eduflex-hero-master.jpg'
 
 export const Route = createFileRoute('/_app/classes-virtuelles')({
   component: ClassesVirtuellesPage,
@@ -190,7 +191,7 @@ export function ClassesVirtuellesPage() {
             {/* Master Backdrop Watermark */}
             <div 
               className="absolute inset-0 bg-cover bg-center opacity-20 filter contrast-125 mix-blend-luminosity pointer-events-none"
-              style={{ backgroundImage: `url('/images/eduflex-hero-master.jpg')` }}
+              style={{ backgroundImage: `url(${heroMasterImg})` }}
             />
             <div className="absolute inset-0 bg-gradient-to-b from-slate-900/80 via-slate-900/90 to-slate-900 pointer-events-none" />
 

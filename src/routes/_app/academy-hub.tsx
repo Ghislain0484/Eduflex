@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
+import heroMasterImg from '@/assets/eduflex-hero-master.jpg'
 import {
   Card,
   CardHeader,
@@ -136,7 +137,7 @@ Répondez simplement à ce mail, je suis là pour vous aider !
       <div className="relative overflow-hidden rounded-2xl border border-teal-500/30 bg-slate-900 p-6 md:p-8 space-y-4 shadow-lg shadow-teal-950/10">
         <div 
           className="absolute inset-0 bg-cover bg-center opacity-20 filter contrast-125 mix-blend-luminosity pointer-events-none"
-          style={{ backgroundImage: `url('/images/eduflex-hero-master.jpg')` }}
+          style={{ backgroundImage: `url(${heroMasterImg})` }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-slate-900/80 via-slate-900/90 to-slate-900 pointer-events-none" />
 

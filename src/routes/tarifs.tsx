@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Button, Card, CardContent, Badge, toast } from '@blinkdotnew/ui'
+import heroMasterImg from '@/assets/eduflex-hero-master.jpg'
 import {
   CheckCircle,
   HelpCircle,
@@ -75,7 +76,7 @@ function TarifsPage() {
         <div className="text-center space-y-3 max-w-4xl mx-auto p-8 rounded-3xl bg-slate-900/60 border border-teal-500/30 relative overflow-hidden shadow-xl">
           <div 
             className="absolute inset-0 bg-cover bg-center opacity-15 filter contrast-125 mix-blend-luminosity pointer-events-none"
-            style={{ backgroundImage: `url('/images/eduflex-hero-master.jpg')` }}
+            style={{ backgroundImage: `url(${heroMasterImg})` }}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-950/90 to-slate-950 pointer-events-none" />
 

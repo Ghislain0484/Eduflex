@@ -3,6 +3,7 @@ import { Button, Card, CardContent, Skeleton, Badge } from '@blinkdotnew/ui'
 import { useAuth } from '@/hooks/useAuth'
 import { useCourses } from '@/hooks/useCourses'
 import { useState, useEffect } from 'react'
+import heroMasterImg from '@/assets/eduflex-hero-master.jpg'
 import {
   Sparkles,
   Monitor,
@@ -225,7 +226,7 @@ function LandingPage() {
         {/* Full-width Master Background Image Watermark */}
         <div 
           className="absolute inset-0 bg-cover bg-center opacity-25 filter contrast-125 mix-blend-luminosity pointer-events-none"
-          style={{ backgroundImage: `url('/images/eduflex-hero-master.jpg')` }}
+          style={{ backgroundImage: `url(${heroMasterImg})` }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#061d1d]/85 via-[#051717]/95 to-[#041212] pointer-events-none" />
 
@@ -287,11 +288,7 @@ function LandingPage() {
           <div className="lg:col-span-5 relative">
             <div className="relative rounded-3xl overflow-hidden border border-teal-500/40 shadow-2xl shadow-teal-950/90 bg-slate-900 group">
               <img 
-                src="/images/eduflex-hero-master.jpg" 
-                onError={(e) => { 
-                  e.currentTarget.onerror = null
-                  e.currentTarget.src = 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1200&q=80' 
-                }}
+                src={heroMasterImg} 
                 alt="Un formateur expert présentant une visioconférence EduFlex Meet avec interfaces interactives et participants"
                 className="w-full h-[420px] sm:h-[490px] object-cover object-center transform transition-transform duration-500 group-hover:scale-105"
               />

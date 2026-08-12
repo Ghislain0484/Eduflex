@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Button, Card, CardContent, Badge } from '@blinkdotnew/ui'
+import heroMasterImg from '@/assets/eduflex-hero-master.jpg'
 import {
   Sparkles,
   Building,
@@ -54,7 +55,7 @@ function EduflexPlusPage() {
       <section className="relative overflow-hidden pt-24 pb-20 bg-[#041212]">
         <div 
           className="absolute inset-0 bg-cover bg-center opacity-20 filter contrast-125 mix-blend-luminosity pointer-events-none"
-          style={{ backgroundImage: `url('/images/eduflex-hero-master.jpg')` }}
+          style={{ backgroundImage: `url(${heroMasterImg})` }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#061d1d]/85 via-[#051717]/95 to-[#041212] pointer-events-none" />
         <div className="max-w-5xl mx-auto px-6 text-center space-y-8 relative z-10">
